@@ -25,6 +25,7 @@ struct GrubPalette {
     static let bone = Color(hex: "#c0b89a")
     static let nearBlack = Color(hex: "#0d0d0d")
     static let deepMoss = Color(hex: "#2a2a4e")
+    static let orange = Color(hex: "#e07020")
 
     static let paletteMap: [Character: Color] = [
         "1": Color(hex: "#1a1a2e"),
@@ -40,6 +41,7 @@ struct GrubPalette {
         "B": Color(hex: "#888880"),
         "C": Color(hex: "#c0b89a"),
         "D": Color(hex: "#0d0d0d"),
+        "E": Color(hex: "#e07020"),
     ]
 }
 
@@ -756,6 +758,160 @@ struct PixelIcon {
             }
         }
         .frame(width: size, height: size)
+    }
+
+    // MARK: - Pixel Grid Helper
+
+    static func pixelGrid(size: CGFloat, grid: [String], colors: [Character: Color]) -> some View {
+        Canvas { context, canvasSize in
+            let s = canvasSize.width / CGFloat(grid[0].count)
+            for (r, row) in grid.enumerated() {
+                for (c, ch) in row.enumerated() {
+                    if let color = colors[ch] {
+                        let rect = CGRect(x: CGFloat(c) * s, y: CGFloat(r) * s, width: s + 0.5, height: s + 0.5)
+                        context.fill(Path(rect), with: .color(color))
+                    }
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+
+    // MARK: - Ingredient Icons
+
+    static func mossClump(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000", "000220000", "002222000", "022222200",
+            "022922200", "022222200", "002222000", "000220000", "000000000",
+        ], colors: ["2": Color(hex: "#4ecca3"), "9": Color(hex: "#2a7a60")])
+    }
+
+    static func caveBeetle(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000", "001000100", "010111010", "011111110",
+            "011171110", "011111110", "010111010", "001000100", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "7": Color(hex: "#16213e")])
+    }
+
+    static func mudRoot(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000010000", "000110000", "001551000", "000155100",
+            "000155100", "001551000", "001550000", "000550000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "5": Color(hex: "#c0b89a")])
+    }
+
+    static func dewDrop(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000010000", "000110000", "001221000", "012222100",
+            "012A22100", "012222100", "001221000", "000110000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "2": Color(hex: "#4ecca3"), "A": Color(hex: "#ffffff")])
+    }
+
+    static func glowshroom(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000666000", "006666600", "066A66600", "066666600",
+            "006666600", "000111000", "000555000", "000555000", "000000000",
+        ], colors: ["6": Color(hex: "#7b2d8b"), "A": Color(hex: "#ffffff"), "1": Color(hex: "#1a1a2e"), "5": Color(hex: "#c0b89a")])
+    }
+
+    static func crystalShard(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000010000", "000110000", "001221000", "001AA1000",
+            "012AA2100", "012222100", "012222100", "001111000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "2": Color(hex: "#4ecca3"), "A": Color(hex: "#ffffff")])
+    }
+
+    static func paleWorm(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000", "033000000", "033300000", "003330000",
+            "000333000", "000033300", "000003330", "000000330", "000000000",
+        ], colors: ["3": Color(hex: "#e8e8d0")])
+    }
+
+    static func slimeBerry(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000220000", "002002000", "001441000", "014444100",
+            "014A44100", "014444100", "001441000", "000110000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "2": Color(hex: "#4ecca3"), "4": Color(hex: "#e94560"), "A": Color(hex: "#ffffff")])
+    }
+
+    static func moonPetal(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000010000", "000110000", "001AA1000", "01AAAA100",
+            "01ABAA100", "01AAAA100", "001AA1000", "000110000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "A": Color(hex: "#ffffff"), "B": Color(hex: "#c8c8b8")])
+    }
+
+    static func emberSeed(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000050000", "000550000", "001551000", "015555100",
+            "015A55100", "015555100", "001551000", "000110000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "5": Color(hex: "#f5a623"), "A": Color(hex: "#ffffff")])
+    }
+
+    static func ancientSpore(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000060000", "006566000", "065656600", "065A56600",
+            "065656600", "006566000", "000660000", "000000000", "000000000",
+        ], colors: ["6": Color(hex: "#7b2d8b"), "5": Color(hex: "#f5a623"), "A": Color(hex: "#ffffff")])
+    }
+
+    static func goldenBug(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000", "001000100", "010555010", "055555550",
+            "055A55550", "055555550", "010555010", "001000100", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "5": Color(hex: "#f5a623"), "A": Color(hex: "#ffffff")])
+    }
+
+    // MARK: - UI Icons
+
+    static func heart(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "011011000", "111111100", "111111100", "111111100",
+            "011111000", "001110000", "000100000", "000000000", "000000000",
+        ], colors: ["1": Color(hex: "#e94560")])
+    }
+
+    static func leaf(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000001100", "000011000", "000112000", "001122000",
+            "012220000", "022200000", "012000000", "001000000", "000000000",
+        ], colors: ["1": Color(hex: "#2a7a60"), "2": Color(hex: "#4ecca3")])
+    }
+
+    static func bag(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "001111000", "010000100", "011111100", "015555100",
+            "015555100", "015555100", "015555100", "011111100", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "5": Color(hex: "#c0b89a")])
+    }
+
+    static func drumstick(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000111000", "001444100", "014444100", "014444100",
+            "001441000", "000110000", "000550000", "000550000", "000000000",
+        ], colors: ["1": Color(hex: "#1a1a2e"), "4": Color(hex: "#e94560"), "5": Color(hex: "#c0b89a")])
+    }
+
+    // MARK: - Ingredient Icon Mapper
+
+    @ViewBuilder
+    static func ingredientIcon(_ id: String, size: CGFloat = 16) -> some View {
+        switch id {
+        case "moss_clump": mossClump(size: size)
+        case "cave_beetle": caveBeetle(size: size)
+        case "mud_root": mudRoot(size: size)
+        case "dew_drop": dewDrop(size: size)
+        case "glowshroom": glowshroom(size: size)
+        case "crystal_shard": crystalShard(size: size)
+        case "pale_worm": paleWorm(size: size)
+        case "slime_berry": slimeBerry(size: size)
+        case "moon_petal": moonPetal(size: size)
+        case "ember_seed": emberSeed(size: size)
+        case "ancient_spore": ancientSpore(size: size)
+        case "golden_bug": goldenBug(size: size)
+        default: mossClump(size: size)
+        }
     }
 }
 
