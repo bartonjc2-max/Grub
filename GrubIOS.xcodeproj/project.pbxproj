@@ -16,6 +16,8 @@
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
 		D1A2B3C4E5F60718A9B0C1D2 /* RecipeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */; };
+		E1F2A3B4C5D60718A9B0C1E3 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */; };
+		F1A2B3C4D5E60718A9B0C1F4 /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,8 @@
 		EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PressStart2P-Regular.ttf"; sourceTree = "<group>"; };
 		F34F1663B37A9209A1EE393F /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeData.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Foraging.swift"; sourceTree = "<group>"; };
+		C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -41,6 +45,8 @@
 				18F70E2BDA0D9DA2712224C1 /* ContentView.swift */,
 				5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */,
 				F34F1663B37A9209A1EE393F /* GameState.swift */,
+				B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */,
+				C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */,
 				23532E87C898D774055B275C /* GrubIOSApp.swift */,
 				468BD209A5D080A784FDC7DF /* Info.plist */,
 				EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */,
@@ -141,6 +147,8 @@
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
 				45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */,
 				674E84966D90C07CE4062CE0 /* GameState.swift in Sources */,
+				E1F2A3B4C5D60718A9B0C1E3 /* GameState+Foraging.swift in Sources */,
+				F1A2B3C4D5E60718A9B0C1F4 /* GameState+Crafting.swift in Sources */,
 				466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */,
 				D1A2B3C4E5F60718A9B0C1D2 /* RecipeData.swift in Sources */,
 				C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */,

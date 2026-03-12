@@ -678,6 +678,8 @@ class GameState: ObservableObject {
     func onForeground() {
         guard isAlive, !name.isEmpty else { return }
         applyDecay()
+        collectPassiveItems()
         save()
+        checkForEvent()
     }
 }
