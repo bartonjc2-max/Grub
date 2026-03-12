@@ -48,6 +48,18 @@ struct ContentView: View {
                 NameEntryView(game: game)
                     .ignoresSafeArea()
             }
+            if game.showForageOverlay {
+                ForageOverlayView(game: game)
+            }
+            if game.showForageResults {
+                ForageResultsView(game: game)
+            }
+            if game.showInventoryOverlay {
+                InventoryOverlayView(game: game)
+            }
+            if game.showGameSelector {
+                GameSelectorOverlayView(game: game)
+            }
             if showStats {
                 StatsMenuView(game: game, isShowing: $showStats)
             }
@@ -106,8 +118,8 @@ struct TopBarView: View {
             Spacer()
 
             HStack(spacing: 8) {
-                PixelIcon.coin(size: 20)
-                Text("\(game.crumbs)")
+                PixelIcon.bag(size: 20)
+                Text("\(game.totalIngredientStacks)")
                     .font(GrubFont.size(13))
                     .foregroundColor(GrubPalette.yellow)
             }
@@ -180,9 +192,12 @@ struct StatBarsView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            StatBarRow(label: "HNG", value: game.hunger, color: game.hunger > 50 ? GrubPalette.green : game.hunger > 20 ? GrubPalette.yellow : GrubPalette.red, isCritical: game.hunger < 20)
-            StatBarRow(label: "HAP", value: game.happiness, color: game.happiness > 50 ? GrubPalette.purple : game.happiness > 20 ? GrubPalette.yellow : GrubPalette.red, isCritical: game.happiness < 20)
-            StatBarRow(label: "HP", value: game.health, color: game.health > 50 ? GrubPalette.green : game.health > 20 ? GrubPalette.yellow : GrubPalette.red, isCritical: game.health < 20)
+            StatBarRow(icon: { AnyView(PixelIcon.drumstick(size: 16)) },
+                      value: game.hunger, isCritical: game.hunger < 20)
+            StatBarRow(icon: { AnyView(PixelIcon.heart(size: 16)) },
+                      value: game.happiness, isCritical: game.happiness < 20)
+            StatBarRow(icon: { AnyView(PixelIcon.leaf(size: 16)) },
+                      value: game.health, isCritical: game.health < 20)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -194,43 +209,45 @@ struct StatBarsView: View {
 }
 
 struct StatBarRow: View {
-    let label: String
+    let icon: () -> AnyView
     let value: Int
-    let color: Color
     let isCritical: Bool
 
     @State private var pulseOpacity: Double = 1.0
 
+    var barColor: Color {
+        if value >= 70 { return GrubPalette.green }
+        if value >= 40 { return GrubPalette.yellow }
+        if value >= 20 { return GrubPalette.orange }
+        return GrubPalette.red
+    }
+
     var body: some View {
-        HStack(spacing: 8) {
-            Text(label)
-                .font(GrubFont.size(11))
-                .foregroundColor(GrubPalette.pale.opacity(0.8))
-                .frame(width: 42, alignment: .leading)
+        HStack(spacing: 6) {
+            icon()
+                .frame(width: 20)
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
+            // Segmented bar
+            HStack(spacing: 2) {
+                ForEach(0..<10, id: \.self) { i in
+                    let segThreshold = (i + 1) * 10
+                    let filled = value >= segThreshold
+                    let partial = !filled && value > i * 10
                     Rectangle()
-                        .fill(GrubPalette.moss)
-                        .border(GrubPalette.deepMoss, width: 1)
-
-                    Rectangle()
-                        .fill(color)
-                        .frame(width: geo.size.width * CGFloat(max(0, value)) / 100)
+                        .fill(filled || partial ? barColor : GrubPalette.moss)
                         .opacity(isCritical ? pulseOpacity : 1)
-                        .overlay(alignment: .top) {
-                            Rectangle()
-                                .fill(Color.white.opacity(0.25))
-                                .frame(height: 2)
-                        }
+                        .overlay(
+                            filled ? Rectangle().fill(Color.white.opacity(0.15)).frame(height: 2).offset(y: -3) : nil,
+                            alignment: .top
+                        )
                 }
             }
-            .frame(height: 18)
+            .frame(height: 22)
 
             Text("\(value)")
                 .font(GrubFont.size(11))
                 .foregroundColor(GrubPalette.pale)
-                .frame(width: 40, alignment: .trailing)
+                .frame(width: 36, alignment: .trailing)
         }
         .onChange(of: isCritical) { _, crit in
             if crit {
@@ -250,7 +267,7 @@ struct ActionButtonsView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            ActionButton(icon: { AnyView(PixelIcon.meat(size: 34)) }, label: "FEED", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.drumstick(size: 34)) }, label: "FEED", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
                 game.showFeedOverlay = true
             }
@@ -259,11 +276,15 @@ struct ActionButtonsView: View {
                 game.openPlay()
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.pill(size: 34)) }, label: "MEDS", borderColor: GrubPalette.red) {
+            ActionButton(icon: { AnyView(PixelIcon.leaf(size: 34)) }, label: "FORAGE", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
-                game.giveMedicine()
+                game.showForageOverlay = true
             }
-            .opacity(game.isMedicineOnCooldown ? 0.4 : 1.0)
+
+            ActionButton(icon: { AnyView(PixelIcon.bag(size: 34)) }, label: "ITEMS", borderColor: GrubPalette.green) {
+                game.audio.play(.tap)
+                game.showInventoryOverlay = true
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
