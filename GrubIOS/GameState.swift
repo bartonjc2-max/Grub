@@ -170,6 +170,24 @@ class GameState: ObservableObject {
     @Published var mgResult: String = ""
     @Published var mgPrompt: String = "GET READY..."
 
+    // Memory game
+    @Published var mgMemoryCards: [String] = []
+    @Published var mgMemoryRevealed: [Bool] = []
+    @Published var mgMemoryMatched: [Bool] = []
+    @Published var mgFirstFlip: Int? = nil
+    @Published var mgMemoryFlips: Int = 0
+
+    // Bug Catch game
+    @Published var mgBugs: [BugState] = []
+    @Published var mgBugScore: Int = 0
+    @Published var mgBugTimeLeft: Double = 15
+
+    // Rhythm game
+    @Published var mgRhythmSequence: [Int] = []
+    @Published var mgRhythmPlayerIndex: Int = 0
+    @Published var mgRhythmShowingSequence: Bool = false
+    @Published var mgRhythmHighlight: Int = -1
+
     private var gameTimer: Timer?
     private var decayTimer: Timer?
     var mgTimer: Timer?
@@ -516,99 +534,6 @@ class GameState: ObservableObject {
         showNameEntry = false
         save()
         checkForEvent()
-    }
-
-    // MARK: - Minigames
-    func openPlay() {
-        audio.play(.tap)
-        mgGame = Int.random(in: 0...1)
-        mgRound = 1
-        mgWins = 0
-        mgResult = ""
-        showMinigame = true
-        setupMGRound()
-    }
-
-    func setupMGRound() {
-        mgResult = ""
-        mgTimer?.invalidate()
-
-        if mgGame == 0 {
-            // Left or Right
-            mgWallSide = Bool.random() ? "left" : "right"
-            mgWaiting = true
-            mgPrompt = "WHICH SIDE IS SAFE?"
-        } else {
-            // Feed the right food
-            let allFoods = ["🍖", "🥦", "🍰", "🍕", "🥕"]
-            mgFoodItems = Array(allFoods.shuffled().prefix(3))
-            mgTargetFood = Int.random(in: 0...2)
-            mgPrompt = "FEED IT: \(mgFoodItems[mgTargetFood])"
-            mgWaiting = true
-
-            // Auto-fail after 3 seconds
-            mgTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
-                DispatchQueue.main.async {
-                    guard let self = self, self.mgWaiting else { return }
-                    self.mgRoundResult(won: false)
-                }
-            }
-        }
-    }
-
-    func mgChoice(side: String) {
-        guard mgWaiting, mgGame == 0 else { return }
-        mgWaiting = false
-        mgTimer?.invalidate()
-        let correct = side != mgWallSide
-        mgRoundResult(won: correct)
-    }
-
-    func mgFoodChoice(index: Int) {
-        guard mgWaiting, mgGame == 1 else { return }
-        mgWaiting = false
-        mgTimer?.invalidate()
-        let correct = index == mgTargetFood
-        mgRoundResult(won: correct)
-    }
-
-    func mgRoundResult(won: Bool) {
-        if won {
-            mgWins += 1
-            audio.play(.win)
-            mgResult = "✓ CORRECT!"
-        } else {
-            audio.play(.lose)
-            mgResult = "✗ WRONG!"
-        }
-
-        if mgRound >= 3 {
-            let gameWon = mgWins >= 2
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-                guard let self = self else { return }
-                self.happiness = min(100, self.happiness + (gameWon ? 20 : 10))
-                self.playedCount += 1
-                self.addXP(3)
-                self.save()
-                self.showMinigame = false
-                if gameWon { self.petStateAnim = "playing" }
-                self.animStateTimer?.invalidate()
-                self.animStateTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
-                    DispatchQueue.main.async { self?.petStateAnim = "idle" }
-                }
-            }
-        } else {
-            mgRound += 1
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
-                self?.setupMGRound()
-            }
-        }
-    }
-
-    func closeMinigame() {
-        audio.play(.tap)
-        mgTimer?.invalidate()
-        showMinigame = false
     }
 
     // MARK: - Toast
