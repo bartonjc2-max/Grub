@@ -77,7 +77,6 @@ struct SpriteRenderer {
 
         let bodyCol: Character = state == "dead" ? "B" : state == "sick" ? "9" : "2"
         let highlightCol: Character = state == "dead" ? "C" : "3"
-        let bob = state == "sleeping" ? 0 : Int(sin(Double(tick) * 0.1) * 1.5)
 
         func px(_ r: Int, _ c: Int, _ col: Character) {
             if r >= 0 && r < s && c >= 0 && c < s { data[r][c] = col }
@@ -101,65 +100,311 @@ struct SpriteRenderer {
             }
         }
 
+        // ── Idle sub-animation system ──
+        // 8-second master cycle at 20fps = 160 ticks
+        let idleCycle = tick % 160
+        // Which "behavior" block we're in (changes every ~24 seconds = 3 full cycles)
+        let behaviorSlot = (tick / 160) % 8
+
+        // Bob: varies by behavior
+        let bob: Int
+        if state == "sleeping" {
+            bob = 0
+        } else if state == "idle" {
+            switch behaviorSlot {
+            case 0, 1: // Normal gentle bob
+                bob = Int(sin(Double(tick) * 0.1) * 1.5)
+            case 2: // Excited bounce
+                bob = Int(sin(Double(tick) * 0.25) * 2.5)
+            case 3: // Slow heavy breathing
+                bob = Int(sin(Double(tick) * 0.05) * 1.0)
+            case 4: // Jittery
+                bob = tick % 6 < 3 ? 1 : -1
+            case 5: // Hop (brief jump mid-cycle)
+                let hopPhase = idleCycle
+                if hopPhase > 60 && hopPhase < 80 {
+                    bob = -3
+                } else if hopPhase >= 80 && hopPhase < 90 {
+                    bob = Int(sin(Double(tick) * 0.15) * 1.5)
+                } else {
+                    bob = Int(sin(Double(tick) * 0.1) * 1.5)
+                }
+            default: // Normal
+                bob = Int(sin(Double(tick) * 0.1) * 1.5)
+            }
+        } else {
+            bob = Int(sin(Double(tick) * 0.1) * 1.5)
+        }
+
+        // Horizontal sway for look-around
+        let sway: Int
+        if state == "idle" && (behaviorSlot == 6 || behaviorSlot == 7) {
+            sway = Int(sin(Double(tick) * 0.06) * 2.0)
+        } else {
+            sway = 0
+        }
+
         let cy = 16 + bob
+        let cx = 16 + sway
 
         // Body
-        circle(cy, 16, 9, "1")
-        circle(cy, 16, 8, bodyCol)
+        circle(cy, cx, 9, "1")
+        circle(cy, cx, 8, bodyCol)
 
         // Highlight
-        px(cy - 5, 13, highlightCol)
-        px(cy - 5, 14, highlightCol)
-        px(cy - 6, 14, highlightCol)
+        px(cy - 5, cx - 3, highlightCol)
+        px(cy - 5, cx - 2, highlightCol)
+        px(cy - 6, cx - 2, highlightCol)
 
-        // Arms
+        // ── Arms ──
+        let leftArmX = cx - 10
+        let rightArmX = cx + 7
         if state == "playing" {
-            rect(cy + 1, 4, 4, 2, "1"); rect(cy + 1, 5, 3, 1, bodyCol)
-            rect(cy + 1, 24, 4, 2, "1"); rect(cy + 1, 25, 3, 1, bodyCol)
-        } else {
-            rect(cy + 3, 6, 3, 2, "1"); rect(cy + 3, 7, 2, 1, bodyCol)
-            rect(cy + 3, 23, 3, 2, "1"); rect(cy + 3, 24, 2, 1, bodyCol)
-        }
-
-        // Eyes
-        if state == "dead" {
-            px(cy - 3, 12, "1"); px(cy - 2, 13, "1"); px(cy - 3, 14, "1"); px(cy - 2, 11, "1")
-            px(cy - 3, 18, "1"); px(cy - 2, 19, "1"); px(cy - 3, 20, "1"); px(cy - 2, 17, "1")
-        } else if state == "sleeping" {
-            rect(cy - 3, 11, 4, 1, "1")
-            rect(cy - 3, 17, 4, 1, "1")
-        } else {
-            // Glint eyes: 3x3 dark with white glint top-left
-            for r in (cy-4)...(cy-2) { for c in 11...13 { px(r, c, "1") } }
-            px(cy - 4, 11, "A")
-            for r in (cy-4)...(cy-2) { for c in 18...20 { px(r, c, "1") } }
-            px(cy - 4, 18, "A")
-        }
-
-        // Mouth
-        if state == "eating" {
-            rect(cy + 3, 13, 6, 3, "1"); rect(cy + 4, 14, 4, 2, "4")
-        } else if state == "sad" || state == "sick" {
-            px(cy + 3, 14, "1"); px(cy + 4, 13, "1"); px(cy + 4, 15, "1"); px(cy + 3, 16, "1")
-        } else if state == "playing" {
-            px(cy + 3, 13, "1"); px(cy + 3, 14, "1"); px(cy + 4, 14, "1"); px(cy + 4, 15, "1")
-            px(cy + 3, 16, "1"); px(cy + 3, 17, "1")
-        } else {
-            px(cy + 3, 14, "1"); px(cy + 3, 15, "1"); px(cy + 3, 16, "1")
-            px(cy + 4, 13, "1"); px(cy + 4, 17, "1")
-        }
-
-        // Sick sweat
-        if state == "sick" {
-            px(cy - 6, 10, "3"); px(cy - 5, 9, "3")
-        }
-
-        // Sleeping Zs
-        if state == "sleeping" && tick % 60 > 20 {
-            px(5, 20, "2"); px(5, 21, "2"); px(6, 20, "2"); px(6, 21, "2")
-            if tick % 60 > 40 {
-                px(3, 22, "2"); px(3, 23, "2"); px(4, 22, "2"); px(4, 23, "2")
+            // Arms up
+            rect(cy + 1, leftArmX, 4, 2, "1"); rect(cy + 1, leftArmX + 1, 3, 1, bodyCol)
+            rect(cy + 1, rightArmX, 4, 2, "1"); rect(cy + 1, rightArmX + 1, 3, 1, bodyCol)
+        } else if state == "idle" && behaviorSlot == 2 {
+            // Wave: one arm up, one down, alternating
+            let waveUp = idleCycle % 40 < 20
+            if waveUp {
+                rect(cy - 1, leftArmX, 4, 2, "1"); rect(cy - 1, leftArmX + 1, 3, 1, bodyCol)
+                rect(cy + 3, rightArmX, 3, 2, "1"); rect(cy + 3, rightArmX + 1, 2, 1, bodyCol)
+            } else {
+                rect(cy + 3, leftArmX + 1, 3, 2, "1"); rect(cy + 3, leftArmX + 2, 2, 1, bodyCol)
+                rect(cy - 1, rightArmX, 4, 2, "1"); rect(cy - 1, rightArmX + 1, 3, 1, bodyCol)
             }
+        } else if state == "idle" && behaviorSlot == 4 {
+            // Fidget: arms twitch
+            let fidget = idleCycle % 20 < 10 ? 1 : 0
+            rect(cy + 3 - fidget, leftArmX + 1, 3, 2, "1"); rect(cy + 3 - fidget, leftArmX + 2, 2, 1, bodyCol)
+            rect(cy + 3 + fidget, rightArmX, 3, 2, "1"); rect(cy + 3 + fidget, rightArmX + 1, 2, 1, bodyCol)
+        } else {
+            // Default arms down
+            rect(cy + 3, leftArmX + 1, 3, 2, "1"); rect(cy + 3, leftArmX + 2, 2, 1, bodyCol)
+            rect(cy + 3, rightArmX, 3, 2, "1"); rect(cy + 3, rightArmX + 1, 2, 1, bodyCol)
+        }
+
+        // ── Eyes ──
+        let leftEyeC = cx - 5
+        let rightEyeC = cx + 2
+
+        if state == "dead" {
+            // X eyes
+            px(cy - 3, leftEyeC, "1"); px(cy - 2, leftEyeC + 1, "1")
+            px(cy - 3, leftEyeC + 2, "1"); px(cy - 2, leftEyeC - 1, "1")
+            px(cy - 3, rightEyeC, "1"); px(cy - 2, rightEyeC + 1, "1")
+            px(cy - 3, rightEyeC + 2, "1"); px(cy - 2, rightEyeC - 1, "1")
+        } else if state == "sleeping" {
+            // Flat line eyes
+            rect(cy - 3, leftEyeC, 4, 1, "1")
+            rect(cy - 3, rightEyeC, 4, 1, "1")
+        } else {
+            // Blink check — blink for 6 ticks every ~90 ticks
+            let blinkCycle = tick % 90
+            let isBlinking = state == "idle" && blinkCycle >= 84
+
+            // Look direction for eye glint position
+            let lookOffset: Int
+            if state == "idle" && behaviorSlot == 6 {
+                // Look left
+                lookOffset = -1
+            } else if state == "idle" && behaviorSlot == 7 {
+                // Look right
+                lookOffset = 1
+            } else if state == "idle" && behaviorSlot == 5 && idleCycle > 100 {
+                // Look up after hop
+                lookOffset = 0 // glint moves up
+            } else {
+                lookOffset = 0
+            }
+
+            let lookUp = state == "idle" && behaviorSlot == 5 && idleCycle > 100 && idleCycle < 140
+
+            if isBlinking {
+                // Half-blink: flat line
+                rect(cy - 3, leftEyeC, 3, 1, "1")
+                rect(cy - 3, rightEyeC, 3, 1, "1")
+            } else {
+                // Normal 3x3 eyes with glint
+                for r in (cy-4)...(cy-2) { for c in leftEyeC...(leftEyeC+2) { px(r, c, "1") } }
+                for r in (cy-4)...(cy-2) { for c in rightEyeC...(rightEyeC+2) { px(r, c, "1") } }
+
+                // Glint position
+                let glintR = lookUp ? cy - 4 : cy - 4
+                let leftGlintC = leftEyeC + max(0, min(2, 0 + lookOffset))
+                let rightGlintC = rightEyeC + max(0, min(2, 0 + lookOffset))
+                px(glintR, leftGlintC, "A")
+                px(glintR, rightGlintC, "A")
+
+                // Squint when jittery
+                if state == "idle" && behaviorSlot == 4 && idleCycle % 30 < 8 {
+                    // Narrow eyes — cover top row
+                    for c in leftEyeC...(leftEyeC+2) { px(cy - 4, c, bodyCol) }
+                    for c in rightEyeC...(rightEyeC+2) { px(cy - 4, c, bodyCol) }
+                }
+            }
+        }
+
+        // ── Mouth ──
+        if state == "eating" {
+            // Chewing animation — mouth opens and closes
+            let chewPhase = tick % 20
+            if chewPhase < 10 {
+                // Mouth open wide — nom!
+                rect(cy + 3, cx - 3, 6, 3, "1"); rect(cy + 4, cx - 2, 4, 2, "4")
+            } else {
+                // Mouth closed — chew
+                rect(cy + 3, cx - 2, 5, 1, "1")
+                px(cy + 4, cx - 1, "1"); px(cy + 4, cx, "1")
+            }
+            // Food crumbs flying out
+            let crumbTick = tick % 30
+            if crumbTick < 8 {
+                px(cy + 2, cx + 5 + crumbTick / 3, "5")
+                px(cy + 4, cx - 5 - crumbTick / 3, "5")
+            }
+            if crumbTick > 10 && crumbTick < 20 {
+                px(cy + 1, cx + 4 + (crumbTick - 10) / 3, "5")
+            }
+            // Happy squint while eating
+            if chewPhase < 10 {
+                for c in (cx-5)...(cx-3) { px(cy - 4, c, bodyCol) }
+                for c in (cx+2)...(cx+4) { px(cy - 4, c, bodyCol) }
+            }
+        } else if state == "drinking" {
+            // Drinking animation — head tilts back, gulp visible
+            let gulpPhase = tick % 24
+            if gulpPhase < 12 {
+                // Mouth open, tilted up — drinking
+                px(cy + 2, cx - 1, "1"); px(cy + 2, cx, "1")
+                px(cy + 3, cx - 2, "1"); px(cy + 3, cx + 1, "1")
+                // Liquid color inside mouth
+                px(cy + 2, cx - 1, "2"); px(cy + 2, cx, "2")
+            } else {
+                // Gulp — closed, satisfied
+                px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+            }
+            // Sparkle effect (health restoration)
+            let sparkTick = tick % 16
+            if sparkTick < 4 {
+                px(cy - 9, cx - 5, "A"); px(cy - 7, cx + 6, "2")
+            } else if sparkTick < 8 {
+                px(cy - 8, cx + 5, "A"); px(cy - 10, cx - 3, "2")
+            } else if sparkTick < 12 {
+                px(cy - 6, cx - 7, "A"); px(cy - 9, cx + 4, "2")
+            }
+            // Happy closed eyes while drinking
+            rect(cy - 3, cx - 5, 3, 1, "1")
+            rect(cy - 3, cx + 2, 3, 1, "1")
+            // Eyebrow raise
+            px(cy - 5, cx - 4, "1"); px(cy - 5, cx + 3, "1")
+        } else if state == "sad" || state == "sick" {
+            // Frown
+            px(cy + 3, cx - 2, "1"); px(cy + 4, cx - 3, "1")
+            px(cy + 4, cx - 1, "1"); px(cy + 3, cx, "1")
+        } else if state == "playing" {
+            // Big grin
+            px(cy + 3, cx - 3, "1"); px(cy + 3, cx - 2, "1")
+            px(cy + 4, cx - 2, "1"); px(cy + 4, cx - 1, "1")
+            px(cy + 3, cx, "1"); px(cy + 3, cx + 1, "1")
+        } else if state == "idle" {
+            // Idle mouth variations
+            switch behaviorSlot {
+            case 0, 6, 7: // Neutral smile
+                px(cy + 3, cx - 2, "1"); px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                px(cy + 4, cx - 3, "1"); px(cy + 4, cx + 1, "1")
+            case 1: // Tiny 'o' — curious
+                px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                px(cy + 4, cx - 1, "1"); px(cy + 4, cx, "1")
+            case 2: // Wide smile (excited)
+                px(cy + 3, cx - 3, "1"); px(cy + 3, cx - 2, "1")
+                px(cy + 4, cx - 2, "1"); px(cy + 4, cx - 1, "1")
+                px(cy + 4, cx, "1"); px(cy + 3, cx + 1, "1")
+                px(cy + 3, cx + 2, "1")
+            case 3: // Breathing — mouth opens slightly on "exhale"
+                let exhale = sin(Double(tick) * 0.05) > 0.3
+                if exhale {
+                    px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                    px(cy + 4, cx - 2, "1"); px(cy + 4, cx + 1, "1")
+                    px(cy + 5, cx - 1, "1"); px(cy + 5, cx, "1")
+                } else {
+                    px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                }
+            case 4: // Gritting (jittery)
+                rect(cy + 3, cx - 2, 5, 1, "1")
+                px(cy + 4, cx - 2, "1"); px(cy + 4, cx, "1"); px(cy + 4, cx + 2, "1")
+            case 5: // :D after hop
+                if idleCycle > 60 && idleCycle < 100 {
+                    rect(cy + 3, cx - 2, 5, 2, "1"); rect(cy + 4, cx - 1, 3, 1, "4")
+                } else {
+                    px(cy + 3, cx - 2, "1"); px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                    px(cy + 4, cx - 3, "1"); px(cy + 4, cx + 1, "1")
+                }
+            default:
+                px(cy + 3, cx - 2, "1"); px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+                px(cy + 4, cx - 3, "1"); px(cy + 4, cx + 1, "1")
+            }
+        } else {
+            // Default mouth
+            px(cy + 3, cx - 2, "1"); px(cy + 3, cx - 1, "1"); px(cy + 3, cx, "1")
+            px(cy + 4, cx - 3, "1"); px(cy + 4, cx + 1, "1")
+        }
+
+        // ── Sick sweat ──
+        if state == "sick" {
+            let sweatDrop = (tick % 40) < 20
+            px(cy - 6, cx - 6, "3"); px(cy - 5, cx - 7, "3")
+            if sweatDrop { px(cy - 4, cx - 7, "3") }
+        }
+
+        // ── Sleeping Zs (animated drift) ──
+        if state == "sleeping" {
+            let zPhase = tick % 80
+            if zPhase > 15 {
+                let zOff = zPhase / 20
+                px(5 - zOff, cx + 4 + zOff, "2")
+                px(5 - zOff, cx + 5 + zOff, "2")
+                px(6 - zOff, cx + 4 + zOff, "2")
+            }
+            if zPhase > 40 {
+                let zOff2 = (zPhase - 40) / 20
+                px(3 - zOff2, cx + 6 + zOff2, "2")
+                px(3 - zOff2, cx + 7 + zOff2, "2")
+                px(4 - zOff2, cx + 6 + zOff2, "2")
+            }
+        }
+
+        // ── Idle sparkles (happy state) ──
+        if state == "idle" && behaviorSlot == 2 {
+            let sparkPhase = idleCycle % 30
+            if sparkPhase < 8 {
+                px(cy - 9, cx - 6, "A")
+                px(cy - 8, cx + 7, "5")
+            } else if sparkPhase < 16 {
+                px(cy - 7, cx + 8, "A")
+                px(cy - 10, cx - 4, "5")
+            }
+        }
+
+        // ── Idle particles: curiosity dots float up ──
+        if state == "idle" && behaviorSlot == 1 {
+            let dotPhase = idleCycle % 50
+            if dotPhase > 10 && dotPhase < 40 {
+                let dotY = cy - 8 - (dotPhase - 10) / 5
+                px(dotY, cx + 6, "2")
+            }
+        }
+
+        // ── Antennae / feelers on top of head ──
+        if state != "dead" && state != "sleeping" {
+            let antennaWave = Int(sin(Double(tick) * 0.15) * 1.5)
+            px(cy - 9, cx - 2 + antennaWave, "2")
+            px(cy - 10, cx - 3 + antennaWave, "2")
+            px(cy - 9, cx + 2 - antennaWave, "2")
+            px(cy - 10, cx + 3 - antennaWave, "2")
+            // Antenna tips glow slightly
+            px(cy - 11, cx - 3 + antennaWave, "A")
+            px(cy - 11, cx + 3 - antennaWave, "A")
         }
 
         return data
@@ -1043,6 +1288,61 @@ struct PixelIcon {
             "000111000", "001444100", "014444100", "014444100",
             "001441000", "000110000", "000550000", "000550000", "000000000",
         ], colors: ["1": Color(hex: "#1a1a2e"), "4": Color(hex: "#e94560"), "5": Color(hex: "#c0b89a")])
+    }
+
+    // Shovel — for DIG button
+    static func shovel(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000110",
+            "000001100",
+            "000011000",
+            "000110000",
+            "001100000",
+            "011100000",
+            "155510000",
+            "155510000",
+            "011100000",
+        ], colors: [
+            "1": Color(hex: "#1a1a2e"),
+            "5": Color(hex: "#c0b89a"),
+        ])
+    }
+
+    // Chest — for PACK button
+    static func chest(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000",
+            "011111110",
+            "155555510",
+            "155555510",
+            "111111110",
+            "155525510",
+            "155555510",
+            "155555510",
+            "111111110",
+        ], colors: [
+            "1": Color(hex: "#1a1a2e"),
+            "5": Color(hex: "#c0b89a"),
+            "2": Color(hex: "#f5a623"),
+        ])
+    }
+
+    // Dice — for PLAY button
+    static func dice(size: CGFloat = 16) -> some View {
+        pixelGrid(size: size, grid: [
+            "000000000",
+            "011111110",
+            "017111710",
+            "011111110",
+            "011171110",
+            "011111110",
+            "017111710",
+            "011111110",
+            "000000000",
+        ], colors: [
+            "1": Color(hex: "#e8e8d0"),
+            "7": Color(hex: "#1a1a2e"),
+        ])
     }
 
     // MARK: - Ingredient Icon Mapper

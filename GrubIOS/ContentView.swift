@@ -266,28 +266,28 @@ struct ActionButtonsView: View {
     @ObservedObject var game: GameState
 
     var body: some View {
-        HStack(spacing: 0) {
-            ActionButton(icon: { AnyView(PixelIcon.drumstick(size: 34)) }, label: "FEED", borderColor: GrubPalette.green) {
+        HStack(spacing: 4) {
+            ActionButton(icon: { AnyView(PixelIcon.meat(size: 28)) }, label: "FEED", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
                 game.showFeedOverlay = true
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.gamepad(size: 34)) }, label: "PLAY", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.dice(size: 28)) }, label: "PLAY", borderColor: GrubPalette.green) {
                 game.openPlay()
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.leaf(size: 34)) }, label: "FORAGE", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 28)) }, label: "DIG", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
                 game.showForageOverlay = true
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.bag(size: 34)) }, label: "ITEMS", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.chest(size: 28)) }, label: "PACK", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
                 game.showInventoryOverlay = true
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 10)
         .background(GrubPalette.moss.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.green).frame(height: 2)
@@ -305,15 +305,17 @@ struct ActionButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            VStack(spacing: 4) {
                 icon()
                 Text(label)
-                    .font(GrubFont.size(11))
+                    .font(GrubFont.size(9))
                     .foregroundColor(isPressed ? GrubPalette.void_color : GrubPalette.pale)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 4)
             .background(isPressed ? borderColor : GrubPalette.void_color)
             .border(borderColor, width: 2)
         }

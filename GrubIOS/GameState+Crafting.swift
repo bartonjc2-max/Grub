@@ -76,10 +76,18 @@ extension GameState {
         audio.play(.feed)
         addXP(1)
 
-        // Animation
-        petStateAnim = recipe.effects.health > recipe.effects.hunger ? "idle" : "eating"
+        // Close overlays so the player can see the animation
+        showFeedOverlay = false
+        showInventoryOverlay = false
+
+        // Animation — eating for food, drinking for health items
+        if recipe.effects.health > recipe.effects.hunger {
+            petStateAnim = "drinking"
+        } else {
+            petStateAnim = "eating"
+        }
         animStateTimer?.invalidate()
-        animStateTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+        animStateTimer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: false) { [weak self] _ in
             DispatchQueue.main.async { self?.petStateAnim = "idle" }
         }
 
