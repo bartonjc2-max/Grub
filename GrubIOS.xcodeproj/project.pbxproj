@@ -19,6 +19,9 @@
 		E1F2A3B4C5D60718A9B0C1E3 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */; };
 		F1A2B3C4D5E60718A9B0C1F4 /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */; };
 		A2B3C4D5E6F70819B0C1D2E5 /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F4A5B6C70819B0C1D2E5 /* GameState+Minigames.swift */; };
+		B3C4D5E6F7A80920C1D2E3F6 /* ForageOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3F4A5B6C7D80920C1D2E3F6 /* ForageOverlay.swift */; };
+		C4D5E6F7A8B90A31D2E3F4A7 /* InventoryOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A5B6C7D8E90A31D2E3F4A7 /* InventoryOverlay.swift */; };
+		D5E6F7A8B9CA0B42E3F4A5B8 /* GameSelectorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5B6C7D8E9FA0B42E3F4A5B8 /* GameSelectorOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +39,9 @@
 		B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Foraging.swift"; sourceTree = "<group>"; };
 		C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
 		D2E3F4A5B6C70819B0C1D2E5 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
+		E3F4A5B6C7D80920C1D2E3F6 /* ForageOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForageOverlay.swift; sourceTree = "<group>"; };
+		F4A5B6C7D8E90A31D2E3F4A7 /* InventoryOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryOverlay.swift; sourceTree = "<group>"; };
+		A5B6C7D8E9FA0B42E3F4A5B8 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -45,7 +51,9 @@
 				5624CADC5A38E7D506E60526 /* Assets.xcassets */,
 				EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */,
 				18F70E2BDA0D9DA2712224C1 /* ContentView.swift */,
+				E3F4A5B6C7D80920C1D2E3F6 /* ForageOverlay.swift */,
 				5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */,
+				A5B6C7D8E9FA0B42E3F4A5B8 /* GameSelectorOverlay.swift */,
 				F34F1663B37A9209A1EE393F /* GameState.swift */,
 				B1C2D3E4F5A60718A9B0C1E3 /* GameState+Foraging.swift */,
 				C1D2E3F4A5B60718A9B0C1F4 /* GameState+Crafting.swift */,
@@ -53,6 +61,7 @@
 				23532E87C898D774055B275C /* GrubIOSApp.swift */,
 				468BD209A5D080A784FDC7DF /* Info.plist */,
 				EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */,
+				F4A5B6C7D8E90A31D2E3F4A7 /* InventoryOverlay.swift */,
 				A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */,
 				20099951754158E5258BC160 /* SpriteRenderer.swift */,
 			);
@@ -156,6 +165,9 @@
 				466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */,
 				D1A2B3C4E5F60718A9B0C1D2 /* RecipeData.swift in Sources */,
 				C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */,
+				B3C4D5E6F7A80920C1D2E3F6 /* ForageOverlay.swift in Sources */,
+				C4D5E6F7A8B90A31D2E3F4A7 /* InventoryOverlay.swift in Sources */,
+				D5E6F7A8B9CA0B42E3F4A5B8 /* GameSelectorOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

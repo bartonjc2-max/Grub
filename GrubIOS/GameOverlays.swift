@@ -17,24 +17,56 @@ struct FeedOverlayView: View {
                     .tracking(2)
                     .padding(.bottom, 20)
 
-                VStack(spacing: 10) {
-                    FoodButton(icon: { AnyView(PixelIcon.nut(size: 22)) }, name: "SNACK", stats: "HNG +10", cost: "FREE") {
-                        game.feed(index: 0)
-                    }
-                    FoodButton(icon: { AnyView(PixelIcon.bento(size: 22)) }, name: "MEAL", stats: "HNG +30", cost: "10") {
-                        game.feed(index: 1)
-                    }
-                    FoodButton(icon: { AnyView(PixelIcon.cake(size: 22)) }, name: "TREAT", stats: "HNG +15 HAP +10", cost: "15") {
-                        game.feed(index: 2)
+                ScrollView {
+                    if game.craftedItems.isEmpty {
+                        Text("NO FOOD!\nCRAFT SOME IN\nINVENTORY.")
+                            .font(GrubFont.size(11))
+                            .foregroundColor(GrubPalette.pale.opacity(0.5))
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 24)
+                    } else {
+                        VStack(spacing: 8) {
+                            ForEach(game.craftedItems.sorted(by: { $0.key < $1.key }), id: \.key) { id, count in
+                                if let recipe = recipeCatalog[id] {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(recipe.name)
+                                                .font(GrubFont.size(9))
+                                                .foregroundColor(GrubPalette.pale)
+                                            feedEffectsText(recipe.effects)
+                                        }
+                                        Spacer()
+                                        Text("x\(count)")
+                                            .font(GrubFont.size(9))
+                                            .foregroundColor(GrubPalette.yellow)
+                                        Button {
+                                            game.useCraftedItem(id)
+                                        } label: {
+                                            Text("USE")
+                                                .font(GrubFont.size(9))
+                                                .foregroundColor(GrubPalette.void_color)
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 6)
+                                                .background(GrubPalette.green)
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(GrubPalette.moss)
+                                    .border(GrubPalette.deepMoss, width: 2)
+                                }
+                            }
+                        }
                     }
                 }
+                .frame(maxHeight: 200)
 
                 Button {
                     game.audio.play(.tap)
                     game.showFeedOverlay = false
                 } label: {
                     Text("CLOSE")
-                        .font(GrubFont.size(10))
+                        .font(GrubFont.size(11))
                         .foregroundColor(GrubPalette.green)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
@@ -51,47 +83,16 @@ struct FeedOverlayView: View {
         }
         .transition(.opacity)
     }
-}
 
-struct FoodButton: View {
-    let icon: () -> AnyView
-    let name: String
-    let stats: String
-    let cost: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                HStack(spacing: 10) {
-                    icon()
-                    Text(name)
-                        .font(GrubFont.size(9))
-                        .foregroundColor(GrubPalette.pale)
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 3) {
-                    Text(stats)
-                        .font(GrubFont.size(7))
-                        .foregroundColor(GrubPalette.green)
-                    HStack(spacing: 4) {
-                        if cost != "FREE" {
-                            PixelIcon.coin(size: 12)
-                        }
-                        Text(cost)
-                            .font(GrubFont.size(7))
-                            .foregroundColor(GrubPalette.yellow)
-                    }
-                }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(GrubPalette.moss)
-            .border(GrubPalette.deepMoss, width: 2)
-        }
-        .buttonStyle(PixelButtonStyle())
+    private func feedEffectsText(_ effects: StatEffects) -> some View {
+        let parts = [
+            effects.hunger > 0 ? "+\(effects.hunger) HNG" : nil,
+            effects.happiness > 0 ? "+\(effects.happiness) HAP" : nil,
+            effects.health > 0 ? "+\(effects.health) HP" : nil,
+        ].compactMap { $0 }
+        return Text(parts.joined(separator: " "))
+            .font(GrubFont.size(7))
+            .foregroundColor(GrubPalette.green.opacity(0.7))
     }
 }
 
@@ -104,7 +105,7 @@ struct EventOverlayView: View {
             VStack(spacing: 0) {
                 if let event = game.pendingEvent {
                     Text(event.text)
-                        .font(GrubFont.size(9))
+                        .font(GrubFont.size(11))
                         .foregroundColor(GrubPalette.pale)
                         .lineSpacing(8)
                         .padding(.bottom, 14)
@@ -114,7 +115,7 @@ struct EventOverlayView: View {
                             game.resolveEvent(choice: 0)
                         } label: {
                             Text(event.optionA.label)
-                                .font(GrubFont.size(8))
+                                .font(GrubFont.size(9))
                                 .foregroundColor(GrubPalette.yellow)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(6)
@@ -129,7 +130,7 @@ struct EventOverlayView: View {
                             game.resolveEvent(choice: 1)
                         } label: {
                             Text(event.optionB.label)
-                                .font(GrubFont.size(8))
+                                .font(GrubFont.size(9))
                                 .foregroundColor(GrubPalette.yellow)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(6)
@@ -159,24 +160,53 @@ struct EventOverlayView: View {
 struct MinigameOverlayView: View {
     @ObservedObject var game: GameState
 
+    private var gameName: String {
+        switch game.mgGame {
+        case 0: return "DODGE"
+        case 1: return "FEED ME"
+        case 2: return "MEMORY"
+        case 3: return "BUG CATCH"
+        case 4: return "RHYTHM"
+        default: return "MINI-GAME"
+        }
+    }
+
+    private var isRoundBased: Bool {
+        game.mgGame == 0 || game.mgGame == 1
+    }
+
     var body: some View {
         ZStack {
             GrubPalette.void_color.ignoresSafeArea()
 
-            VStack(spacing: 18) {
-                Text("MINI-GAME")
+            VStack(spacing: 14) {
+                Text(gameName)
                     .font(GrubFont.size(14))
                     .foregroundColor(GrubPalette.green)
                     .tracking(2)
 
-                HStack(spacing: 0) {
-                    Text("ROUND \(game.mgRound)/3")
+                if isRoundBased {
+                    HStack(spacing: 0) {
+                        Text("ROUND \(game.mgRound)/5")
+                            .font(GrubFont.size(9))
+                            .foregroundColor(GrubPalette.pale)
+                        Text("  |  ")
+                            .font(GrubFont.size(9))
+                            .foregroundColor(GrubPalette.pale.opacity(0.5))
+                        Text("\(game.mgWins) WINS")
+                            .font(GrubFont.size(9))
+                            .foregroundColor(GrubPalette.pale)
+                    }
+                } else if game.mgGame == 3 {
+                    Text("TIME: \(String(format: "%.1f", max(0, game.mgBugTimeLeft)))s  |  CAUGHT: \(game.mgBugScore)/8")
                         .font(GrubFont.size(9))
                         .foregroundColor(GrubPalette.pale)
-                    Text("  |  ")
+                } else if game.mgGame == 2 {
+                    Text("PAIRS: \(game.mgWins)/6  |  FLIPS: \(game.mgMemoryFlips)")
                         .font(GrubFont.size(9))
-                        .foregroundColor(GrubPalette.pale.opacity(0.5))
-                    Text("\(game.mgWins) WINS")
+                        .foregroundColor(GrubPalette.pale)
+                } else if game.mgGame == 4 {
+                    Text("ROUND: \(game.mgWins + 1)")
                         .font(GrubFont.size(9))
                         .foregroundColor(GrubPalette.pale)
                 }
@@ -187,11 +217,22 @@ struct MinigameOverlayView: View {
                     .multilineTextAlignment(.center)
                     .frame(minHeight: 36)
 
-                MinigameCanvasView(game: game)
-                    .frame(width: 260, height: 160)
-                    .border(GrubPalette.green, width: 2)
+                // Game-specific canvas
+                if game.mgGame == 2 {
+                    MemoryCardGridView(game: game)
+                } else if game.mgGame == 3 {
+                    BugCatchCanvasView(game: game)
+                        .frame(width: 260, height: 200)
+                        .border(GrubPalette.green, width: 2)
+                } else {
+                    MinigameCanvasView(game: game)
+                        .frame(width: 260, height: 160)
+                        .border(GrubPalette.green, width: 2)
+                }
 
+                // Game-specific controls
                 if game.mgGame == 0 {
+                    // Dodge controls
                     HStack(spacing: 16) {
                         Button {
                             game.mgChoice(side: "left")
@@ -225,30 +266,31 @@ struct MinigameOverlayView: View {
                             .border(GrubPalette.green, width: 2)
                         }
                     }
-                } else {
+                } else if game.mgGame == 1 {
+                    // Feed Me controls
                     HStack(spacing: 14) {
                         ForEach(0..<3, id: \.self) { idx in
                             Button {
                                 game.mgFoodChoice(index: idx)
                             } label: {
-                                VStack(spacing: 6) {
-                                    mgFoodIcon(idx < game.mgFoodItems.count ? game.mgFoodItems[idx] : "?", size: 28)
-                                    Text(mgFoodLabel(idx < game.mgFoodItems.count ? game.mgFoodItems[idx] : "?"))
-                                        .font(GrubFont.size(7))
-                                        .foregroundColor(GrubPalette.pale)
-                                }
-                                .frame(minWidth: 60, minHeight: 60)
-                                .padding(8)
-                                .background(GrubPalette.moss)
-                                .border(GrubPalette.green, width: 2)
+                                Text(idx < game.mgFoodItems.count ? game.mgFoodItems[idx].uppercased() : "?")
+                                    .font(GrubFont.size(8))
+                                    .foregroundColor(GrubPalette.pale)
+                                    .frame(minWidth: 60, minHeight: 50)
+                                    .padding(8)
+                                    .background(GrubPalette.moss)
+                                    .border(GrubPalette.green, width: 2)
                             }
                         }
                     }
+                } else if game.mgGame == 4 {
+                    // Rhythm controls
+                    RhythmButtonsView(game: game)
                 }
 
                 Text(game.mgResult)
                     .font(GrubFont.size(12))
-                    .foregroundColor(game.mgResult.contains("✓") ? GrubPalette.green : GrubPalette.red)
+                    .foregroundColor(game.mgResult.contains("CORRECT") || game.mgResult.contains("GREAT") || game.mgResult.contains("GOOD") ? GrubPalette.green : GrubPalette.red)
                     .frame(minHeight: 24)
 
                 Button {
@@ -262,6 +304,108 @@ struct MinigameOverlayView: View {
             .padding(20)
         }
         .transition(.opacity)
+    }
+}
+
+// MARK: - Memory Card Grid
+struct MemoryCardGridView: View {
+    @ObservedObject var game: GameState
+
+    private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+    private let symbolColors: [String: Color] = [
+        "A": GrubPalette.green, "B": GrubPalette.yellow, "C": GrubPalette.red,
+        "D": GrubPalette.purple, "E": GrubPalette.orange, "F": GrubPalette.pale,
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(0..<12, id: \.self) { idx in
+                Button {
+                    game.memoryFlip(index: idx)
+                } label: {
+                    ZStack {
+                        if idx < game.mgMemoryMatched.count && game.mgMemoryMatched[idx] {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(GrubPalette.deepMoss)
+                                .frame(height: 44)
+                            Text(idx < game.mgMemoryCards.count ? game.mgMemoryCards[idx] : "?")
+                                .font(GrubFont.size(14))
+                                .foregroundColor((symbolColors[idx < game.mgMemoryCards.count ? game.mgMemoryCards[idx] : "A"] ?? GrubPalette.green).opacity(0.4))
+                        } else if idx < game.mgMemoryRevealed.count && game.mgMemoryRevealed[idx] {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(GrubPalette.moss)
+                                .frame(height: 44)
+                            Text(idx < game.mgMemoryCards.count ? game.mgMemoryCards[idx] : "?")
+                                .font(GrubFont.size(14))
+                                .foregroundColor(symbolColors[idx < game.mgMemoryCards.count ? game.mgMemoryCards[idx] : "A"] ?? GrubPalette.green)
+                        } else {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(GrubPalette.moss)
+                                .frame(height: 44)
+                            Text("?")
+                                .font(GrubFont.size(12))
+                                .foregroundColor(GrubPalette.pale.opacity(0.3))
+                        }
+                    }
+                }
+                .disabled(idx < game.mgMemoryMatched.count && game.mgMemoryMatched[idx])
+            }
+        }
+        .padding(.horizontal, 12)
+    }
+}
+
+// MARK: - Bug Catch Canvas
+struct BugCatchCanvasView: View {
+    @ObservedObject var game: GameState
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Canvas { context, size in
+                    context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(GrubPalette.moss))
+                }
+
+                ForEach(0..<game.mgBugs.count, id: \.self) { idx in
+                    if !game.mgBugs[idx].caught {
+                        Circle()
+                            .fill(idx % 3 == 0 ? GrubPalette.green : idx % 3 == 1 ? GrubPalette.yellow : GrubPalette.red)
+                            .frame(width: 20, height: 20)
+                            .position(
+                                x: game.mgBugs[idx].x * geo.size.width,
+                                y: game.mgBugs[idx].y * geo.size.height
+                            )
+                            .onTapGesture {
+                                game.catchBug(at: idx)
+                            }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Rhythm Buttons
+struct RhythmButtonsView: View {
+    @ObservedObject var game: GameState
+
+    private let buttonColors: [Color] = [GrubPalette.green, GrubPalette.yellow, GrubPalette.red, GrubPalette.purple]
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(0..<4, id: \.self) { idx in
+                Button {
+                    game.rhythmTap(idx)
+                } label: {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(buttonColors[idx])
+                        .opacity(game.mgRhythmHighlight == idx ? 1.0 : 0.4)
+                        .frame(width: 56, height: 56)
+                        .border(game.mgRhythmHighlight == idx ? GrubPalette.pale : GrubPalette.deepMoss, width: 2)
+                }
+                .disabled(game.mgRhythmShowingSequence)
+            }
+        }
     }
 }
 
@@ -635,12 +779,14 @@ struct StatsMenuView: View {
 
                     statsRow("OWNER LVL", "\(game.ownerLevel)", GrubPalette.green)
                     statsRow("TOTAL XP", "\(game.ownerXP)", GrubPalette.pale)
-                    statsRow("CRUMBS", "\(game.crumbs)", GrubPalette.yellow)
 
                     Divider().background(GrubPalette.deepMoss).padding(.vertical, 6)
 
                     statsRow("TIMES FED", "\(game.fedCount)", GrubPalette.pale)
                     statsRow("PLAYED", "\(game.playedCount)", GrubPalette.pale)
+                    statsRow("FORAGES", "\(game.forageCount)", GrubPalette.pale)
+                    statsRow("RECIPES", "\(game.recipesFound)", GrubPalette.pale)
+                    statsRow("ITEMS CRAFTED", "\(game.itemsCrafted)", GrubPalette.pale)
                     statsRow("NEGLECT", "\(game.neglectCount)", game.neglectCount > 0 ? GrubPalette.red : GrubPalette.pale)
                     statsRow("DEATHS", "\(game.totalDeaths)", GrubPalette.grey)
 
