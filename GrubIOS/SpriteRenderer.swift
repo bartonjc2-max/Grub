@@ -183,8 +183,103 @@ struct SpriteRenderer {
         }
     }
 
+    // MARK: - Time Phase
+
+    enum TimePhase {
+        case dawn, day, dusk, night
+
+        static var current: TimePhase {
+            let hour = Calendar.current.component(.hour, from: Date())
+            if hour >= 5 && hour < 8 { return .dawn }
+            if hour >= 8 && hour < 18 { return .day }
+            if hour >= 18 && hour < 21 { return .dusk }
+            return .night
+        }
+
+        var skyColors: [Color] {
+            switch self {
+            case .dawn: return [
+                Color(hex: "#0e0e2a"), Color(hex: "#1a1040"), Color(hex: "#2a1848"),
+                Color(hex: "#3a2050"), Color(hex: "#4a2850"), Color(hex: "#5a3048"),
+                Color(hex: "#6a3848"), Color(hex: "#7a4040"),
+            ]
+            case .day: return [
+                Color(hex: "#0e0e2a"), Color(hex: "#12123a"), Color(hex: "#161640"),
+                Color(hex: "#1a1a44"), Color(hex: "#1e1e48"), Color(hex: "#1a1a3e"),
+                Color(hex: "#1a1a3e"), Color(hex: "#1a1a3e"),
+            ]
+            case .dusk: return [
+                Color(hex: "#0a0a1e"), Color(hex: "#1a1030"), Color(hex: "#2a1838"),
+                Color(hex: "#3a2040"), Color(hex: "#4a2838"), Color(hex: "#5a3030"),
+                Color(hex: "#6a3830"), Color(hex: "#7a4028"),
+            ]
+            case .night: return [
+                Color(hex: "#060612"), Color(hex: "#080818"), Color(hex: "#0a0a1e"),
+                Color(hex: "#0c0c22"), Color(hex: "#0e0e26"), Color(hex: "#0e0e26"),
+                Color(hex: "#0e0e26"), Color(hex: "#0e0e26"),
+            ]
+            }
+        }
+
+        var groundTop: Color {
+            switch self {
+            case .dawn: return Color(hex: "#2a6a40")
+            case .day: return Color(hex: "#3a9a70")
+            case .dusk: return Color(hex: "#2a6a40")
+            case .night: return Color(hex: "#1a4a28")
+            }
+        }
+
+        var groundMid: Color {
+            switch self {
+            case .dawn: return Color(hex: "#1e3a22")
+            case .day: return Color(hex: "#243828")
+            case .dusk: return Color(hex: "#1e3020")
+            case .night: return Color(hex: "#142018")
+            }
+        }
+
+        var groundDark: Color {
+            switch self {
+            case .dawn: return Color(hex: "#162a18")
+            case .day: return Color(hex: "#1a3020")
+            case .dusk: return Color(hex: "#16261a")
+            case .night: return Color(hex: "#0e1810")
+            }
+        }
+
+        var sporeOpacity: Double {
+            switch self {
+            case .dawn: return 0.25
+            case .day: return 0.2
+            case .dusk: return 0.3
+            case .night: return 0.55
+            }
+        }
+
+        var starOpacity: Double {
+            switch self {
+            case .dawn: return 0.15
+            case .day: return 0.0
+            case .dusk: return 0.2
+            case .night: return 0.7
+            }
+        }
+
+        var showDrips: Bool { self != .night }
+
+        var mushGlowOpacity: Double {
+            switch self {
+            case .night: return 0.4
+            default: return 0.0
+            }
+        }
+
+        var isNight: Bool { self == .night }
+    }
+
     /// Draw the background scene — pixel-art cave burrow (everything snapped to grid)
-    static func drawBackground(context: inout GraphicsContext, size: CGSize, isNight: Bool) {
+    static func drawBackground(context: inout GraphicsContext, size: CGSize, tick: Int) {
         let w = size.width
         let h = size.height
 
@@ -199,34 +294,34 @@ struct SpriteRenderer {
             context.fill(Path(CGRect(x: sx, y: sy, width: sw, height: sh)), with: .color(color))
         }
 
-        // Sky colors
-        let skyTop = Color(hex: isNight ? "#08081a" : "#0e0e2a")
-        let skyMid = Color(hex: isNight ? "#10102a" : "#1a1a3e")
-        let skyBot = Color(hex: isNight ? "#14142e" : "#222248")
+        let phase = TimePhase.current
 
         // Banded sky (pixel rows, not smooth gradient)
         let skyBands = 8
-        let skyColors = [skyTop, skyTop, skyTop, skyMid, skyMid, skyBot, skyBot, skyBot]
+        let skyColors = phase.skyColors
         let groundStart = h * 0.72
         let bandH = groundStart / CGFloat(skyBands)
         for i in 0..<skyBands {
             block(0, CGFloat(i) * bandH, w, bandH + px, skyColors[i])
         }
 
-        // Stars (small pixel dots, night only shows more)
+        // Stars (small pixel dots with twinkling)
         let starPositions: [(CGFloat, CGFloat)] = [
             (0.1, 0.08), (0.25, 0.15), (0.45, 0.05), (0.6, 0.12),
             (0.78, 0.08), (0.92, 0.18), (0.15, 0.28), (0.5, 0.22),
             (0.85, 0.32), (0.35, 0.35), (0.7, 0.25),
         ]
-        let starColor = Color(hex: isNight ? "#4ecca3" : "#2a7a60")
-        for (i, (sx, sy)) in starPositions.enumerated() {
-            if !isNight && i > 5 { break } // fewer stars in day
-            block(sx * w, sy * groundStart, px, px, starColor.opacity(isNight ? 0.6 : 0.25))
+        if phase.starOpacity > 0 {
+            let starColor = Color(hex: "#4ecca3")
+            for (i, (sx, sy)) in starPositions.enumerated() {
+                let twinkle = sin(Double(tick + i * 37) * 0.05) * 0.3 + 0.7
+                block(sx * w, sy * groundStart, px, px,
+                      starColor.opacity(phase.starOpacity * twinkle))
+            }
         }
 
         // Stalactites from ceiling (chunky pixel blocks)
-        let ceilColor = Color(hex: isNight ? "#060612" : "#0a0a1e")
+        let ceilColor = Color(hex: phase.isNight ? "#060612" : "#0a0a1e")
         // Ceiling bar
         block(0, 0, w, px * 2, ceilColor)
         // Stalactite shapes (each is a stack of blocks getting narrower)
@@ -248,7 +343,7 @@ struct SpriteRenderer {
         }
 
         // Rock texture spots on cave walls (blocky)
-        let rockColor = Color(hex: isNight ? "#0c0c20" : "#151538")
+        let rockColor = Color(hex: phase.isNight ? "#0c0c20" : "#151538")
         let rockSpots: [(CGFloat, CGFloat, Int, Int)] = [
             (0.05, 0.3, 3, 2), (0.88, 0.25, 2, 3), (0.12, 0.5, 2, 2),
             (0.92, 0.55, 3, 2), (0.03, 0.6, 2, 1), (0.8, 0.15, 2, 2),
@@ -259,12 +354,12 @@ struct SpriteRenderer {
         }
 
         // Ground — chunky pixel rows with earthy palette
-        let dirtDark = Color(hex: "#1a3020")
-        let dirtMid = Color(hex: "#243828")
+        let dirtDark = phase.groundDark
+        let dirtMid = phase.groundMid
         let dirtLight = Color(hex: "#1e2e1e")
-        let mossGreen = Color(hex: "#2a7a60")
-        let mossBright = Color(hex: "#3a9a70")
-        let dirtDeep = Color(hex: "#142018")
+        let mossGreen = phase.groundMid
+        let mossBright = phase.groundTop
+        let dirtDeep = phase.groundDark
 
         // Grass/moss top edge — irregular pixel line
         let grassY = groundStart
@@ -323,15 +418,72 @@ struct SpriteRenderer {
             block(baseX - totalCapW / 2 + px / 2, baseY - px * 2, px, px, capColor.opacity(0.7))
         }
 
-        // Floating spore particles (single pixel blocks)
+        // Animated floating spores
         let sporeColor = Color(hex: "#4ecca3")
-        let sporePos: [(CGFloat, CGFloat)] = [
-            (0.15, 0.3), (0.4, 0.18), (0.65, 0.38), (0.82, 0.22),
-            (0.25, 0.5), (0.55, 0.55), (0.9, 0.4), (0.1, 0.6),
-            (0.48, 0.42), (0.72, 0.58),
+        let sporeData: [(baseX: CGFloat, baseY: CGFloat, speed: CGFloat, phaseOffset: Int)] = [
+            (0.15, 0.7, 0.3, 0), (0.4, 0.8, 0.2, 40), (0.65, 0.6, 0.35, 80),
+            (0.82, 0.75, 0.25, 120), (0.25, 0.65, 0.15, 60), (0.55, 0.85, 0.3, 100),
+            (0.9, 0.7, 0.2, 20), (0.1, 0.9, 0.28, 140), (0.48, 0.72, 0.18, 90),
+            (0.72, 0.82, 0.32, 50),
         ]
-        for (sx, sy) in sporePos {
-            block(sx * w, sy * groundStart, px, px, sporeColor.opacity(isNight ? 0.5 : 0.2))
+        for spore in sporeData {
+            let cycle = 400
+            let t = (tick + spore.phaseOffset) % cycle
+            let yOffset = CGFloat(t) * spore.speed
+            let y = (spore.baseY * groundStart) - yOffset
+            let wrappedY = y < 0 ? y + groundStart : y
+            if wrappedY < groundStart {
+                block(spore.baseX * w, wrappedY, px, px, sporeColor.opacity(phase.sporeOpacity))
+            }
+        }
+
+        // Dripping water
+        if phase.showDrips {
+            let dripSources: [(x: CGFloat, startY: CGFloat, cycle: Int)] = [
+                (0.25, 0.06, 120), (0.62, 0.04, 160), (0.45, 0.08, 140),
+            ]
+            for drip in dripSources {
+                let t = tick % drip.cycle
+                let progress = CGFloat(t) / CGFloat(drip.cycle)
+                let dropY = drip.startY * h + progress * (groundStart - drip.startY * h)
+                if progress < 0.3 {
+                    block(drip.x * w, drip.startY * h, px, px,
+                          Color(hex: "#4ecca3").opacity(0.3 * Double(progress / 0.3)))
+                }
+                if progress >= 0.3 && progress < 0.9 {
+                    block(drip.x * w, dropY, px, px * 2, Color(hex: "#4ecca3").opacity(0.25))
+                }
+                if progress >= 0.9 {
+                    let splash = (progress - 0.9) / 0.1
+                    block(drip.x * w - px, groundStart - px, px * 3, px,
+                          Color(hex: "#4ecca3").opacity(0.2 * (1 - Double(splash))))
+                }
+            }
+        }
+
+        // Mushroom glow at night
+        if phase.mushGlowOpacity > 0 {
+            for (mx, _, capW) in mushData {
+                let glow = sin(Double(tick) * 0.03) * 0.15 + phase.mushGlowOpacity
+                let baseX = floor(mx * w / px) * px
+                let glowSize = CGFloat(capW + 2) * px
+                block(baseX - glowSize / 2 + px / 2, grassY - px * 3,
+                      glowSize, px * 2,
+                      Color(hex: "#7b2d8b").opacity(glow))
+            }
+        }
+
+        // Ambient drifting particles
+        let particles: [(baseX: CGFloat, y: CGFloat, speed: CGFloat, offset: Int)] = [
+            (0.0, 0.35, 0.15, 0), (0.3, 0.55, 0.1, 200), (0.7, 0.25, 0.12, 100),
+        ]
+        for p in particles {
+            let cycle = 600
+            let t = (tick + p.offset) % cycle
+            let x = (p.baseX + CGFloat(t) * p.speed / CGFloat(cycle))
+            let wrappedX = x.truncatingRemainder(dividingBy: 1.0)
+            block(wrappedX * w, p.y * groundStart, px, px,
+                  GrubPalette.pale.opacity(0.06))
         }
 
         // Vignette (still smooth — this is a screen effect, not world art)

@@ -141,7 +141,7 @@ struct ViewportView: View {
 
     var body: some View {
         Canvas { context, size in
-            SpriteRenderer.drawBackground(context: &context, size: size, isNight: game.isNight)
+            SpriteRenderer.drawBackground(context: &context, size: size, tick: game.animTick)
 
             // Pet sprite — scale to fill viewport nicely
             let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
