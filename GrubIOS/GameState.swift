@@ -23,21 +23,6 @@ let evoNames: [String: String] = [
     "feral_2": "GREMLIN GRUB",
 ]
 
-// MARK: - Food Types
-struct FoodItem {
-    let name: String
-    let emoji: String
-    let hungerGain: Int
-    let happinessGain: Int
-    let cost: Int
-}
-
-let foodItems: [FoodItem] = [
-    FoodItem(name: "SNACK", emoji: "🥜", hungerGain: 10, happinessGain: 0, cost: 0),
-    FoodItem(name: "MEAL", emoji: "🍱", hungerGain: 30, happinessGain: 0, cost: 10),
-    FoodItem(name: "TREAT", emoji: "🍰", hungerGain: 15, happinessGain: 10, cost: 15),
-]
-
 // MARK: - Event
 struct GameEvent {
     let text: String
@@ -53,31 +38,51 @@ struct EventOption {
 let gameEvents: [GameEvent] = [
     GameEvent(
         text: "YOUR GRUB FOUND SOMETHING\nSHINY IN THE DIRT.",
-        optionA: EventOption(label: "KEEP IT\n+15 CRUMBS", action: { s in s.addCrumbs(15) }),
+        optionA: EventOption(label: "KEEP IT\n+1 CRYSTAL SHARD", action: { s in s.addIngredient("crystal_shard") }),
         optionB: EventOption(label: "TOSS IT BACK\n+10 HAPPINESS", action: { s in s.happiness = min(100, s.happiness + 10) })
     ),
     GameEvent(
         text: "A STRANGE CREATURE\nAPPEARED. GRUB IS NERVOUS.",
-        optionA: EventOption(label: "COMFORT\n+15 HAPPINESS", action: { s in s.happiness = min(100, s.happiness + 15) }),
+        optionA: EventOption(label: "COMFORT\n+1 PALE WORM", action: { s in s.addIngredient("pale_worm") }),
         optionB: EventOption(label: "PLAY GAME\nTO SCARE IT", action: { s in s.showMinigame = true })
     ),
     GameEvent(
         text: "YOUR GRUB ATE SOMETHING\nSUSPICIOUS.",
-        optionA: EventOption(label: "GIVE MEDS\nPREVENT DMG", action: { s in s.giveMedicine(free: true) }),
-        optionB: EventOption(label: "WAIT & SEE\n50/50 RISK", action: { s in
+        optionA: EventOption(label: "SPIT IT OUT\n+1 GLOWSHROOM", action: { s in s.addIngredient("glowshroom") }),
+        optionB: EventOption(label: "SWALLOW\n50/50 RISK", action: { s in
             if Double.random(in: 0...1) < 0.5 {
+                s.addIngredient("ancient_spore")
+                s.displayToast("+1 ANCIENT SPORE!")
+            } else {
                 s.health = max(5, s.health - 10)
+                s.displayToast("OUCH! -10 HP")
             }
         })
     ),
     GameEvent(
         text: "GRUB IS IN A CREATIVE\nMOOD TODAY.",
-        optionA: EventOption(label: "PLAY GAME\n+15 HAP", action: { s in s.showMinigame = true }),
-        optionB: EventOption(label: "FEED TREAT\n-15 CRUMBS", action: { s in
-            if s.crumbs >= 15 {
-                s.crumbs -= 15
-                s.hunger = min(100, s.hunger + 15)
-            }
+        optionA: EventOption(label: "EXPLORE\n+2 UNCOMMON", action: { s in
+            let items = uncommonIngredients.shuffled().prefix(2)
+            for item in items { s.addIngredient(item) }
+        }),
+        optionB: EventOption(label: "REST\n+15 HAPPINESS", action: { s in s.happiness = min(100, s.happiness + 15) })
+    ),
+    GameEvent(
+        text: "GRUB FOUND AN OLD\nSCROLL IN THE MUD.",
+        optionA: EventOption(label: "STUDY IT\nNEW RECIPE?", action: { s in s.unlockRandomScrollRecipe() }),
+        optionB: EventOption(label: "TRADE IT\n+1 RARE", action: { s in
+            let rare = rareIngredients.filter { $0 != "golden_bug" }.randomElement() ?? "moon_petal"
+            s.addIngredient(rare)
+        })
+    ),
+    GameEvent(
+        text: "RAIN DRIPS THROUGH\nTHE CAVE CEILING.",
+        optionA: EventOption(label: "COLLECT DEW\n+3 DEW DROPS", action: { s in
+            for _ in 0..<3 { s.addIngredient("dew_drop") }
+        }),
+        optionB: EventOption(label: "TAKE SHELTER\n+10 HAP +5 HP", action: { s in
+            s.happiness = min(100, s.happiness + 10)
+            s.health = min(100, s.health + 5)
         })
     ),
 ]
@@ -101,16 +106,39 @@ class GameState: ObservableObject {
     // Owner progression
     @Published var ownerXP: Int = 0
     @Published var ownerLevel: Int = 1
-    @Published var crumbs: Int = 0
 
     // Tracking
     @Published var fedCount: Int = 0
     @Published var playedCount: Int = 0
     @Published var neglectCount: Int = 0
-    @Published var medicineCooldown: Date = Date.distantPast
     @Published var totalDeaths: Int = 0
     @Published var lastEvent: Date = Date.distantPast
     @Published var legacyTrait: String = ""
+
+    // Foraging & Crafting
+    @Published var ingredients: [String: Int] = [:]
+    @Published var craftedItems: [String: Int] = [:]
+    @Published var unlockedRecipes: Set<String> = starterRecipeIds
+    @Published var lastForageTime: Date? = nil
+    @Published var passiveGatherTime: Date = Date()
+    @Published var activeEffects: [ActiveEffect] = []
+
+    // Minigame progression
+    @Published var highScores: [String: Int] = [:]
+    @Published var winStreak: Int = 0
+
+    // Lifetime stats
+    @Published var forageCount: Int = 0
+    @Published var recipesFound: Int = 0
+    @Published var itemsCrafted: Int = 0
+
+    // New UI state
+    @Published var showForageOverlay: Bool = false
+    @Published var showInventoryOverlay: Bool = false
+    @Published var showGameSelector: Bool = false
+    @Published var showForageResults: Bool = false
+    @Published var forageResults: [String] = []
+    @Published var passiveResults: [String] = []
 
     // UI state
     @Published var showNameEntry: Bool = true
@@ -144,8 +172,8 @@ class GameState: ObservableObject {
 
     private var gameTimer: Timer?
     private var decayTimer: Timer?
-    private var mgTimer: Timer?
-    private var animStateTimer: Timer?
+    var mgTimer: Timer?
+    var animStateTimer: Timer?
 
     let audio = AudioEngine()
 
@@ -168,7 +196,7 @@ class GameState: ObservableObject {
 
     // MARK: - Save/Load
     func save() {
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             "name": name,
             "hunger": hunger,
             "happiness": happiness,
@@ -181,15 +209,30 @@ class GameState: ObservableObject {
             "evoBranch": evoBranch,
             "ownerXP": ownerXP,
             "ownerLevel": ownerLevel,
-            "crumbs": crumbs,
             "fedCount": fedCount,
             "playedCount": playedCount,
             "neglectCount": neglectCount,
-            "medicineCooldown": medicineCooldown.timeIntervalSince1970,
             "totalDeaths": totalDeaths,
             "lastEvent": lastEvent.timeIntervalSince1970,
             "legacyTrait": legacyTrait,
+            // New properties
+            "ingredients": ingredients,
+            "craftedItems": craftedItems,
+            "unlockedRecipes": Array(unlockedRecipes),
+            "highScores": highScores,
+            "winStreak": winStreak,
+            "forageCount": forageCount,
+            "recipesFound": recipesFound,
+            "itemsCrafted": itemsCrafted,
+            "passiveGatherTime": passiveGatherTime.timeIntervalSince1970,
         ]
+        if let lft = lastForageTime {
+            data["lastForageTime"] = lft.timeIntervalSince1970
+        }
+        let effectsData = activeEffects.map { e -> [String: Any] in
+            ["type": e.type.rawValue, "expiresAt": e.expiresAt.timeIntervalSince1970]
+        }
+        data["activeEffects"] = effectsData
         UserDefaults.standard.set(data, forKey: "grub_state")
     }
 
@@ -207,18 +250,41 @@ class GameState: ObservableObject {
         evoBranch = data["evoBranch"] as? String ?? ""
         ownerXP = data["ownerXP"] as? Int ?? 0
         ownerLevel = data["ownerLevel"] as? Int ?? 1
-        crumbs = data["crumbs"] as? Int ?? 0
         fedCount = data["fedCount"] as? Int ?? 0
         playedCount = data["playedCount"] as? Int ?? 0
         neglectCount = data["neglectCount"] as? Int ?? 0
-        medicineCooldown = Date(timeIntervalSince1970: data["medicineCooldown"] as? Double ?? 0)
         totalDeaths = data["totalDeaths"] as? Int ?? 0
         lastEvent = Date(timeIntervalSince1970: data["lastEvent"] as? Double ?? 0)
         legacyTrait = data["legacyTrait"] as? String ?? ""
 
-        if !name.isEmpty {
-            showNameEntry = false
+        // New properties with migration defaults
+        ingredients = data["ingredients"] as? [String: Int] ?? [:]
+        craftedItems = data["craftedItems"] as? [String: Int] ?? [:]
+        if let savedRecipes = data["unlockedRecipes"] as? [String] {
+            unlockedRecipes = Set(savedRecipes)
+        } else {
+            unlockedRecipes = starterRecipeIds
         }
+        highScores = data["highScores"] as? [String: Int] ?? [:]
+        winStreak = data["winStreak"] as? Int ?? 0
+        forageCount = data["forageCount"] as? Int ?? 0
+        recipesFound = data["recipesFound"] as? Int ?? 0
+        itemsCrafted = data["itemsCrafted"] as? Int ?? 0
+        passiveGatherTime = Date(timeIntervalSince1970: data["passiveGatherTime"] as? Double ?? Date().timeIntervalSince1970)
+
+        if let lft = data["lastForageTime"] as? Double {
+            lastForageTime = Date(timeIntervalSince1970: lft)
+        }
+        if let effectsArr = data["activeEffects"] as? [[String: Any]] {
+            activeEffects = effectsArr.compactMap { dict in
+                guard let typeStr = dict["type"] as? String,
+                      let type = EffectType(rawValue: typeStr),
+                      let exp = dict["expiresAt"] as? Double else { return nil }
+                return ActiveEffect(type: type, expiresAt: Date(timeIntervalSince1970: exp))
+            }
+        }
+
+        if !name.isEmpty { showNameEntry = false }
     }
 
     // MARK: - Game Loop
@@ -266,8 +332,16 @@ class GameState: ObservableObject {
         let nightMin = cappedMin * nightFraction
         let effectiveMin = dayMin + nightMin * DecayConstants.nightMult
 
-        let hDrop = effectiveMin * DecayConstants.hungerPerMin
-        let hpDrop = effectiveMin * DecayConstants.happinessPerMin
+        // Prune expired effects
+        activeEffects.removeAll { $0.expiresAt < now }
+
+        // Apply effect modifiers
+        let isEnergized = activeEffects.contains { $0.type == .energized }
+        let isPoisoned = activeEffects.contains { $0.type == .poisoned }
+        let decayMult: Double = isEnergized ? 0.5 : 1.0
+
+        let hDrop = effectiveMin * DecayConstants.hungerPerMin * decayMult
+        let hpDrop = effectiveMin * DecayConstants.happinessPerMin * decayMult
 
         let newHunger = max(floors.hunger, Double(hunger) - hDrop)
         let newHappy = max(floors.happiness, Double(happiness) - hpDrop)
@@ -275,7 +349,8 @@ class GameState: ObservableObject {
         let critMinH = estimateCriticalMinutes(startVal: Double(hunger), decayPerMin: DecayConstants.hungerPerMin, elapsed: effectiveMin)
         let critMinHp = estimateCriticalMinutes(startVal: Double(happiness), decayPerMin: DecayConstants.happinessPerMin, elapsed: effectiveMin)
         let critMin = max(critMinH, critMinHp)
-        let heDrop = critMin * DecayConstants.healthPerMin
+        let healthDecayMult = isPoisoned ? 2.0 : decayMult
+        let heDrop = critMin * DecayConstants.healthPerMin * healthDecayMult
         let newHealth = max(floors.health, Double(health) - heDrop)
 
         hunger = min(100, Int(round(newHunger)))
@@ -324,30 +399,24 @@ class GameState: ObservableObject {
         showEvolution = true
     }
 
-    // MARK: - XP & Crumbs
+    // MARK: - XP
     func addXP(_ amount: Int) {
         ownerXP += amount
         while ownerLevel < xpThresholds.count && ownerXP >= xpThresholds[ownerLevel] {
             ownerLevel += 1
             audio.play(.levelup)
             displayToast("LEVEL UP! LVL \(ownerLevel)")
-        }
-    }
-
-    func addCrumbs(_ amount: Int) {
-        crumbs += amount
-        if amount > 0 {
-            audio.play(.crumb)
+            checkLevelRecipeUnlocks()
         }
     }
 
     // MARK: - Legacy
     func computeLegacyTrait() -> String {
-        if ageDays > 20 { return "★ LONG-LIVED: NEXT PET\nHEALTH DECAYS 20% SLOWER" }
-        if crumbs > 200 { return "★ WEALTHY LINE: +2 CRUMBS\nPER ACTION NEXT LIFE" }
-        if neglectCount == 0 { return "★ WELL-TENDED: NEXT PET\nSTARTS AT 80 HUNGER" }
-        if evoStage >= 1 { return "★ EVOLVED STOCK: NEXT PET\nEVOLVES 1 DAY EARLY" }
-        return "★ HARDENED: NEXT PET\nDECAYS 10% SLOWER"
+        if ageDays > 20 { return "LONG-LIVED: NEXT PET\nHEALTH DECAYS 20% SLOWER" }
+        if itemsCrafted > 50 { return "MASTER CRAFTER: NEXT PET\nSTARTS WITH 3 MOSS CLUMPS" }
+        if neglectCount == 0 { return "WELL-TENDED: NEXT PET\nSTARTS AT 80 HUNGER" }
+        if evoStage >= 1 { return "EVOLVED STOCK: NEXT PET\nEVOLVES 1 DAY EARLY" }
+        return "HARDENED: NEXT PET\nDECAYS 10% SLOWER"
     }
 
     // MARK: - Events
@@ -373,51 +442,7 @@ class GameState: ObservableObject {
         pendingEvent = nil
         showEventOverlay = false
         addXP(5)
-        addCrumbs(3)
         save()
-    }
-
-    // MARK: - Actions
-    func feed(index: Int) {
-        let food = foodItems[index]
-        if food.cost > crumbs {
-            displayToast("NOT ENOUGH CRUMBS!")
-            return
-        }
-        crumbs -= food.cost
-        hunger = min(100, hunger + food.hungerGain)
-        happiness = min(100, happiness + food.happinessGain)
-        fedCount += 1
-        audio.play(.feed)
-        addXP(1)
-        showFeedOverlay = false
-        petStateAnim = "eating"
-        animStateTimer?.invalidate()
-        animStateTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
-            DispatchQueue.main.async { self?.petStateAnim = "idle" }
-        }
-        save()
-    }
-
-    func giveMedicine(free: Bool = false) {
-        let now = Date()
-        if !free && now.timeIntervalSince(medicineCooldown) < 14400 {
-            let mins = Int(ceil((14400 - now.timeIntervalSince(medicineCooldown)) / 60))
-            displayToast("COOLDOWN: \(mins)m")
-            return
-        }
-        health = min(100, health + 30)
-        if !free { medicineCooldown = now }
-        audio.play(.feed)
-        save()
-    }
-
-    var medicineCooldownRemaining: TimeInterval {
-        14400 - Date().timeIntervalSince(medicineCooldown)
-    }
-
-    var isMedicineOnCooldown: Bool {
-        medicineCooldownRemaining > 0
     }
 
     // MARK: - Death & Restart
@@ -434,9 +459,12 @@ class GameState: ObservableObject {
         audio.play(.tap)
         let savedLegacy = computeLegacyTrait()
         let savedDeaths = totalDeaths
-        let savedCrumbs = crumbs
         let savedXP = ownerXP
         let savedLevel = ownerLevel
+        let savedRecipes = unlockedRecipes
+        let savedHighScores = highScores
+        let savedRecipesFound = recipesFound
+        let savedItemsCrafted = itemsCrafted
 
         name = ""
         hunger = 100
@@ -448,16 +476,29 @@ class GameState: ObservableObject {
         isAlive = true
         evoStage = 0
         evoBranch = ""
-        ownerXP = savedXP
-        ownerLevel = savedLevel
-        crumbs = savedCrumbs
         fedCount = 0
         playedCount = 0
         neglectCount = 0
-        medicineCooldown = Date.distantPast
-        totalDeaths = savedDeaths
         lastEvent = Date.distantPast
+
+        ingredients = [:]
+        craftedItems = [:]
+        lastForageTime = nil
+        passiveGatherTime = Date()
+        activeEffects = []
+        winStreak = 0
+        forageCount = 0
+        forageResults = []
+        passiveResults = []
+
+        ownerXP = savedXP
+        ownerLevel = savedLevel
+        totalDeaths = savedDeaths
         legacyTrait = savedLegacy
+        unlockedRecipes = savedRecipes
+        highScores = savedHighScores
+        recipesFound = savedRecipesFound
+        itemsCrafted = savedItemsCrafted
 
         showDeathOverlay = false
         showNameEntry = true
@@ -548,7 +589,6 @@ class GameState: ObservableObject {
                 self.happiness = min(100, self.happiness + (gameWon ? 20 : 10))
                 self.playedCount += 1
                 self.addXP(3)
-                if gameWon { self.addCrumbs(10) }
                 self.save()
                 self.showMinigame = false
                 if gameWon { self.petStateAnim = "playing" }
@@ -591,6 +631,42 @@ class GameState: ObservableObject {
         if isNight { return "sleeping" }
         if health < 20 { return "sick" }
         return petStateAnim
+    }
+
+    // MARK: - Ingredient Helpers
+    func addIngredient(_ id: String, count: Int = 1) {
+        let current = ingredients[id] ?? 0
+        ingredients[id] = current + count
+    }
+
+    var totalIngredientStacks: Int {
+        ingredients.filter { $0.value > 0 }.count
+    }
+
+    func unlockRandomScrollRecipe() {
+        let locked = scrollRecipeIds.filter { !unlockedRecipes.contains($0) }
+        if let recipe = locked.randomElement() {
+            unlockedRecipes.insert(recipe)
+            recipesFound += 1
+            if let def = recipeCatalog[recipe] {
+                displayToast("NEW RECIPE: \(def.name)!")
+            }
+            audio.play(.levelup)
+        } else {
+            displayToast("NO NEW RECIPES!")
+        }
+    }
+
+    func checkLevelRecipeUnlocks() {
+        for (id, recipe) in recipeCatalog {
+            if case .level(let lvl) = recipe.unlockType, ownerLevel >= lvl {
+                if !unlockedRecipes.contains(id) {
+                    unlockedRecipes.insert(id)
+                    recipesFound += 1
+                    displayToast("NEW RECIPE: \(recipe.name)!")
+                }
+            }
+        }
     }
 
     // MARK: - App Lifecycle

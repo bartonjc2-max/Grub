@@ -15,6 +15,7 @@
 		71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F70E2BDA0D9DA2712224C1 /* ContentView.swift */; };
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
+		D1A2B3C4E5F60718A9B0C1D2 /* RecipeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PressStart2P-Regular.ttf"; sourceTree = "<group>"; };
 		F34F1663B37A9209A1EE393F /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -42,6 +44,7 @@
 				23532E87C898D774055B275C /* GrubIOSApp.swift */,
 				468BD209A5D080A784FDC7DF /* Info.plist */,
 				EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */,
+				A1B2C3D4E5F60718A9B0C1D2 /* RecipeData.swift */,
 				20099951754158E5258BC160 /* SpriteRenderer.swift */,
 			);
 			path = GrubIOS;
@@ -139,6 +142,7 @@
 				45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */,
 				674E84966D90C07CE4062CE0 /* GameState.swift in Sources */,
 				466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */,
+				D1A2B3C4E5F60718A9B0C1D2 /* RecipeData.swift in Sources */,
 				C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
