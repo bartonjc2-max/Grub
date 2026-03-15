@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var game = GameState()
-    @State private var showStats = false
+    @ObservedObject var game: GameState
 
     var body: some View {
         ZStack {
@@ -14,8 +13,15 @@ struct ContentView: View {
                 GrubPalette.moss.ignoresSafeArea(edges: .top)
                     .frame(height: 0)
 
-                TopBarView(game: game, showStats: $showStats)
+                TopBarView(game: game)
                 ViewportView(game: game)
+                if game.isDying {
+                    DyingBannerView(game: game)
+                } else if game.isNight {
+                    NapBannerView(game: game)
+                } else if game.isOnExpedition {
+                    ExpeditionBannerView(game: game)
+                }
                 PetInfoBar(game: game)
                 StatBarsView(game: game)
                 ActionButtonsView(game: game)
@@ -60,8 +66,28 @@ struct ContentView: View {
             if game.showGameSelector {
                 GameSelectorOverlayView(game: game)
             }
-            if showStats {
-                StatsMenuView(game: game, isShowing: $showStats)
+            if game.showBurrowOverlay {
+                BurrowOverlayView(game: game)
+            }
+            if game.showExpeditionOverlay {
+                ExpeditionOverlayView(game: game)
+            }
+            if game.showExpeditionResults {
+                ExpeditionResultsView(game: game)
+            }
+            if game.showJournalOverlay {
+                JournalOverlayView(game: game, initialTab: game.journalInitialTab)
+            }
+            if game.showSettingsMenu {
+                SettingsMenuView(game: game)
+            }
+
+            // Expedition find popup
+            if let findId = game.expeditionFindPopup {
+                ExpeditionFindPopup(itemId: findId)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+                    .animation(.easeOut(duration: 0.3), value: game.expeditionFindPopup)
+                    .allowsHitTesting(false)
             }
 
             // Scanline overlay (above everything, non-interactive)
@@ -87,50 +113,60 @@ struct ContentView: View {
 // MARK: - Top Bar
 struct TopBarView: View {
     @ObservedObject var game: GameState
-    @Binding var showStats: Bool
 
     var body: some View {
-        HStack {
-            HStack(spacing: 8) {
-                PixelIcon.star(size: 20)
-                Text("LVL")
-                    .font(GrubFont.size(13))
-                    .foregroundColor(GrubPalette.pale)
-                Text("\(game.ownerLevel)")
-                    .font(GrubFont.size(13))
-                    .foregroundColor(GrubPalette.green)
-            }
+        HStack(spacing: 0) {
+            // Name — plain display, no action
+            Text(game.name.isEmpty ? "GRUB" : game.name)
+                .font(GrubFont.size(12))
+                .foregroundColor(GrubPalette.green)
 
             Spacer()
 
+            // LVL
+            Text("LV\(game.ownerLevel)")
+                .font(GrubFont.size(10))
+                .foregroundColor(GrubPalette.yellow)
+
+            // Divider dot
+            Text("\u{00B7}")
+                .font(GrubFont.size(10))
+                .foregroundColor(GrubPalette.pale.opacity(0.3))
+                .padding(.horizontal, 6)
+
+            // Journal button
             Button {
                 game.audio.play(.tap)
-                showStats = true
+                game.journalInitialTab = 0
+                game.showJournalOverlay = true
             } label: {
-                HStack(spacing: 8) {
-                    PixelIcon.statsIcon(size: 18)
-                    Text(game.name.isEmpty ? "GRUB" : game.name)
-                        .font(GrubFont.size(13))
-                        .foregroundColor(GrubPalette.green)
-                }
+                Text("LOG")
+                    .font(GrubFont.size(10))
+                    .foregroundColor(GrubPalette.pale.opacity(0.6))
             }
 
-            Spacer()
+            Text("\u{00B7}")
+                .font(GrubFont.size(10))
+                .foregroundColor(GrubPalette.pale.opacity(0.3))
+                .padding(.horizontal, 6)
 
-            HStack(spacing: 8) {
-                PixelIcon.bag(size: 20)
-                Text("\(game.totalIngredientStacks)")
-                    .font(GrubFont.size(13))
-                    .foregroundColor(GrubPalette.yellow)
+            // Settings button
+            Button {
+                game.audio.play(.tap)
+                game.showSettingsMenu = true
+            } label: {
+                Text("\u{2699}")
+                    .font(.system(size: 16))
+                    .foregroundColor(GrubPalette.pale.opacity(0.6))
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 10)
         .background(GrubPalette.moss.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(GrubPalette.green)
-                .frame(height: 2)
+                .fill(GrubPalette.deepMoss)
+                .frame(height: 1)
         }
     }
 }
@@ -143,22 +179,269 @@ struct ViewportView: View {
         Canvas { context, size in
             SpriteRenderer.drawBackground(context: &context, size: size, tick: game.animTick)
 
-            // Pet sprite — scale to fill viewport nicely
-            let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
-            let scale = min(size.width, size.height) / 32.0 * 0.7
-            let petX = size.width / 2 - 16 * scale
-            let petY = size.height * 0.45 - 16 * scale
-            SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: CGPoint(x: petX, y: petY), scale: scale)
+            if game.isOnExpedition {
+                let tick = game.animTick
+                let miniScale = min(size.width, size.height) / 32.0 * 0.18
+                let baseY = size.height * 0.58 - 16 * miniScale
+                let px = max(2, min(size.width, size.height) / 64)
+                let w = size.width
+
+                // 8 behavior phases, ~200 ticks each = ~80s full cycle
+                let masterCycle = tick % 1600
+                let phase = masterCycle / 200
+
+                let spriteState: String
+                var grubX: CGFloat
+                var grubY: CGFloat = baseY
+                var grubScale = miniScale
+                var showDust = false
+                var showDig = false
+                var showSparkle = false
+                var showQuestion = false
+
+                let phaseT = Double(masterCycle % 200) / 200.0  // 0..1 within phase
+
+                switch phase {
+                case 0:
+                    // Walk in from left
+                    spriteState = "idle"
+                    grubX = CGFloat(phaseT) * w * 0.4
+                    grubY = baseY + CGFloat(sin(Double(tick) * 0.3) * 1.5)
+                    showDust = true
+
+                case 1:
+                    // Stop, look around — head turns
+                    spriteState = "tap_peek"
+                    grubX = w * 0.4
+                    // Little side-to-side sway
+                    grubX += CGFloat(sin(Double(tick) * 0.08) * 3.0)
+                    showQuestion = phaseT > 0.3 && phaseT < 0.7
+
+                case 2:
+                    // Dig! Crouch down and throw dirt
+                    spriteState = "tap_spin"
+                    grubX = w * 0.4
+                    // Bob down while digging
+                    grubY = baseY + CGFloat(sin(Double(tick) * 0.5) * 2.0) + 2
+                    showDig = true
+
+                case 3:
+                    // Found something! Jump up with sparkle
+                    spriteState = "tap_jump"
+                    grubX = w * 0.4
+                    let jumpPhase = sin(Double(tick) * 0.2) * 4.0
+                    grubY = baseY + CGFloat(min(0, jumpPhase))
+                    showSparkle = true
+
+                case 4:
+                    // Dash right fast (off screen)
+                    spriteState = "idle"
+                    grubX = w * 0.4 + CGFloat(phaseT * phaseT) * w * 0.8
+                    grubY = baseY + CGFloat(sin(Double(tick) * 0.5) * 1.0)
+                    showDust = true
+
+                case 5:
+                    // Gone — nothing visible, just dots
+                    spriteState = "idle"
+                    grubX = w * 2 // off screen
+                    // Show "..." in the distance
+                    if Int(phaseT * 6) % 2 == 0 {
+                        let dotY = baseY + 10 * miniScale
+                        for i in 0..<3 {
+                            let dotRect = CGRect(x: w * 0.85 + CGFloat(i) * px * 2, y: dotY, width: px, height: px)
+                            context.fill(Path(dotRect), with: .color(GrubPalette.pale.opacity(0.3)))
+                        }
+                    }
+
+                case 6:
+                    // Dash back from right, carrying something
+                    spriteState = "tap_bounce"
+                    grubX = w * 1.0 - CGFloat(phaseT) * w * 0.5
+                    grubY = baseY + CGFloat(sin(Double(tick) * 0.4) * 1.5)
+                    showDust = true
+                    showSparkle = phaseT > 0.7
+
+                default:
+                    // Stop in center, look at camera, then restart
+                    spriteState = "tap_wave"
+                    grubX = w * 0.5
+                    grubY = baseY + CGFloat(sin(Double(tick) * 0.1) * 1.0)
+                    // Slowly shrink as if walking into distance
+                    if phaseT > 0.6 {
+                        let shrink = 1.0 - (phaseT - 0.6) / 0.4 * 0.5
+                        grubScale = miniScale * CGFloat(shrink)
+                        grubY = baseY + CGFloat((phaseT - 0.6) / 0.4 * 8.0)
+                    }
+                }
+
+                // Draw mini grub
+                if grubX > -32 * miniScale && grubX < w + 32 * miniScale {
+                    let miniSprite = SpriteRenderer.makeGrubSprite(state: spriteState, tick: tick)
+                    SpriteRenderer.drawSprite(context: &context, sprite: miniSprite,
+                        origin: CGPoint(x: grubX, y: grubY), scale: grubScale)
+                }
+
+                // Dust particles
+                if showDust {
+                    let dustFrame = tick % 16
+                    if dustFrame < 8 {
+                        let dx = grubX - CGFloat(dustFrame) * px * 0.6
+                        let dy = grubY + 16 * miniScale - CGFloat(dustFrame / 3) * px
+                        context.fill(Path(CGRect(x: dx, y: dy, width: px, height: px)),
+                            with: .color(GrubPalette.pale.opacity(0.12)))
+                        context.fill(Path(CGRect(x: dx - px * 2, y: dy + px, width: px, height: px)),
+                            with: .color(GrubPalette.pale.opacity(0.06)))
+                    }
+                }
+
+                // Dig particles — dirt flying up
+                if showDig {
+                    let digFrame = tick % 12
+                    let dirtColors: [Color] = [GrubPalette.yellow.opacity(0.3), GrubPalette.pale.opacity(0.2), GrubPalette.orange.opacity(0.2)]
+                    for i in 0..<3 {
+                        let dirtX = grubX + 8 * miniScale + CGFloat(i * 4 - 4) * px
+                        let dirtY = grubY + 12 * miniScale - CGFloat(digFrame + i * 2) * px * 0.5
+                        if digFrame < 8 {
+                            context.fill(Path(CGRect(x: dirtX, y: dirtY, width: px, height: px)),
+                                with: .color(dirtColors[i]))
+                        }
+                    }
+                }
+
+                // Sparkle effect
+                if showSparkle {
+                    let sp = tick % 12
+                    let sparkColor = GrubPalette.yellow.opacity(0.5)
+                    if sp < 4 {
+                        context.fill(Path(CGRect(x: grubX + 2 * miniScale, y: grubY - 4 * miniScale, width: px, height: px)), with: .color(sparkColor))
+                        context.fill(Path(CGRect(x: grubX + 20 * miniScale, y: grubY - 2 * miniScale, width: px, height: px)), with: .color(sparkColor))
+                    } else if sp < 8 {
+                        context.fill(Path(CGRect(x: grubX + 12 * miniScale, y: grubY - 6 * miniScale, width: px, height: px)), with: .color(sparkColor))
+                        context.fill(Path(CGRect(x: grubX - 2 * miniScale, y: grubY, width: px, height: px)), with: .color(sparkColor))
+                    }
+                }
+
+                // Question mark
+                if showQuestion {
+                    context.fill(Path(CGRect(x: grubX + 10 * miniScale, y: grubY - 8 * miniScale, width: px * 2, height: px)), with: .color(GrubPalette.green.opacity(0.5)))
+                    context.fill(Path(CGRect(x: grubX + 11 * miniScale, y: grubY - 6 * miniScale, width: px, height: px)), with: .color(GrubPalette.green.opacity(0.5)))
+                    context.fill(Path(CGRect(x: grubX + 11 * miniScale, y: grubY - 4 * miniScale, width: px, height: px)), with: .color(GrubPalette.green.opacity(0.5)))
+                }
+
+                // Status text
+                let statusTexts = ["EXPLORING...", "SEARCHING...", "DIGGING...", "FOUND SOMETHING!", "RUNNING!", "...", "COMING BACK!", "HI!"]
+                let statusText = statusTexts[min(phase, statusTexts.count - 1)]
+                context.draw(Text(statusText)
+                    .font(GrubFont.size(7))
+                    .foregroundColor(GrubPalette.green.opacity(0.5)),
+                    at: CGPoint(x: w / 2, y: size.height * 0.32))
+
+            } else {
+                // Normal — pet sprite in foreground
+                let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
+                let scale = min(size.width, size.height) / 32.0 * 0.7
+                let petX = size.width / 2 - 16 * scale
+                let petY = size.height * 0.45 - 16 * scale
+                SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: CGPoint(x: petX, y: petY), scale: scale)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
         .onTapGesture {
-            game.audio.play(.tap)
+            game.tapGrub()
         }
     }
 }
 
 // MARK: - Pet Info Bar
+// MARK: - Dying Banner
+// MARK: - Nap Banner
+struct NapBannerView: View {
+    @ObservedObject var game: GameState
+
+    var body: some View {
+        VStack(spacing: 2) {
+            HStack {
+                Text("NAPPING")
+                    .font(GrubFont.size(9))
+                    .foregroundColor(GrubPalette.pale.opacity(0.5))
+                Text("zzz")
+                    .font(GrubFont.size(8))
+                    .foregroundColor(GrubPalette.purple.opacity(game.animTick % 20 < 10 ? 0.8 : 0.4))
+                Spacer()
+                Text(game.napTimeString)
+                    .font(GrubFont.size(11))
+                    .foregroundColor(GrubPalette.pale)
+            }
+            Text("DECAY SLOWED \u{00B7} GRUB SLEEPS 10PM-6AM")
+                .font(GrubFont.size(6))
+                .foregroundColor(GrubPalette.pale.opacity(0.25))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(GrubPalette.void_color)
+    }
+}
+
+struct DyingBannerView: View {
+    @ObservedObject var game: GameState
+
+    var body: some View {
+        HStack {
+            Text("DYING!")
+                .font(GrubFont.size(10))
+                .foregroundColor(GrubPalette.red)
+            Spacer()
+            Text(game.dyingTimeString)
+                .font(GrubFont.size(12))
+                .foregroundColor(game.dyingTimeRemaining < 300 ? GrubPalette.red : GrubPalette.yellow)
+            Spacer()
+            Text("HEAL HIM!")
+                .font(GrubFont.size(8))
+                .foregroundColor(GrubPalette.pale.opacity(0.6))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(GrubPalette.void_color)
+        .overlay(
+            Rectangle().fill(GrubPalette.red.opacity(game.animTick % 20 < 10 ? 0.4 : 0.1)).frame(height: 2),
+            alignment: .top
+        )
+    }
+}
+
+struct ExpeditionBannerView: View {
+    @ObservedObject var game: GameState
+
+    var body: some View {
+        Button {
+            game.audio.play(.menuOpen)
+            game.showExpeditionOverlay = true
+        } label: {
+            HStack {
+                Text("EXPLORING")
+                    .font(GrubFont.size(9))
+                    .foregroundColor(GrubPalette.yellow)
+                let _ = game.animTick
+                Text(game.isExpeditionComplete ? "DONE!" : game.expeditionTimeString)
+                    .font(GrubFont.size(11))
+                    .foregroundColor(game.isExpeditionComplete ? GrubPalette.green : GrubPalette.pale)
+                Spacer()
+                Text(game.isExpeditionComplete ? "COLLECT" : "VIEW")
+                    .font(GrubFont.size(8))
+                    .foregroundColor(GrubPalette.pale.opacity(0.6))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(GrubPalette.void_color)
+            .overlay(
+                Rectangle().fill(GrubPalette.yellow.opacity(0.4)).frame(height: 1),
+                alignment: .top
+            )
+        }
+    }
+}
+
 struct PetInfoBar: View {
     @ObservedObject var game: GameState
 
@@ -178,7 +461,7 @@ struct PetInfoBar: View {
         .padding(.vertical, 10)
         .background(GrubPalette.moss)
         .overlay(alignment: .top) {
-            Rectangle().fill(GrubPalette.green).frame(height: 2)
+            Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
         .overlay(alignment: .bottom) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
@@ -191,16 +474,11 @@ struct StatBarsView: View {
     @ObservedObject var game: GameState
 
     var body: some View {
-        VStack(spacing: 6) {
-            StatBarRow(icon: { AnyView(PixelIcon.drumstick(size: 16)) },
-                      value: game.hunger, isCritical: game.hunger < 20)
-            StatBarRow(icon: { AnyView(PixelIcon.heart(size: 16)) },
-                      value: game.happiness, isCritical: game.happiness < 20)
-            StatBarRow(icon: { AnyView(PixelIcon.leaf(size: 16)) },
-                      value: game.health, isCritical: game.health < 20)
+        VStack(spacing: 0) {
+            PixelStatRow(label: "HNG", value: game.hunger, color: GrubPalette.green)
+            PixelStatRow(label: "HAP", value: game.happiness, color: GrubPalette.yellow)
+            PixelStatRow(label: "HP", value: game.health, color: GrubPalette.red)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
         .background(GrubPalette.void_color)
         .overlay(alignment: .bottom) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
@@ -208,55 +486,64 @@ struct StatBarsView: View {
     }
 }
 
-struct StatBarRow: View {
-    let icon: () -> AnyView
+struct PixelStatRow: View {
+    let label: String
     let value: Int
-    let isCritical: Bool
+    let color: Color
 
-    @State private var pulseOpacity: Double = 1.0
-
-    var barColor: Color {
-        if value >= 70 { return GrubPalette.green }
-        if value >= 40 { return GrubPalette.yellow }
-        if value >= 20 { return GrubPalette.orange }
-        return GrubPalette.red
-    }
+    private var isCritical: Bool { value < 20 }
+    // Pulse driven by animation tick — no timer needed
+    private var pulseOn: Bool { !isCritical || (Int(Date().timeIntervalSince1970 / 0.4) % 2 == 0) }
 
     var body: some View {
         HStack(spacing: 6) {
-            icon()
-                .frame(width: 20)
+            Text(label)
+                .font(GrubFont.size(7))
+                .foregroundColor(isCritical ? color : color.opacity(0.6))
+                .frame(width: 28, alignment: .leading)
 
-            // Segmented bar
-            HStack(spacing: 2) {
-                ForEach(0..<10, id: \.self) { i in
-                    let segThreshold = (i + 1) * 10
-                    let filled = value >= segThreshold
-                    let partial = !filled && value > i * 10
-                    Rectangle()
-                        .fill(filled || partial ? barColor : GrubPalette.moss)
-                        .opacity(isCritical ? pulseOpacity : 1)
-                        .overlay(
-                            filled ? Rectangle().fill(Color.white.opacity(0.15)).frame(height: 2).offset(y: -3) : nil,
-                            alignment: .top
-                        )
+            // Pixel bar rendered via Canvas
+            Canvas { ctx, size in
+                let px: CGFloat = 3
+                let cols = Int(size.width / px)
+                let filledCols = Int(Double(cols) * Double(value) / 100.0)
+                let rows = Int(size.height / px)
+
+                // Empty track
+                for c in 0..<cols {
+                    for r in 0..<rows {
+                        let rect = CGRect(x: CGFloat(c) * px, y: CGFloat(r) * px, width: px - 0.5, height: px - 0.5)
+                        ctx.fill(Path(rect), with: .color(GrubPalette.moss.opacity(0.4)))
+                    }
+                }
+
+                // Filled portion
+                if pulseOn {
+                    for c in 0..<filledCols {
+                        for r in 0..<rows {
+                            let rect = CGRect(x: CGFloat(c) * px, y: CGFloat(r) * px, width: px - 0.5, height: px - 0.5)
+                            // Top row highlight
+                            if r == 0 {
+                                ctx.fill(Path(rect), with: .color(color.opacity(0.6)))
+                            } else {
+                                ctx.fill(Path(rect), with: .color(color))
+                            }
+                        }
+                    }
                 }
             }
-            .frame(height: 22)
+            .frame(height: 9)
 
+            // Value
             Text("\(value)")
-                .font(GrubFont.size(11))
-                .foregroundColor(GrubPalette.pale)
-                .frame(width: 36, alignment: .trailing)
+                .font(GrubFont.size(8))
+                .foregroundColor(isCritical ? GrubPalette.red : GrubPalette.pale.opacity(0.7))
+                .frame(width: 28, alignment: .trailing)
         }
-        .onChange(of: isCritical) { _, crit in
-            if crit {
-                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) {
-                    pulseOpacity = 0.3
-                }
-            } else {
-                pulseOpacity = 1.0
-            }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 4)
+        .overlay(alignment: .top) {
+            Rectangle().fill(GrubPalette.deepMoss.opacity(0.3)).frame(height: 0.5)
         }
     }
 }
@@ -277,7 +564,7 @@ struct ActionButtonsView: View {
             }
 
             ActionButton(icon: { AnyView(PixelIcon.shovel(size: 28)) }, label: "DIG", borderColor: GrubPalette.green) {
-                game.audio.play(.tap)
+                game.audio.play(.dig)
                 game.showForageOverlay = true
             }
 
@@ -290,7 +577,7 @@ struct ActionButtonsView: View {
         .padding(.vertical, 10)
         .background(GrubPalette.moss.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
-            Rectangle().fill(GrubPalette.green).frame(height: 2)
+            Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
     }
 }
@@ -331,6 +618,27 @@ struct PixelButtonStyle: ButtonStyle {
 }
 
 // MARK: - Toast
+struct ExpeditionFindPopup: View {
+    let itemId: String
+
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack(spacing: 8) {
+                PixelIcon.ingredientIcon(itemId, size: 24)
+                Text("FOUND \(ingredientCatalog[itemId]?.name ?? itemId.uppercased())!")
+                    .font(GrubFont.size(8))
+                    .foregroundColor(GrubPalette.pale)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(GrubPalette.moss)
+            .border(GrubPalette.yellow, width: 1)
+            .padding(.bottom, 120)
+        }
+    }
+}
+
 struct ToastView: View {
     let message: String
 

@@ -300,11 +300,13 @@ extension GameState {
         happiness = min(100, happiness + (won ? 15 : 5))
         playedCount += 1
         addXP(3)
+        trackCare("play")
+        if won { trackCare("minigameWin") }
 
         if won {
             let reward = uncommonIngredients.randomElement() ?? "glowshroom"
             addIngredient(reward)
-            let count = Int.random(in: 1...2)
+            let count = Int.random(in: 1...2) + minigameRewardBonus
             if count > 1, let extra = uncommonIngredients.randomElement() {
                 addIngredient(extra)
             }
@@ -356,6 +358,8 @@ extension GameState {
         happiness = min(100, happiness + hapBonus)
         playedCount += 1
         addXP(3)
+        trackCare("play")
+        if ratio >= 0.4 { trackCare("minigameWin") }
 
         if let reward = ingredientReward {
             addIngredient(reward)

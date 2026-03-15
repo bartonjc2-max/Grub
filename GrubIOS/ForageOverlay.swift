@@ -35,8 +35,40 @@ struct ForageOverlayView: View {
                     }
                 }
 
+                // Divider between forage and expeditions
+                HStack(spacing: 8) {
+                    Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
+                    Text("OR")
+                        .font(GrubFont.size(7))
+                        .foregroundColor(GrubPalette.pale.opacity(0.3))
+                    Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
+                }
+                .padding(.top, 12)
+
+                // Expedition button
                 Button {
-                    game.audio.play(.tap)
+                    game.audio.play(.menuOpen)
+                    game.showForageOverlay = false
+                    game.showExpeditionOverlay = true
+                } label: {
+                    HStack {
+                        Text("EXPEDITIONS")
+                            .font(GrubFont.size(10))
+                            .foregroundColor(GrubPalette.void_color)
+                        if game.isOnExpedition {
+                            Text(game.isExpeditionComplete ? "DONE!" : game.expeditionTimeString)
+                                .font(GrubFont.size(8))
+                                .foregroundColor(GrubPalette.void_color)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(game.isExpeditionComplete ? GrubPalette.green : GrubPalette.yellow)
+                }
+                .padding(.top, 4)
+
+                Button {
+                    game.audio.play(.menuClose)
                     game.showForageOverlay = false
                 } label: {
                     Text("CLOSE")
@@ -46,7 +78,7 @@ struct ForageOverlayView: View {
                         .padding(.vertical, 12)
                         .overlay(Rectangle().stroke(GrubPalette.green, lineWidth: 2))
                 }
-                .padding(.top, 16)
+                .padding(.top, 8)
             }
             .padding(24)
             .background(GrubPalette.void_color)
@@ -97,12 +129,12 @@ struct ForageResultsView: View {
                     .foregroundColor(GrubPalette.green)
                     .tracking(2)
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))], spacing: 12) {
                     ForEach(Array(game.forageResults.enumerated()), id: \.offset) { _, itemId in
                         VStack(spacing: 4) {
-                            PixelIcon.ingredientIcon(itemId, size: 28)
+                            PixelIcon.ingredientIcon(itemId, size: 36)
                             Text(ingredientCatalog[itemId]?.name ?? "???")
-                                .font(GrubFont.size(6))
+                                .font(GrubFont.size(7))
                                 .foregroundColor(GrubPalette.pale)
                                 .multilineTextAlignment(.center)
                         }
@@ -111,7 +143,7 @@ struct ForageResultsView: View {
                 .padding(.horizontal, 8)
 
                 Button {
-                    game.audio.play(.tap)
+                    game.audio.play(.menuClose)
                     game.showForageResults = false
                     game.forageResults = []
                 } label: {

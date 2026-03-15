@@ -4,8 +4,7 @@ import SwiftUI
 struct GrubIOSApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .preferredColorScheme(.dark)
+            RootView()
         }
     }
 }

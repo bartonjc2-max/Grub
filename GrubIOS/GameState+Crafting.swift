@@ -30,8 +30,10 @@ extension GameState {
         craftedItems[recipeId] = (craftedItems[recipeId] ?? 0) + 1
         itemsCrafted += 1
         addXP(1)
-        audio.play(.feed)
+        audio.play(.craftDone)
         displayToast("CRAFTED \(recipe.name)!")
+        trackCare("craft")
+        checkJournalUnlocks()
         save()
     }
 
@@ -47,18 +49,28 @@ extension GameState {
         let newHunger = hunger + recipe.effects.hunger
         if newHunger > 95 && recipe.effects.hunger > 0 {
             happiness = max(0, happiness - 5)
+            trackCare("overfeed")
             displayToast("OVERFED! -5 HAP")
         }
+        trackCare("feed")
+
+        // Apply gentle trait bonus
+        if foodHappinessBonus > 0 {
+            happiness = min(100, happiness + foodHappinessBonus)
+        }
+
+        // Apply picky trait bonus: +50% effect from uncommon+ recipes
+        let pickyMult: Double = hasTraitBonus(.picky) && recipe.unlockType != .starter ? 1.5 : 1.0
 
         // Apply effects
         if recipe.effects.health == 100 {
             // Full heal (Spore Elixir)
             health = 100
         } else {
-            health = min(100, health + recipe.effects.health)
+            health = min(100, health + Int(Double(recipe.effects.health) * pickyMult))
         }
-        hunger = min(100, hunger + recipe.effects.hunger)
-        happiness = min(100, happiness + recipe.effects.happiness)
+        hunger = min(100, hunger + Int(Double(recipe.effects.hunger) * pickyMult))
+        happiness = min(100, happiness + Int(Double(recipe.effects.happiness) * pickyMult))
 
         // Energized effect
         if recipe.grantsEnergized {

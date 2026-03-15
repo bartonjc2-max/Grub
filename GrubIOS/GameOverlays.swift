@@ -297,8 +297,11 @@ struct MinigameOverlayView: View {
                     game.closeMinigame()
                 } label: {
                     Text("EXIT")
-                        .font(GrubFont.size(9))
-                        .foregroundColor(GrubPalette.pale.opacity(0.5))
+                        .font(GrubFont.size(10))
+                        .foregroundColor(GrubPalette.red)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .overlay(Rectangle().stroke(GrubPalette.red, lineWidth: 2))
                 }
             }
             .padding(20)
@@ -473,6 +476,11 @@ struct EvolutionOverlayView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(8)
 
+                Text(evoBonus(game.evoStage))
+                    .font(GrubFont.size(8))
+                    .foregroundColor(GrubPalette.yellow)
+                    .multilineTextAlignment(.center)
+
                 Text("TAP TO CONTINUE")
                     .font(GrubFont.size(8))
                     .foregroundColor(GrubPalette.pale.opacity(0.5))
@@ -488,6 +496,14 @@ struct EvolutionOverlayView: View {
 
     private func pulsingOpacity() -> Double {
         return game.animTick % 40 < 20 ? 0.5 : 0.1
+    }
+
+    private func evoBonus(_ stage: Int) -> String {
+        switch stage {
+        case 1: return "NEW LOOK UNLOCKED!\nSTATS GROW FASTER"
+        case 2: return "FINAL FORM!\nLEGACY BONUS UNLOCKED"
+        default: return "SOMETHING CHANGED..."
+        }
     }
 }
 
@@ -752,95 +768,3 @@ func mgFoodLabel(_ emoji: String) -> String {
     mgFoodNameMap[emoji] ?? "FOOD"
 }
 
-// MARK: - Stats Menu Overlay
-struct StatsMenuView: View {
-    @ObservedObject var game: GameState
-    @Binding var isShowing: Bool
-
-    var body: some View {
-        ZStack {
-            Color(hex: "#1a1a2e").opacity(0.93)
-                .ignoresSafeArea()
-                .onTapGesture { isShowing = false }
-
-            VStack(spacing: 0) {
-                Text("STATUS")
-                    .font(GrubFont.size(14))
-                    .foregroundColor(GrubPalette.green)
-                    .tracking(2)
-                    .padding(.bottom, 20)
-
-                VStack(spacing: 8) {
-                    statsRow("NAME", game.name.isEmpty ? "???" : game.name, GrubPalette.green)
-                    statsRow("AGE", "\(game.ageDays) DAYS", GrubPalette.pale)
-                    statsRow("STAGE", stageName(), GrubPalette.purple)
-
-                    Divider().background(GrubPalette.deepMoss).padding(.vertical, 6)
-
-                    statsRow("OWNER LVL", "\(game.ownerLevel)", GrubPalette.green)
-                    statsRow("TOTAL XP", "\(game.ownerXP)", GrubPalette.pale)
-
-                    Divider().background(GrubPalette.deepMoss).padding(.vertical, 6)
-
-                    statsRow("TIMES FED", "\(game.fedCount)", GrubPalette.pale)
-                    statsRow("PLAYED", "\(game.playedCount)", GrubPalette.pale)
-                    statsRow("FORAGES", "\(game.forageCount)", GrubPalette.pale)
-                    statsRow("RECIPES", "\(game.recipesFound)", GrubPalette.pale)
-                    statsRow("ITEMS CRAFTED", "\(game.itemsCrafted)", GrubPalette.pale)
-                    statsRow("NEGLECT", "\(game.neglectCount)", game.neglectCount > 0 ? GrubPalette.red : GrubPalette.pale)
-                    statsRow("DEATHS", "\(game.totalDeaths)", GrubPalette.grey)
-
-                    if !game.legacyTrait.isEmpty {
-                        Divider().background(GrubPalette.deepMoss).padding(.vertical, 6)
-                        Text("LEGACY")
-                            .font(GrubFont.size(8))
-                            .foregroundColor(GrubPalette.purple)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(game.legacyTrait)
-                            .font(GrubFont.size(7))
-                            .foregroundColor(GrubPalette.purple.opacity(0.8))
-                            .lineSpacing(6)
-                    }
-                }
-
-                Button {
-                    game.audio.play(.tap)
-                    isShowing = false
-                } label: {
-                    Text("CLOSE")
-                        .font(GrubFont.size(10))
-                        .foregroundColor(GrubPalette.green)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .overlay(
-                            Rectangle().stroke(GrubPalette.green, lineWidth: 2)
-                        )
-                }
-                .padding(.top, 16)
-            }
-            .padding(24)
-            .background(GrubPalette.void_color)
-            .border(GrubPalette.green, width: 2)
-            .padding(.horizontal, 24)
-        }
-        .transition(.opacity)
-    }
-
-    private func stageName() -> String {
-        if game.evoStage == 0 { return "BASE GRUB" }
-        let key = "\(game.evoBranch)_\(game.evoStage)"
-        return evoNames[key] ?? "EVOLVED"
-    }
-
-    private func statsRow(_ label: String, _ value: String, _ valueColor: Color) -> some View {
-        HStack {
-            Text(label)
-                .font(GrubFont.size(8))
-                .foregroundColor(GrubPalette.pale.opacity(0.6))
-            Spacer()
-            Text(value)
-                .font(GrubFont.size(9))
-                .foregroundColor(valueColor)
-        }
-    }
-}

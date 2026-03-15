@@ -16,11 +16,17 @@ struct InventoryOverlayView: View {
 
             VStack(spacing: 0) {
                 // Title
-                Text("INVENTORY")
-                    .font(GrubFont.size(14))
-                    .foregroundColor(GrubPalette.green)
-                    .tracking(2)
-                    .padding(.bottom, 12)
+                HStack {
+                    Text("INVENTORY")
+                        .font(GrubFont.size(14))
+                        .foregroundColor(GrubPalette.green)
+                        .tracking(2)
+                    Spacer()
+                    Text("\(game.ingredients.count)/20")
+                        .font(GrubFont.size(8))
+                        .foregroundColor(game.ingredients.count >= 18 ? GrubPalette.red : GrubPalette.pale.opacity(0.5))
+                }
+                .padding(.bottom, 12)
 
                 // Tabs
                 HStack(spacing: 0) {
@@ -45,12 +51,25 @@ struct InventoryOverlayView: View {
                             game.audio.play(.tap)
                             showCrafting = true
                         } label: {
-                            Text("CRAFT")
+                            Text("RECIPES")
                                 .font(GrubFont.size(11))
                                 .foregroundColor(GrubPalette.void_color)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                                 .background(GrubPalette.green)
+                        }
+
+                        Button {
+                            game.audio.play(.tap)
+                            game.showInventoryOverlay = false
+                            game.showBurrowOverlay = true
+                        } label: {
+                            Text("BURROW")
+                                .font(GrubFont.size(11))
+                                .foregroundColor(GrubPalette.void_color)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(GrubPalette.yellow)
                         }
                     }
 
@@ -73,6 +92,8 @@ struct InventoryOverlayView: View {
             .background(GrubPalette.void_color)
             .border(GrubPalette.green, width: 2)
             .padding(.horizontal, 16)
+            .contentShape(Rectangle())
+            .onTapGesture { } // Block taps from passing through to background
         }
         .transition(.opacity)
     }
@@ -231,9 +252,13 @@ struct CraftingListView: View {
                                 .foregroundColor(GrubPalette.pale.opacity(0.3))
                             Spacer()
                             if case .level(let lvl) = def.unlockType {
-                                Text("LVL \(lvl)")
-                                    .font(GrubFont.size(8))
+                                Text("LVL \(lvl) (YOU: \(game.ownerLevel))")
+                                    .font(GrubFont.size(7))
                                     .foregroundColor(GrubPalette.yellow.opacity(0.5))
+                            } else if case .scroll = def.unlockType {
+                                Text("SCROLL")
+                                    .font(GrubFont.size(7))
+                                    .foregroundColor(GrubPalette.purple.opacity(0.5))
                             }
                         }
                         .padding(.horizontal, 8)
@@ -277,7 +302,7 @@ struct RecipeRow: View {
                 ForEach(def.ingredients, id: \.id) { req in
                     let have = game.ingredients[req.id] ?? 0
                     HStack(spacing: 2) {
-                        PixelIcon.ingredientIcon(req.id, size: 14)
+                        PixelIcon.ingredientIcon(req.id, size: 20)
                         Text("\(have)/\(req.quantity)")
                             .font(GrubFont.size(7))
                             .foregroundColor(have >= req.quantity ? GrubPalette.green : GrubPalette.red)

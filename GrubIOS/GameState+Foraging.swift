@@ -1,7 +1,7 @@
 import Foundation
 
 extension GameState {
-    static let forageCooldownSeconds: TimeInterval = 2700 // 45 minutes
+    static let forageCooldownSeconds: TimeInterval = 900 // 15 minutes
     static let passiveGatherInterval: TimeInterval = 7200 // 2 hours
     static let maxPassiveItems: Int = 8
     static let maxIngredientStacks: Int = 20
@@ -18,16 +18,25 @@ extension GameState {
     }
 
     // MARK: - Active Foraging
+    static let forageCost: Int = 5
+
     func forage(area: ForageArea) {
         guard canForage else {
             displayToast("COOLDOWN: \(forageTimeRemaining)m")
             return
         }
+        guard hunger > Self.forageCost else {
+            displayToast("TOO HUNGRY TO FORAGE!")
+            return
+        }
         guard let table = lootTables[area] else { return }
 
-        audio.play(.tap)
+        // Foraging costs hunger
+        hunger = max(0, hunger - Self.forageCost)
+        audio.play(.dig)
         var found: [String] = []
-        let count = Int.random(in: table.itemCount)
+        let baseCount = Int.random(in: table.itemCount)
+        let count = Int(Double(baseCount) * forageYieldMultiplier)
 
         for _ in 0..<count {
             if totalIngredientStacks >= Self.maxIngredientStacks && found.isEmpty {
@@ -65,6 +74,8 @@ extension GameState {
         lastForageTime = Date()
         forageCount += 1
         addXP(3)
+        trackCare("forage")
+        checkJournalUnlocks()
 
         forageResults = found
         showForageResults = true
@@ -97,7 +108,8 @@ extension GameState {
     func collectPassiveItems() {
         let now = Date()
         let elapsed = now.timeIntervalSince(passiveGatherTime)
-        let intervals = min(Int(elapsed / Self.passiveGatherInterval), Self.maxPassiveItems / 2)
+        let gatherInterval = decorationPassiveBonus ? Self.passiveGatherInterval * 0.75 : Self.passiveGatherInterval
+        let intervals = min(Int(elapsed / gatherInterval), Self.maxPassiveItems / 2)
 
         guard intervals > 0 else { return }
 
