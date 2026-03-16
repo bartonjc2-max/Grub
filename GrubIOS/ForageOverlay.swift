@@ -20,7 +20,25 @@ struct ForageOverlayView: View {
                     Text("COOLDOWN: \(game.forageTimeRemaining)m")
                         .font(GrubFont.size(11))
                         .foregroundColor(GrubPalette.yellow)
-                        .padding(.bottom, 12)
+                        .padding(.bottom, 4)
+
+                    if game.adManager.isRewardedReady {
+                        Button {
+                            game.showRewardedAd(for: .skipForageCooldown)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text("\u{25B6}")
+                                    .font(.system(size: 10))
+                                Text("WATCH AD TO FORAGE NOW")
+                                    .font(GrubFont.size(8))
+                            }
+                            .foregroundColor(GrubPalette.yellow)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 1))
+                        }
+                        .padding(.bottom, 8)
+                    }
                 }
 
                 VStack(spacing: 10) {
@@ -141,6 +159,23 @@ struct ForageResultsView: View {
                     }
                 }
                 .padding(.horizontal, 8)
+
+                if game.adManager.isRewardedReady {
+                    Button {
+                        game.showRewardedAd(for: .doubleForageLoot)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("\u{25B6}")
+                                .font(.system(size: 10))
+                            Text("WATCH AD FOR 2X LOOT")
+                                .font(GrubFont.size(8))
+                        }
+                        .foregroundColor(GrubPalette.yellow)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 1))
+                    }
+                }
 
                 Button {
                     game.audio.play(.menuClose)

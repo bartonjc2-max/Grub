@@ -54,12 +54,24 @@ class AudioEngine {
 
         setupAudioSession()
         startEngine()
+
+        // Restart engine after interruptions (phone calls, Siri, etc.)
+        NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] notification in
+            guard let info = notification.userInfo,
+                  let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+            if type == .ended {
+                self?.isRunning = false
+                self?.setupAudioSession()
+                self?.startEngine()
+            }
+        }
     }
 
     private func setupAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.ambient, mode: .default)
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
         } catch {
             print("Audio session setup failed: \(error)")
@@ -80,8 +92,8 @@ class AudioEngine {
     }
 
     private func getNextPlayer() -> AVAudioPlayerNode {
-        let player = playerPool[nextPlayer % poolSize]
-        nextPlayer += 1
+        let player = playerPool[nextPlayer]
+        nextPlayer = (nextPlayer + 1) % poolSize
         return player
     }
 

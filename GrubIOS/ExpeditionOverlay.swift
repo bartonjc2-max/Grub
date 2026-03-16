@@ -53,6 +53,24 @@ struct ExpeditionOverlayView: View {
                             Text("GRUB IS EXPLORING...")
                                 .font(GrubFont.size(9))
                                 .foregroundColor(GrubPalette.pale.opacity(0.5))
+
+                            if game.adManager.isRewardedReady {
+                                Button {
+                                    game.showRewardedAd(for: .skipExpeditionTimer)
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Text("\u{25B6}")
+                                            .font(.system(size: 10))
+                                        Text("WATCH AD TO SKIP")
+                                            .font(GrubFont.size(8))
+                                    }
+                                    .foregroundColor(GrubPalette.yellow)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 1))
+                                }
+                                .padding(.top, 8)
+                            }
                         }
                     }
                     .padding(20)
@@ -194,6 +212,23 @@ struct ExpeditionResultsView: View {
                     Text(msg)
                         .font(GrubFont.size(9))
                         .foregroundColor(GrubPalette.red)
+                }
+
+                if game.adManager.isRewardedReady {
+                    Button {
+                        game.showRewardedAd(for: .bonusExpeditionLoot)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("\u{25B6}")
+                                .font(.system(size: 10))
+                            Text("WATCH AD FOR BONUS LOOT")
+                                .font(GrubFont.size(8))
+                        }
+                        .foregroundColor(GrubPalette.yellow)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 1))
+                    }
                 }
 
                 Button("OK") {

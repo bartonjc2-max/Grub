@@ -46,7 +46,7 @@ let gameEvents: [GameEvent] = [
     GameEvent(
         text: "A STRANGE CREATURE\nAPPEARED. GRUB IS NERVOUS.",
         optionA: EventOption(label: "COMFORT\n+1 PALE WORM", action: { s in s.addIngredient("pale_worm") }),
-        optionB: EventOption(label: "PLAY GAME\nTO SCARE IT", action: { s in s.showMinigame = true })
+        optionB: EventOption(label: "PLAY GAME\nTO SCARE IT", action: { s in s.openRandomGame() })
     ),
     // 3 — Suspicious food
     GameEvent(
@@ -150,8 +150,7 @@ let gameEvents: [GameEvent] = [
         text: "GLOWING MUSHROOMS FORM\nA PERFECT RING.",
         optionA: EventOption(label: "PICK THEM\n+2 GLOWSHROOMS", action: { s in s.addIngredient("glowshroom", count: 2) }),
         optionB: EventOption(label: "SIT INSIDE\nENERGIZED 30M", action: { s in
-            let expiry = Date().addingTimeInterval(1800)
-            s.activeEffects.append(ActiveEffect(type: .energized, expiresAt: expiry))
+            s.applyEnergized()
             s.displayToast("ENERGIZED!")
         })
     ),
@@ -191,7 +190,8 @@ let gameEvents: [GameEvent] = [
             for item in all { s.addIngredient(item) }
         }),
         optionB: EventOption(label: "JUST THE BEST\n+1 RARE", action: { s in
-            s.addIngredient(rareIngredients.randomElement()!)
+            let pool = rareIngredients.filter { $0 != "golden_bug" }
+            s.addIngredient(pool.randomElement()!)
         })
     ),
     // 18 — Spore cloud
@@ -364,7 +364,7 @@ let gameEvents: [GameEvent] = [
     GameEvent(
         text: "GRUB WANTS TO\nPROVE ITS SKILLS!",
         optionA: EventOption(label: "ACCEPT\nPLAY GAME!", action: { s in
-            s.showMinigame = true
+            s.openRandomGame()
             s.addXP(1)
         }),
         optionB: EventOption(label: "MAYBE LATER\n+5 HAP", action: { s in s.happiness = min(100, s.happiness + 5) })
@@ -372,19 +372,18 @@ let gameEvents: [GameEvent] = [
     // 36 — Ingredient feast
     GameEvent(
         text: "A PILE OF INGREDIENTS\nSPILLED FROM A CRACK.",
-        optionA: EventOption(label: "GRAB COMMONS\n+2 OF EACH", action: { s in
-            for id in commonIngredients { s.addIngredient(id, count: 2) }
+        optionA: EventOption(label: "GRAB COMMONS\n+3 RANDOM COMMON", action: { s in
+            for _ in 0..<3 { s.addIngredient(commonIngredients.randomElement()!) }
         }),
-        optionB: EventOption(label: "DIG DEEPER\n+1 UNCOMMON EACH", action: { s in
-            for id in uncommonIngredients { s.addIngredient(id) }
+        optionB: EventOption(label: "DIG DEEPER\n+2 RANDOM UNCOMMON", action: { s in
+            for _ in 0..<2 { s.addIngredient(uncommonIngredients.randomElement()!) }
         })
     ),
     // 37 — Energized spring
     GameEvent(
         text: "A BUBBLING SPRING HUMS\nWITH ENERGY.",
         optionA: EventOption(label: "DRINK DEEP\nENERGIZED 30M", action: { s in
-            let expiry = Date().addingTimeInterval(1800)
-            s.activeEffects.append(ActiveEffect(type: .energized, expiresAt: expiry))
+            s.applyEnergized()
             s.health = min(100, s.health + 10)
         }),
         optionB: EventOption(label: "FILL BOTTLES\n+3 DEW DROPS", action: { s in s.addIngredient("dew_drop", count: 3) })
@@ -434,6 +433,9 @@ let gameEvents: [GameEvent] = [
 
 // MARK: - Game State
 class GameState: ObservableObject {
+    // Ad manager (never imports GoogleMobileAds — talks through AdService protocol)
+    let adManager: AdService = AdManager.shared
+
     // Core stats
     @Published var name: String = ""
     @Published var hunger: Int = 100
@@ -525,6 +527,7 @@ class GameState: ObservableObject {
     @Published var showToast: Bool = false
     @Published var petStateAnim: String = "idle"
     @Published var animTick: Int = 0
+    @Published var lastMinigameXP: Int = 0
 
     // Evolution display
     @Published var evoDisplayBranch: String = ""
@@ -596,9 +599,12 @@ class GameState: ObservableObject {
         toastWorkItem?.cancel()
     }
 
+    static let saveVersion = 1
+
     // MARK: - Save/Load
     func save() {
         var data: [String: Any] = [
+            "saveVersion": Self.saveVersion,
             "name": name,
             "hunger": hunger,
             "happiness": happiness,
@@ -656,6 +662,9 @@ class GameState: ObservableObject {
 
     func load() {
         guard let data = UserDefaults.standard.dictionary(forKey: "grub_state") else { return }
+        let version = data["saveVersion"] as? Int ?? 0
+        // Future migration: if version < 2 { migrate_v1_to_v2(data) }
+        _ = version // Used for future migrations
         name = data["name"] as? String ?? ""
         hunger = data["hunger"] as? Int ?? 100
         happiness = data["happiness"] as? Int ?? 100
@@ -740,8 +749,8 @@ class GameState: ObservableObject {
                 if self.animTick % 20 == 0 && self.isOnExpedition {
                     self.checkExpeditionFinds()
                 }
-                // Notify when expedition completes
-                if self.animTick % 20 == 0 && self.isExpeditionComplete && !self.showExpeditionResults && !self.showExpeditionOverlay {
+                // Notify when expedition completes (don't interrupt other overlays)
+                if self.animTick % 20 == 0 && self.isExpeditionComplete && !self.showExpeditionResults && !self.showExpeditionOverlay && !self.hasActiveOverlay {
                     self.displayToast("EXPEDITION COMPLETE!")
                     self.showExpeditionOverlay = true
                 }
@@ -901,6 +910,7 @@ class GameState: ObservableObject {
         if Double.random(in: 0...1) > 0.3 { return }
         pendingEvent = gameEvents.randomElement()
         lastEvent = now
+        dismissAllOverlays()
         showEventOverlay = true
         audio.play(.event)
     }
@@ -1068,6 +1078,32 @@ class GameState: ObservableObject {
         displayToast(toast)
     }
 
+    // MARK: - Overlay Management
+    /// Dismiss all content overlays to prevent stacking.
+    /// Does NOT dismiss death/name-entry/evolution (those are lifecycle overlays).
+    func dismissAllOverlays() {
+        showFeedOverlay = false
+        showMinigame = false
+        showEventOverlay = false
+        showForageOverlay = false
+        showForageResults = false
+        showInventoryOverlay = false
+        showGameSelector = false
+        showBurrowOverlay = false
+        showExpeditionOverlay = false
+        showExpeditionResults = false
+        showJournalOverlay = false
+        showSettingsMenu = false
+    }
+
+    var hasActiveOverlay: Bool {
+        showFeedOverlay || showMinigame || showEventOverlay ||
+        showForageOverlay || showForageResults || showInventoryOverlay ||
+        showGameSelector || showBurrowOverlay || showExpeditionOverlay ||
+        showExpeditionResults || showJournalOverlay || showSettingsMenu ||
+        showDeathOverlay || showEvolution || showNameEntry
+    }
+
     // MARK: - Toast
     func displayToast(_ message: String) {
         toastWorkItem?.cancel()
@@ -1154,6 +1190,14 @@ class GameState: ObservableObject {
         if happiness < 30 { return "unhappy" }
         if activeEffects.contains(where: { $0.type == .energized && $0.expiresAt > Date() }) { return "energized" }
         return petStateAnim
+    }
+
+    // MARK: - Effect Helpers
+    func applyEnergized(duration: TimeInterval = 1800) {
+        // Remove existing energized effect to prevent stacking
+        activeEffects.removeAll { $0.type == .energized }
+        let expiry = Date().addingTimeInterval(duration)
+        activeEffects.append(ActiveEffect(type: .energized, expiresAt: expiry))
     }
 
     // MARK: - Ingredient Helpers

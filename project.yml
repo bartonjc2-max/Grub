@@ -1,4 +1,8 @@
 name: GrubIOS
+packages:
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads
+    from: "11.0.0"
 options:
   bundleIdPrefix: com.jessedev
   deploymentTarget:
@@ -12,6 +16,8 @@ targets:
     platform: iOS
     sources:
       - GrubIOS
+    dependencies:
+      - package: GoogleMobileAds
     settings:
       INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
@@ -26,11 +32,16 @@ targets:
       CURRENT_PROJECT_VERSION: "1"
       GENERATE_INFOPLIST_FILE: true
       CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: 2JME4EQ8MT
     info:
       path: GrubIOS/Info.plist
       properties:
         UIAppFonts:
           - PressStart2P-Regular.ttf
+        GADApplicationIdentifier: ca-app-pub-2693240777289599~6001078046
+        NSUserTrackingUsageDescription: "Grub uses ads to stay free. Allow tracking for more relevant ads."
+        SKAdNetworkItems:
+          - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork
   GrubIOSTests:
     type: bundle.unit-test
     platform: iOS

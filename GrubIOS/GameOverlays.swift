@@ -293,15 +293,34 @@ struct MinigameOverlayView: View {
                     .foregroundColor(game.mgResult.contains("CORRECT") || game.mgResult.contains("GREAT") || game.mgResult.contains("GOOD") ? GrubPalette.green : GrubPalette.red)
                     .frame(minHeight: 24)
 
-                Button {
-                    game.closeMinigame()
-                } label: {
-                    Text("EXIT")
-                        .font(GrubFont.size(10))
-                        .foregroundColor(GrubPalette.red)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .overlay(Rectangle().stroke(GrubPalette.red, lineWidth: 2))
+                HStack(spacing: 12) {
+                    if game.adManager.isRewardedReady && game.lastMinigameXP > 0 {
+                        Button {
+                            game.showRewardedAd(for: .doubleMinigameXP)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("\u{25B6}")
+                                    .font(.system(size: 9))
+                                Text("2X XP")
+                                    .font(GrubFont.size(9))
+                            }
+                            .foregroundColor(GrubPalette.yellow)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 2))
+                        }
+                    }
+
+                    Button {
+                        game.closeMinigame()
+                    } label: {
+                        Text("EXIT")
+                            .font(GrubFont.size(10))
+                            .foregroundColor(GrubPalette.red)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .overlay(Rectangle().stroke(GrubPalette.red, lineWidth: 2))
+                    }
                 }
             }
             .padding(20)
@@ -542,6 +561,24 @@ struct DeathOverlayView: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(8)
                     .padding(.top, 4)
+
+                if game.adManager.isRewardedReady {
+                    Button {
+                        game.showRewardedAd(for: .reviveGrub)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text("\u{25B6}")
+                                .font(.system(size: 10))
+                            Text("WATCH AD TO REVIVE")
+                                .font(GrubFont.size(9))
+                        }
+                        .foregroundColor(GrubPalette.yellow)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .overlay(Rectangle().stroke(GrubPalette.yellow, lineWidth: 2))
+                    }
+                    .padding(.top, 10)
+                }
 
                 Button {
                     game.restartGame()

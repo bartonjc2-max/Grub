@@ -475,9 +475,9 @@ struct StatBarsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PixelStatRow(label: "HNG", value: game.hunger, color: GrubPalette.green)
-            PixelStatRow(label: "HAP", value: game.happiness, color: GrubPalette.yellow)
-            PixelStatRow(label: "HP", value: game.health, color: GrubPalette.red)
+            PixelStatRow(label: "HNG", value: game.hunger, color: GrubPalette.green, tick: game.animTick)
+            PixelStatRow(label: "HAP", value: game.happiness, color: GrubPalette.yellow, tick: game.animTick)
+            PixelStatRow(label: "HP", value: game.health, color: GrubPalette.red, tick: game.animTick)
         }
         .background(GrubPalette.void_color)
         .overlay(alignment: .bottom) {
@@ -490,10 +490,10 @@ struct PixelStatRow: View {
     let label: String
     let value: Int
     let color: Color
+    let tick: Int
 
     private var isCritical: Bool { value < 20 }
-    // Pulse driven by animation tick — no timer needed
-    private var pulseOn: Bool { !isCritical || (Int(Date().timeIntervalSince1970 / 0.4) % 2 == 0) }
+    private var pulseOn: Bool { !isCritical || (tick / 8) % 2 == 0 }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -588,22 +588,20 @@ struct ActionButton: View {
     let borderColor: Color
     let action: () -> Void
 
-    @State private var isPressed = false
-
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 icon()
                 Text(label)
                     .font(GrubFont.size(9))
-                    .foregroundColor(isPressed ? GrubPalette.void_color : GrubPalette.pale)
+                    .foregroundColor(GrubPalette.pale)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
             .padding(.horizontal, 4)
-            .background(isPressed ? borderColor : GrubPalette.void_color)
+            .background(GrubPalette.void_color)
             .border(borderColor, width: 2)
         }
         .buttonStyle(PixelButtonStyle())

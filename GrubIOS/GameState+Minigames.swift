@@ -45,6 +45,12 @@ extension GameState {
         MinigameType.allCases.filter { isGameUnlocked($0) }
     }
 
+    func openRandomGame() {
+        let games = unlockedGames()
+        guard let game = games.randomElement() else { return }
+        openGame(game)
+    }
+
     // MARK: - Open Specific Game
     func openGame(_ game: MinigameType) {
         guard isGameUnlocked(game) else { return }
@@ -299,6 +305,7 @@ extension GameState {
 
         happiness = min(100, happiness + (won ? 15 : 5))
         playedCount += 1
+        lastMinigameXP = 3
         addXP(3)
         trackCare("play")
         if won { trackCare("minigameWin") }
@@ -357,6 +364,7 @@ extension GameState {
 
         happiness = min(100, happiness + hapBonus)
         playedCount += 1
+        lastMinigameXP = 3
         addXP(3)
         trackCare("play")
         if ratio >= 0.4 { trackCare("minigameWin") }
@@ -392,5 +400,7 @@ extension GameState {
         audio.play(.tap)
         mgTimer?.invalidate()
         showMinigame = false
+        // Show interstitial at natural break point (respects 5-min cooldown)
+        tryShowInterstitial()
     }
 }

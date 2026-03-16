@@ -74,8 +74,7 @@ extension GameState {
 
         // Energized effect
         if recipe.grantsEnergized {
-            let expiry = Date().addingTimeInterval(1800) // 30 minutes
-            activeEffects.append(ActiveEffect(type: .energized, expiresAt: expiry))
+            applyEnergized()
         }
 
         // Consume item

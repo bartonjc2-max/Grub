@@ -17,12 +17,16 @@
 		65910566002ED2DBBD73FB8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5624CADC5A38E7D506E60526 /* Assets.xcassets */; };
 		674E84966D90C07CE4062CE0 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34F1663B37A9209A1EE393F /* GameState.swift */; };
 		6FFAA5F3BC4E953AF3F0C501 /* GameState+Personality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */; };
+		714109160C04E62C3E61709C /* AdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EE00B6A047FC079E273D80 /* AdService.swift */; };
 		71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F70E2BDA0D9DA2712224C1 /* ContentView.swift */; };
 		74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */; };
 		78330876D62DF49C7C35CF0C /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCBE326714FB960EC58256D /* GameState+Crafting.swift */; };
+		81C8761B7298E90A9B3E0C54 /* GameState+Ads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */; };
 		84C2FE8A6F8F089F23906C8F /* RecipeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342775127EB6EF1C707709CD /* RecipeData.swift */; };
+		8A4ACDC85B525869873E8616 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C7C322C8E54B4DBD2D68AE6A /* GoogleMobileAds */; };
 		A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECFC767EBDB0D567F0B7422 /* ForageOverlay.swift */; };
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
+		B2963A1AEDAFDCBED32E5BD7 /* AdConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EB451FA4162A64E6A81F42 /* AdConfig.swift */; };
 		B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */; };
 		BA178D0D6A213A7525D63DC1 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D37C188B461CEADB0424CC /* GameState+Foraging.swift */; };
 		BD09F0E3104DDC180D05B420 /* GameStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBC9FF6A7163A08306E7660 /* GameStateTests.swift */; };
@@ -33,6 +37,7 @@
 		D63FD2D70D70574232F1D312 /* GameState+Expeditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B5111B13882012C1497812 /* GameState+Expeditions.swift */; };
 		E14039E8EE217AFB2BD12D61 /* InventoryOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */; };
 		ED49DEB62AE1E28428327095 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB530A92485B49730BC1516A /* RootView.swift */; };
+		F36E502CC2963502AED8F155 /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -47,6 +52,7 @@
 
 /* Begin PBXFileReference section */
 		18F70E2BDA0D9DA2712224C1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Ads.swift"; sourceTree = "<group>"; };
 		20099951754158E5258BC160 /* SpriteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteRenderer.swift; sourceTree = "<group>"; };
 		23532E87C898D774055B275C /* GrubIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubIOSApp.swift; sourceTree = "<group>"; };
 		23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalOverlay.swift; sourceTree = "<group>"; };
@@ -57,12 +63,15 @@
 		5624CADC5A38E7D506E60526 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
 		7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
+		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
 		7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuView.swift; sourceTree = "<group>"; };
 		7BCBE326714FB960EC58256D /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
 		8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowOverlay.swift; sourceTree = "<group>"; };
 		972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryOverlay.swift; sourceTree = "<group>"; };
 		9CAB23882DE94A37931A500A /* GameState+Burrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Burrow.swift"; sourceTree = "<group>"; };
+		A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 		AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Personality.swift"; sourceTree = "<group>"; };
+		B6EB451FA4162A64E6A81F42 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
 		BB530A92485B49730BC1516A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C8B5111B13882012C1497812 /* GameState+Expeditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Expeditions.swift"; sourceTree = "<group>"; };
 		D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
@@ -77,10 +86,24 @@
 		FDA3AF8C394AE1A6C43C0BFE /* ExpeditionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpeditionOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		35219277459BC4C73B3310DF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8A4ACDC85B525869873E8616 /* GoogleMobileAds in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		20ADD7ABE2D4C872C5B81FA9 /* GrubIOS */ = {
 			isa = PBXGroup;
 			children = (
+				B6EB451FA4162A64E6A81F42 /* AdConfig.swift */,
+				A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */,
+				79EE00B6A047FC079E273D80 /* AdService.swift */,
 				5624CADC5A38E7D506E60526 /* Assets.xcassets */,
 				EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */,
 				8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */,
@@ -90,6 +113,7 @@
 				5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */,
 				7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */,
 				F34F1663B37A9209A1EE393F /* GameState.swift */,
+				1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */,
 				9CAB23882DE94A37931A500A /* GameState+Burrow.swift */,
 				7BCBE326714FB960EC58256D /* GameState+Crafting.swift */,
 				C8B5111B13882012C1497812 /* GameState+Expeditions.swift */,
@@ -164,6 +188,7 @@
 			buildPhases = (
 				44010952746DED7AB2CB9DE4 /* Sources */,
 				204B7B0B453227E61FF8ABC5 /* Resources */,
+				35219277459BC4C73B3310DF /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -171,6 +196,7 @@
 			);
 			name = GrubIOS;
 			packageProductDependencies = (
+				C7C322C8E54B4DBD2D68AE6A /* GoogleMobileAds */,
 			);
 			productName = GrubIOS;
 			productReference = E72253F310EB1C1D9D78835D /* GrubIOS.app */;
@@ -186,6 +212,7 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					9430421D9FF73FA9BC8C8BCD = {
+						DevelopmentTeam = 2JME4EQ8MT;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -200,6 +227,9 @@
 			);
 			mainGroup = 68389987CB30483A926C3E87;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AB2AF04309B41AC6E3582FBC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -235,6 +265,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2963A1AEDAFDCBED32E5BD7 /* AdConfig.swift in Sources */,
+				F36E502CC2963502AED8F155 /* AdManager.swift in Sources */,
+				714109160C04E62C3E61709C /* AdService.swift in Sources */,
 				AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
@@ -242,6 +275,7 @@
 				A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */,
 				45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */,
 				43EED2590935E87C7BE594D8 /* GameSelectorOverlay.swift in Sources */,
+				81C8761B7298E90A9B3E0C54 /* GameState+Ads.swift in Sources */,
 				4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */,
 				78330876D62DF49C7C35CF0C /* GameState+Crafting.swift in Sources */,
 				D63FD2D70D70574232F1D312 /* GameState+Expeditions.swift in Sources */,
@@ -280,6 +314,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2JME4EQ8MT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrubIOS/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -380,6 +415,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2JME4EQ8MT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrubIOS/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -510,6 +546,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AB2AF04309B41AC6E3582FBC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C7C322C8E54B4DBD2D68AE6A /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB2AF04309B41AC6E3582FBC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7FC98ECE093B8EF3976CBE27 /* Project object */;
 }

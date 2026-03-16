@@ -100,9 +100,9 @@ let ingredientCatalog: [String: IngredientDef] = {
     return Dictionary(uniqueKeysWithValues: defs.map { ($0.id, $0) })
 }()
 
-let commonIngredients = ingredientCatalog.values.filter { $0.rarity == .common }.map(\.id)
-let uncommonIngredients = ingredientCatalog.values.filter { $0.rarity == .uncommon }.map(\.id)
-let rareIngredients = ingredientCatalog.values.filter { $0.rarity == .rare }.map(\.id)
+let commonIngredients = ingredientCatalog.values.filter { $0.rarity == .common }.map(\.id).sorted()
+let uncommonIngredients = ingredientCatalog.values.filter { $0.rarity == .uncommon }.map(\.id).sorted()
+let rareIngredients = ingredientCatalog.values.filter { $0.rarity == .rare }.map(\.id).sorted()
 
 // MARK: - Recipe Catalog
 // 14 recipes: 3 starter, 6 level-unlocked, 5 scroll-unlocked

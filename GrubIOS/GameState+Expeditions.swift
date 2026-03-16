@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 extension GameState {
     // MARK: - Expeditions
@@ -123,18 +124,22 @@ extension GameState {
             addIngredient(itemId)
             expeditionCollectedFinds.append(itemId)
 
-            // Show popup
-            let name = ingredientCatalog[itemId]?.name ?? itemId.uppercased()
-            expeditionFindPopup = itemId
+            // Show popup with animation so SwiftUI transition renders
+            withAnimation(.easeOut(duration: 0.3)) {
+                expeditionFindPopup = itemId
+            }
             audio.play(.lootSparkle)
+            displayToast("FOUND \(ingredientCatalog[itemId]?.name ?? itemId.uppercased())!")
 
-            // Auto-dismiss popup after 2 seconds
+            // Auto-dismiss popup after 3 seconds
             let work = DispatchWorkItem { [weak self] in
-                if self?.expeditionFindPopup == itemId {
-                    self?.expeditionFindPopup = nil
+                withAnimation(.easeIn(duration: 0.3)) {
+                    if self?.expeditionFindPopup == itemId {
+                        self?.expeditionFindPopup = nil
+                    }
                 }
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: work)
             save()
         }
     }
@@ -187,6 +192,8 @@ extension GameState {
         trackCare("expedition")
         checkJournalUnlocks()
         save()
+        // Show interstitial at natural break point
+        tryShowInterstitial()
     }
 
     /// Check expeditions on foreground return
