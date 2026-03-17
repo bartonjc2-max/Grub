@@ -3,6 +3,8 @@ packages:
   GoogleMobileAds:
     url: https://github.com/googleads/swift-package-manager-google-mobile-ads
     from: "11.0.0"
+  PetEngine:
+    path: ../../PetEngine
 options:
   bundleIdPrefix: com.jessedev
   deploymentTarget:
@@ -18,6 +20,8 @@ targets:
       - GrubIOS
     dependencies:
       - package: GoogleMobileAds
+      - package: PetEngine
+        product: PetEngine
     settings:
       INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true

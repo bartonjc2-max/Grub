@@ -1,4 +1,5 @@
 import Foundation
+import PetEngine
 
 /// Central configuration for all AdMob ad unit IDs and behavior settings.
 struct AdConfig {
@@ -35,13 +36,4 @@ struct AdConfig {
     }
 }
 
-// MARK: - Reward Types
-/// All the rewarded ad placements in the game
-enum AdRewardType: String {
-    case skipExpeditionTimer
-    case skipForageCooldown
-    case reviveGrub
-    case doubleMinigameXP
-    case doubleForageLoot
-    case bonusExpeditionLoot
-}
+// AdRewardType is provided by PetEngine

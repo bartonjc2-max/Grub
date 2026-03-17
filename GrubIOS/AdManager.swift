@@ -1,9 +1,10 @@
 import UIKit
 import GoogleMobileAds
+import PetEngine
 
-/// Singleton ad manager implementing AdService.
+/// Singleton ad manager implementing PetEngine.AdService.
 /// Handles preloading, frequency capping, and reward callbacks.
-final class AdManager: NSObject, AdService {
+final class AdManager: NSObject, PetEngine.AdService {
     static let shared = AdManager()
 
     // MARK: - State
