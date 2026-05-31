@@ -43,6 +43,33 @@ final class NotificationSchedulerTests: XCTestCase {
         XCTAssertFalse(notices.contains { $0.id == "expedition_ready" })
     }
 
+    // MARK: - requestPermissionOnce gating
+
+    final class SpyCenter: LocalNotifying {
+        var addedIds: [String] = []
+        var removedIds: [String] = []
+        var authRequests = 0
+        func addRequest(_ request: UNNotificationRequest) { addedIds.append(request.identifier) }
+        func removePending(identifiers: [String]) { removedIds.append(contentsOf: identifiers) }
+        func requestAuth(_ completion: @escaping (Bool) -> Void) {
+            authRequests += 1
+            completion(true)
+        }
+    }
+
+    func test_requestPermissionOnce_only_fires_once() {
+        let spy = SpyCenter()
+        let scheduler = NotificationScheduler(center: spy)
+        let d = UserDefaults(suiteName: "notif_once_\(UUID().uuidString)")!
+        defer { d.removePersistentDomain(forName: d.dictionaryRepresentation().keys.first ?? "") }
+
+        scheduler.requestPermissionOnce(defaults: d)
+        scheduler.requestPermissionOnce(defaults: d)
+        scheduler.requestPermissionOnce(defaults: d)
+        XCTAssertEqual(spy.authRequests, 1,
+                       "permission should be asked exactly once; got \(spy.authRequests)")
+    }
+
     func test_hungry_fire_date_uses_decay_rate() {
         let from = Date(timeIntervalSince1970: 0)
         // hunger 85, threshold 25, rate 6/hr -> 60/6 = 10 hours

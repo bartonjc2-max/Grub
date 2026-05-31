@@ -21,10 +21,11 @@ struct RootView: View {
                 SKStoreReviewController.requestReview(in: scene)
             }
         })
+        let notifier = NotificationScheduler(center: UNUserNotificationCenter.current())
         self.analytics = analytics
         self.retention = RetentionTracker()
-        self.notifier = NotificationScheduler(center: UNUserNotificationCenter.current())
-        _game = StateObject(wrappedValue: GameState(analytics: analytics, rating: rating))
+        self.notifier = notifier
+        _game = StateObject(wrappedValue: GameState(analytics: analytics, rating: rating, notifier: notifier))
     }
 
     enum AppPhase {
@@ -54,10 +55,9 @@ struct RootView: View {
             case .active:
                 let info = retention.registerOpen()
                 analytics.log(.appOpen(isFirstOpen: info.isFirstOpen))
-                // First time: ask politely for notification permission.
-                // (UI soft-prompt before an earned moment is a follow-up — this is the
-                // minimum-viable hook; OS will only prompt once.)
-                notifier.requestPermission { _ in }
+                // NOTE: notification permission is NOT requested here.
+                // Asking at cold launch is bad UX and an App Store review risk.
+                // It is requested after an "earned moment" — see GameState hooks.
             case .background:
                 // Reschedule local notifications from the current pet state.
                 let plan = NotificationScheduler.plan(

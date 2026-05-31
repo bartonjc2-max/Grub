@@ -105,6 +105,8 @@ extension GameState {
 
         save()
         analytics.log(.homeAction(type: "feed"))
+        // First feed is the earned moment: ask once for notification permission.
+        notifier?.requestPermissionOnce(defaults: defaults)
     }
 
     /// Get sorted list of available recipes (unlocked, grouped by craftability)

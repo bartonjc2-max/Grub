@@ -575,20 +575,25 @@ class GameState: ObservableObject {
 
     /// Injectable persistence store. Defaults to `.standard` for production;
     /// tests pass an isolated suite. (Phase 0 / O-5)
-    private let defaults: UserDefaults
+    /// `internal` rather than `private` so extension files (GameState+*.swift) can
+    /// reach it without re-architecting persistence.
+    let defaults: UserDefaults
 
     /// Growth services (Phase 1), injected. Default to no-op-safe impls so existing
     /// call sites and previews keep working.
     let analytics: AnalyticsService
     let rating: RatingPrompt?
+    let notifier: NotificationScheduler?
 
     init(defaults: UserDefaults = .standard,
          startGameLoop runLoop: Bool = true,
          analytics: AnalyticsService = ConsoleAnalytics(),
-         rating: RatingPrompt? = nil) {
+         rating: RatingPrompt? = nil,
+         notifier: NotificationScheduler? = nil) {
         self.defaults = defaults
         self.analytics = analytics
         self.rating = rating
+        self.notifier = notifier
         load()
         if !name.isEmpty {
             showNameEntry = false

@@ -69,4 +69,16 @@ final class NotificationScheduler {
     func requestPermission(_ completion: @escaping (Bool) -> Void) {
         center.requestAuth(completion)
     }
+
+    /// One-shot permission request gated on an "earned moment" (first feed/extract).
+    /// Stores a flag in UserDefaults so the OS prompt is only triggered once.
+    /// Per spec §10 Phase 1: never prompt at cold launch, only after a positive moment.
+    func requestPermissionOnce(defaults: UserDefaults = .standard,
+                               completion: @escaping (Bool) -> Void = { _ in }) {
+        let key = "notif_permission_asked"
+        guard !defaults.bool(forKey: key) else { return }
+        defaults.set(true, forKey: key)
+        center.requestAuth(completion)
+    }
 }
+
