@@ -1,6 +1,7 @@
 import SwiftUI
 import StoreKit
 import UIKit
+import UserNotifications
 
 struct RootView: View {
     @StateObject private var game: GameState
@@ -10,6 +11,7 @@ struct RootView: View {
     // Growth services (Phase 1). Constructed here, where GameState is owned.
     private let analytics: AnalyticsService
     private let retention: RetentionTracker
+    private let notifier: NotificationScheduler
 
     init() {
         let analytics = ConsoleAnalytics()
@@ -21,6 +23,7 @@ struct RootView: View {
         })
         self.analytics = analytics
         self.retention = RetentionTracker()
+        self.notifier = NotificationScheduler(center: UNUserNotificationCenter.current())
         _game = StateObject(wrappedValue: GameState(analytics: analytics, rating: rating))
     }
 
@@ -47,9 +50,26 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
+            switch newPhase {
+            case .active:
                 let info = retention.registerOpen()
                 analytics.log(.appOpen(isFirstOpen: info.isFirstOpen))
+                // First time: ask politely for notification permission.
+                // (UI soft-prompt before an earned moment is a follow-up — this is the
+                // minimum-viable hook; OS will only prompt once.)
+                notifier.requestPermission { _ in }
+            case .background:
+                // Reschedule local notifications from the current pet state.
+                let plan = NotificationScheduler.plan(
+                    hunger: Double(game.hunger),
+                    happiness: Double(game.happiness),
+                    hungerPerHour: DecayConstants.hungerPerMin * 60,
+                    happinessPerHour: DecayConstants.happinessPerMin * 60,
+                    expeditionEnd: game.expeditionEndDate,
+                    from: Date())
+                notifier.apply(plan)
+            default:
+                break
             }
         }
     }

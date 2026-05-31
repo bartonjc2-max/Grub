@@ -19,6 +19,14 @@ extension GameState {
     }
 
     /// Whether current expedition is complete
+    /// Wall-clock date when the current expedition completes, or nil if none active.
+    /// Used by NotificationScheduler (Phase 1) to schedule "expedition ready" reminders.
+    var expeditionEndDate: Date? {
+        guard let start = expeditionStartTime,
+              let def = expeditionCatalog[activeExpeditionId] else { return nil }
+        return start.addingTimeInterval(Double(def.durationMinutes) * 60)
+    }
+
     var isExpeditionComplete: Bool {
         isOnExpedition && expeditionTimeRemaining <= 0
     }
