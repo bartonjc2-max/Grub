@@ -338,11 +338,25 @@ struct ViewportView: View {
 
             } else {
                 // Normal — pet sprite in foreground
-                let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
                 let petY = size.height * 0.45 - 16 * scale
-                SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: CGPoint(x: petX, y: petY), scale: scale)
+
+                if game.currentPetAnim == "idle" {
+                    // PNG hero (pixel-perfect via Image.interpolation(.none)).
+                    let hero = Image("grub_S").interpolation(.none)
+                    let drawSize = 32 * scale  // visually equivalent to the 32-grid procedural sprite
+                    context.draw(hero,
+                                 in: CGRect(x: petX, y: petY,
+                                            width: drawSize, height: drawSize))
+                } else {
+                    // Procedural fallback for stateful animations
+                    // (eating, sad, dying, sleeping, …) — no PNG frames yet.
+                    let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
+                    SpriteRenderer.drawSprite(context: &context, sprite: sprite,
+                                              origin: CGPoint(x: petX, y: petY),
+                                              scale: scale)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

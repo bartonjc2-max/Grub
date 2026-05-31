@@ -93,10 +93,10 @@ struct SplashView: View {
 
     private var spriteCanvas: some View {
         // PNG hero: pixel-perfect directional sprite, with the same gentle bob
-        // animation the procedural renderer used.
+        // the procedural renderer had. Filling the parent's 120x120 frame
+        // (no horizontal padding — that was shrinking it to a sliver).
         let bob = sin(Double(animTick) * 0.15) * 3.0
         return GrubSpriteView(state: "idle", tick: animTick)
-            .padding(.horizontal, 40)   // ~ matches the 0.8 scale the canvas used
             .offset(y: CGFloat(bob))
     }
 
