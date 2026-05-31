@@ -92,14 +92,12 @@ struct SplashView: View {
     // MARK: - Sprite Canvas
 
     private var spriteCanvas: some View {
-        Canvas { context, size in
-            let sprite = SpriteRenderer.makeGrubSprite(state: "idle", tick: animTick)
-            let scale = min(size.width, size.height) / 32.0 * 0.8
-            let bob = sin(Double(animTick) * 0.15) * 3.0
-            let originX = size.width / 2 - 16 * scale
-            let originY = size.height / 2 - 16 * scale + CGFloat(bob)
-            SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: CGPoint(x: originX, y: originY), scale: scale)
-        }
+        // PNG hero: pixel-perfect directional sprite, with the same gentle bob
+        // animation the procedural renderer used.
+        let bob = sin(Double(animTick) * 0.15) * 3.0
+        return GrubSpriteView(state: "idle", tick: animTick)
+            .padding(.horizontal, 40)   // ~ matches the 0.8 scale the canvas used
+            .offset(y: CGFloat(bob))
     }
 
     // MARK: - Loading Bar

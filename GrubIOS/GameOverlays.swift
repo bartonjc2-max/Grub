@@ -482,12 +482,9 @@ struct EvolutionOverlayView: View {
                 }
 
             VStack(spacing: 24) {
-                Canvas { context, size in
-                    let sprite = SpriteRenderer.makeGrubSprite(state: "idle", tick: game.animTick)
-                    let scale = size.width / 32
-                    SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: .zero, scale: scale)
-                }
-                .frame(width: 192, height: 192)
+                // PNG hero for the evolution reveal (idle pose, pixel-perfect)
+                GrubSpriteView(state: "idle", tick: game.animTick)
+                    .frame(width: 192, height: 192)
 
                 Text("\(game.name) EVOLVED INTO\n\(game.evoDisplayName)!")
                     .font(GrubFont.size(11))
@@ -764,6 +761,12 @@ class GrubSpriteUIView: UIView {
     override func draw(_ rect: CGRect) {
         guard let ctx = UIGraphicsGetCurrentContext() else { return }
         ctx.interpolationQuality = .none
+        // PNG hero (idle), pixel-perfect via interpolationQuality.none above.
+        if let img = UIImage(named: "grub_S") {
+            img.draw(in: rect)
+            return
+        }
+        // Procedural fallback if the asset is missing for any reason.
         let sprite = SpriteRenderer.makeGrubSprite(state: "idle", tick: tick)
         let scale = rect.width / 32
         for (r, row) in sprite.enumerated() {
