@@ -54,3 +54,14 @@ targets:
       GENERATE_INFOPLIST_FILE: true
       TEST_HOST: "$(BUILT_PRODUCTS_DIR)/GrubIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GrubIOS"
       BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  GrubIOS:
+    build:
+      targets:
+        GrubIOS: all
+        GrubIOSTests: [test]
+    test:
+      targets:
+        - GrubIOSTests
+    run:
+      config: Debug

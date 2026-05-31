@@ -573,7 +573,12 @@ class GameState: ObservableObject {
 
     let audio = AudioEngine()
 
-    init() {
+    /// Injectable persistence store. Defaults to `.standard` for production;
+    /// tests pass an isolated suite. (Phase 0 / O-5)
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard, startGameLoop runLoop: Bool = true) {
+        self.defaults = defaults
         load()
         if !name.isEmpty {
             showNameEntry = false
@@ -588,7 +593,7 @@ class GameState: ObservableObject {
                 }
             }
         }
-        startGameLoop()
+        if runLoop { startGameLoop() }
     }
 
     deinit {
@@ -657,11 +662,11 @@ class GameState: ObservableObject {
             ["type": e.type.rawValue, "expiresAt": e.expiresAt.timeIntervalSince1970]
         }
         data["activeEffects"] = effectsData
-        UserDefaults.standard.set(data, forKey: "grub_state")
+        defaults.set(data, forKey: "grub_state")
     }
 
     func load() {
-        guard let data = UserDefaults.standard.dictionary(forKey: "grub_state") else { return }
+        guard let data = defaults.dictionary(forKey: "grub_state") else { return }
         let version = data["saveVersion"] as? Int ?? 0
         // Future migration: if version < 2 { migrate_v1_to_v2(data) }
         _ = version // Used for future migrations
