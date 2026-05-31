@@ -342,17 +342,28 @@ struct ViewportView: View {
                 let petX = size.width / 2 - 16 * scale
                 let petY = size.height * 0.45 - 16 * scale
 
-                if game.currentPetAnim == "idle" {
+                // Use PNG hero for normal/calm states. Fall back to procedural
+                // only for animations and danger states where the body-color tint
+                // carries info (eating/drinking/angry/sick/starving/dying/dead/tap_*).
+                let proceduralStates: Set<String> = [
+                    "eating", "drinking", "angry",
+                    "sick", "starving", "dying", "dead"
+                ]
+                let anim = game.currentPetAnim
+                let stateNeedsProcedural = proceduralStates.contains(anim) || anim.hasPrefix("tap_")
+
+                if !stateNeedsProcedural {
                     // PNG hero (pixel-perfect via Image.interpolation(.none)).
+                    // Gentle bob so the pet feels alive (same shape as the
+                    // splash sprite's bob, baked into draw Y).
+                    let bob = CGFloat(sin(Double(game.animTick) * 0.08) * 3.0)
                     let hero = Image("grub_S").interpolation(.none)
                     let drawSize = 32 * scale  // visually equivalent to the 32-grid procedural sprite
                     context.draw(hero,
-                                 in: CGRect(x: petX, y: petY,
+                                 in: CGRect(x: petX, y: petY + bob,
                                             width: drawSize, height: drawSize))
                 } else {
-                    // Procedural fallback for stateful animations
-                    // (eating, sad, dying, sleeping, …) — no PNG frames yet.
-                    let sprite = SpriteRenderer.makeGrubSprite(state: game.currentPetAnim, tick: game.animTick)
+                    let sprite = SpriteRenderer.makeGrubSprite(state: anim, tick: game.animTick)
                     SpriteRenderer.drawSprite(context: &context, sprite: sprite,
                                               origin: CGPoint(x: petX, y: petY),
                                               scale: scale)
