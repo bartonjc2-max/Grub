@@ -81,6 +81,7 @@ extension GameState {
         showForageResults = true
         showForageOverlay = false
         save()
+        analytics.log(.homeAction(type: "forage"))
     }
 
     fileprivate func rollIngredient(rarity: Rarity, area: ForageArea, table: LootTable) -> String? {

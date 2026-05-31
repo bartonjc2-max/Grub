@@ -35,6 +35,7 @@ extension GameState {
         trackCare("craft")
         checkJournalUnlocks()
         save()
+        analytics.log(.homeAction(type: "craft"))
     }
 
     /// Use a crafted food/medicine item on Grub
@@ -103,6 +104,7 @@ extension GameState {
         }
 
         save()
+        analytics.log(.homeAction(type: "feed"))
     }
 
     /// Get sorted list of available recipes (unlocked, grouped by craftability)

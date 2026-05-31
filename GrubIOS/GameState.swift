@@ -577,8 +577,18 @@ class GameState: ObservableObject {
     /// tests pass an isolated suite. (Phase 0 / O-5)
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard, startGameLoop runLoop: Bool = true) {
+    /// Growth services (Phase 1), injected. Default to no-op-safe impls so existing
+    /// call sites and previews keep working.
+    let analytics: AnalyticsService
+    let rating: RatingPrompt?
+
+    init(defaults: UserDefaults = .standard,
+         startGameLoop runLoop: Bool = true,
+         analytics: AnalyticsService = ConsoleAnalytics(),
+         rating: RatingPrompt? = nil) {
         self.defaults = defaults
+        self.analytics = analytics
+        self.rating = rating
         load()
         if !name.isEmpty {
             showNameEntry = false
@@ -881,6 +891,8 @@ class GameState: ObservableObject {
         evoDisplayName = evoNames[key] ?? "EVOLVED GRUB"
         evoDisplayBranch = branch
         showEvolution = true
+        // Evolution is a high point — a good moment to ask for a rating.
+        rating?.consider(moment: .positive)
     }
 
     // MARK: - XP
