@@ -24,4 +24,11 @@ final class GrubAssetTests: XCTestCase {
               ?? UIImage(named: SpriteRenderer.canonicalAssetName)
         XCTAssertNotNil(img, "grub_canon not found in bundle")
     }
+
+    func test_blink_frame_resolves() {
+        let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)
+        let img = UIImage(named: "grub_S_blink", in: appBundle, with: nil)
+              ?? UIImage(named: "grub_S_blink")
+        XCTAssertNotNil(img, "grub_S_blink not found in bundle — the blink animation will silently fall back to nothing")
+    }
 }

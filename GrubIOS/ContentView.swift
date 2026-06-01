@@ -373,7 +373,11 @@ struct ViewportView: View {
                     let drawX = petX + (baseDraw - drawW) / 2    // keep centered horizontally
                     let drawY = feetY - drawH + bob              // grow upward, then bob
 
-                    let hero = Image("grub_S").interpolation(.none)
+                    // Blink: ~5 ticks closed every ~80 ticks (~0.25s blink, ~4s cycle).
+                    let blinkPhase = game.animTick % 80
+                    let isBlinking = blinkPhase < 5
+                    let assetName = isBlinking ? "grub_S_blink" : "grub_S"
+                    let hero = Image(assetName).interpolation(.none)
                     context.draw(hero,
                                  in: CGRect(x: drawX, y: drawY,
                                             width: drawW, height: drawH))
