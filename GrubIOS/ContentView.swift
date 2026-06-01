@@ -342,17 +342,39 @@ struct ViewportView: View {
                 let petX = size.width / 2 - 16 * scale
                 let petY = size.height * 0.45 - 16 * scale
 
-                // Use PNG hero for normal/calm states. Fall back to procedural
-                // only for animations and danger states where the body-color tint
-                // carries info (eating/drinking/angry/sick/starving/dying/dead/tap_*).
+                // PNG-state dispatch:
+                //   - "eating"/"drinking": use grub_S_eat (with fallback to procedural
+                //     if the asset is missing — see UIImage(named:) guard below)
+                //   - calm/normal states: use grub_S + blink alternation + transforms
+                //   - danger/action states (angry/sick/starving/dying/dead/tap_*):
+                //     fall back to procedural where body-color tint carries info
                 let proceduralStates: Set<String> = [
-                    "eating", "drinking", "angry",
-                    "sick", "starving", "dying", "dead"
+                    "angry", "sick", "starving", "dying", "dead"
                 ]
                 let anim = game.currentPetAnim
+                let isEating = (anim == "eating" || anim == "drinking")
                 let stateNeedsProcedural = proceduralStates.contains(anim) || anim.hasPrefix("tap_")
 
-                if !stateNeedsProcedural {
+                // Eating PNG path (only if the asset actually shipped — graceful fallback)
+                if isEating, UIImage(named: "grub_S_eat") != nil {
+                    // Same transform stack as idle, but slightly more bounce to feel chompy
+                    let t = Double(game.animTick)
+                    let bobPhase = sin(t * 0.16)               // 2x faster than idle
+                    let bob = CGFloat(bobPhase * 4.0)          // 4px instead of 3
+                    let breathe = 1.0 + sin(t * 0.04) * 0.02
+                    let stretchY = CGFloat(breathe + bobPhase * 0.04)
+                    let stretchX = CGFloat(breathe - bobPhase * 0.025)
+
+                    let baseDraw = 32 * scale
+                    let drawW = baseDraw * stretchX
+                    let drawH = baseDraw * stretchY
+                    let feetY = petY + baseDraw
+                    let drawX = petX + (baseDraw - drawW) / 2
+                    let drawY = feetY - drawH + bob
+
+                    let eater = Image("grub_S_eat").interpolation(.none)
+                    context.draw(eater, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
+                } else if !stateNeedsProcedural && !isEating {
                     // PNG hero idle animation — pure transforms, no per-frame art:
                     //   * bob: vertical sine, ~3px peak-to-peak
                     //   * breathe: slow ambient vertical scale pulse (~2.5%)
