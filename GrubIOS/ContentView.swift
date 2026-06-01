@@ -353,15 +353,30 @@ struct ViewportView: View {
                 let stateNeedsProcedural = proceduralStates.contains(anim) || anim.hasPrefix("tap_")
 
                 if !stateNeedsProcedural {
-                    // PNG hero (pixel-perfect via Image.interpolation(.none)).
-                    // Gentle bob so the pet feels alive (same shape as the
-                    // splash sprite's bob, baked into draw Y).
-                    let bob = CGFloat(sin(Double(game.animTick) * 0.08) * 3.0)
+                    // PNG hero idle animation — pure transforms, no per-frame art:
+                    //   * bob: vertical sine, ~3px peak-to-peak
+                    //   * breathe: slow ambient vertical scale pulse (~2.5%)
+                    //   * squash & stretch: bob-coupled — taller going up,
+                    //     squatter at the bottom; X anti-correlates to suggest
+                    //     volume preservation. Feet stay grounded.
+                    let t = Double(game.animTick)
+                    let bobPhase = sin(t * 0.08)                 // -1..1
+                    let bob = CGFloat(bobPhase * 3.0)            // pixels
+                    let breathe = 1.0 + sin(t * 0.04) * 0.02     // 0.98..1.02
+                    let stretchY = CGFloat(breathe + bobPhase * 0.025) // taller at peak
+                    let stretchX = CGFloat(breathe - bobPhase * 0.015) // narrower at peak
+
+                    let baseDraw = 32 * scale
+                    let drawW = baseDraw * stretchX
+                    let drawH = baseDraw * stretchY
+                    let feetY = petY + baseDraw                  // anchor at "ground"
+                    let drawX = petX + (baseDraw - drawW) / 2    // keep centered horizontally
+                    let drawY = feetY - drawH + bob              // grow upward, then bob
+
                     let hero = Image("grub_S").interpolation(.none)
-                    let drawSize = 32 * scale  // visually equivalent to the 32-grid procedural sprite
                     context.draw(hero,
-                                 in: CGRect(x: petX, y: petY + bob,
-                                            width: drawSize, height: drawSize))
+                                 in: CGRect(x: drawX, y: drawY,
+                                            width: drawW, height: drawH))
                 } else {
                     let sprite = SpriteRenderer.makeGrubSprite(state: anim, tick: game.animTick)
                     SpriteRenderer.drawSprite(context: &context, sprite: sprite,
