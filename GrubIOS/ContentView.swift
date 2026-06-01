@@ -274,11 +274,38 @@ struct ViewportView: View {
                     }
                 }
 
-                // Draw mini grub
+                // Draw mini grub — V3 PNG hero with directional walks during the walking
+                // phases (0=walk in left→right, 4=dash right, 6=dash back right→left).
+                // Other phases are static stops/diggings/jumps → use grub_S (camera-facing).
                 if grubX > -32 * miniScale && grubX < w + 32 * miniScale {
-                    let miniSprite = SpriteRenderer.makeGrubSprite(state: spriteState, tick: tick)
-                    SpriteRenderer.drawSprite(context: &context, sprite: miniSprite,
-                        origin: CGPoint(x: grubX, y: grubY), scale: grubScale)
+                    // Pick PNG asset based on phase
+                    let pngName: String = {
+                        switch phase {
+                        case 0, 4:
+                            // Walking right → cycle east walk frames at ~6 fps
+                            let frame = (tick / 4) % 4
+                            return "grub_E_walk_\(frame)"
+                        case 6:
+                            // Walking left → cycle west walk frames at ~6 fps
+                            let frame = (tick / 4) % 4
+                            return "grub_W_walk_\(frame)"
+                        default:
+                            return "grub_S"
+                        }
+                    }()
+
+                    if UIImage(named: pngName) != nil {
+                        let resolved = Image(pngName).interpolation(.none)
+                        let drawSize = 32 * grubScale
+                        context.draw(resolved,
+                                     in: CGRect(x: grubX, y: grubY,
+                                                width: drawSize, height: drawSize))
+                    } else {
+                        // Procedural fallback if asset missing
+                        let miniSprite = SpriteRenderer.makeGrubSprite(state: spriteState, tick: tick)
+                        SpriteRenderer.drawSprite(context: &context, sprite: miniSprite,
+                            origin: CGPoint(x: grubX, y: grubY), scale: grubScale)
+                    }
                 }
 
                 // Dust particles
