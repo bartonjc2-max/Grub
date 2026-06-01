@@ -348,15 +348,21 @@ struct ViewportView: View {
                 let anim = game.currentPetAnim
                 let baseAssetName: String? = {
                     switch anim {
-                    case "idle", "energized", "sleeping":  return "grub_S"
-                    case "eating", "drinking":             return "grub_S_eat"
-                    case "sad", "unhappy":                 return "grub_S_sad"
-                    case "sick":                           return "grub_S_sick"
-                    case "starving", "hungry":             return "grub_S_starving"
-                    case "angry":                          return "grub_S_angry"
-                    case "dying":                          return "grub_S_dying"
-                    case "dead":                           return "grub_S_dead"
-                    default:                               return nil   // tap_*, unmapped
+                    case "idle", "energized", "sleeping", "playing":  return "grub_S"
+                    case "eating", "drinking":                         return "grub_S_eat"
+                    case "sad", "unhappy":                             return "grub_S_sad"
+                    case "sick":                                       return "grub_S_sick"
+                    case "starving", "hungry":                         return "grub_S_starving"
+                    case "angry":                                      return "grub_S_angry"
+                    case "dying":                                      return "grub_S_dying"
+                    case "dead":                                       return "grub_S_dead"
+                    // Tap interactions — keep V3 hero; the bob/squash exaggeration below
+                    // sells the motion. tap_grumpy reuses the angry expression;
+                    // tap_sick reuses the sick expression. Others keep idle face.
+                    case "tap_grumpy":                                 return "grub_S_angry"
+                    case "tap_sick":                                   return "grub_S_sick"
+                    case _ where anim.hasPrefix("tap_"):               return "grub_S"
+                    default:                                           return nil   // truly unmapped
                     }
                 }()
 
@@ -380,6 +386,12 @@ struct ViewportView: View {
                         bobAmp = 4.0; bobSpeed = 0.16; breatheAmp = 0.02; stretchMod = 0.04;  useBlink = false
                     case "idle", "energized", "sleeping":
                         bobAmp = 3.0; bobSpeed = 0.08; breatheAmp = 0.02; stretchMod = 0.025; useBlink = true
+                    case "playing", "tap_jump", "tap_bounce", "tap_spin":
+                        // Excited / interaction bounce — big amplitude, fast, exaggerated squash
+                        bobAmp = 6.0; bobSpeed = 0.32; breatheAmp = 0.025; stretchMod = 0.06; useBlink = false
+                    case _ where anim.hasPrefix("tap_"):
+                        // Other taps (wave, nuzzle, chirp, peek, grumpy, sick) — mild reaction
+                        bobAmp = 2.0; bobSpeed = 0.20; breatheAmp = 0.02; stretchMod = 0.03; useBlink = false
                     default:
                         // Stat-driven states (sad/sick/starving/angry/hungry/unhappy): gentle idle, no blink
                         bobAmp = 3.0; bobSpeed = 0.08; breatheAmp = 0.02; stretchMod = 0.025; useBlink = false

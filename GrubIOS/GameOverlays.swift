@@ -455,12 +455,18 @@ struct MinigameCanvasView: View {
                 context.draw(Text("DODGE!").font(GrubFont.size(12)).foregroundColor(GrubPalette.pale),
                              at: CGPoint(x: w / 2, y: 20))
             } else {
-                let sprite = SpriteRenderer.makeGrubSprite(state: "sad", tick: game.animTick)
+                // V3 PNG hero (sad) — falls back to procedural only if asset missing.
                 let scale: CGFloat = 2.5
                 let ox = (size.width - 32 * scale) / 2
                 let oy = (size.height - 32 * scale) / 2
-                SpriteRenderer.drawSprite(context: &context, sprite: sprite,
-                                          origin: CGPoint(x: ox, y: oy), scale: scale)
+                if UIImage(named: "grub_S_sad") != nil {
+                    let sprite = Image("grub_S_sad").interpolation(.none)
+                    context.draw(sprite, in: CGRect(x: ox, y: oy, width: 32 * scale, height: 32 * scale))
+                } else {
+                    let proc = SpriteRenderer.makeGrubSprite(state: "sad", tick: game.animTick)
+                    SpriteRenderer.drawSprite(context: &context, sprite: proc,
+                                              origin: CGPoint(x: ox, y: oy), scale: scale)
+                }
             }
         }
     }
@@ -532,10 +538,20 @@ struct DeathOverlayView: View {
             Color(hex: "#0d0d0d").ignoresSafeArea()
 
             VStack(spacing: 18) {
-                Canvas { context, size in
-                    let sprite = SpriteRenderer.makeGrubSprite(state: "dead", tick: 0)
-                    let scale = size.width / 32
-                    SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: .zero, scale: scale)
+                // V3 PNG hero (dead with X eyes) — fallback to procedural if asset missing
+                Group {
+                    if UIImage(named: "grub_S_dead") != nil {
+                        Image("grub_S_dead")
+                            .interpolation(.none)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Canvas { context, size in
+                            let sprite = SpriteRenderer.makeGrubSprite(state: "dead", tick: 0)
+                            let scale = size.width / 32
+                            SpriteRenderer.drawSprite(context: &context, sprite: sprite, origin: .zero, scale: scale)
+                        }
+                    }
                 }
                 .frame(width: 192, height: 192)
 
