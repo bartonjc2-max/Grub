@@ -31,4 +31,11 @@ final class GrubAssetTests: XCTestCase {
               ?? UIImage(named: "grub_S_blink")
         XCTAssertNotNil(img, "grub_S_blink not found in bundle — the blink animation will silently fall back to nothing")
     }
+
+    func test_eat_frame_resolves() {
+        let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)
+        let img = UIImage(named: "grub_S_eat", in: appBundle, with: nil)
+              ?? UIImage(named: "grub_S_eat")
+        XCTAssertNotNil(img, "grub_S_eat not found in bundle — eating animation will fall back to procedural")
+    }
 }
