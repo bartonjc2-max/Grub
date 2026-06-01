@@ -39,6 +39,21 @@ final class GrubAssetTests: XCTestCase {
         XCTAssertNotNil(img, "grub_S_eat not found in bundle — eating animation will fall back to procedural")
     }
 
+    func test_all_pet_state_pngs_resolve() {
+        // 6 state variants from PixelLab (sad/sick/starving/angry/dying/dead),
+        // all derived from canonical 1e12a98f via create_character_state.
+        let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)
+        let states = ["sad", "sick", "starving", "angry", "dying", "dead"]
+        var missing: [String] = []
+        for s in states {
+            let name = "grub_S_\(s)"
+            let img = UIImage(named: name, in: appBundle, with: nil) ?? UIImage(named: name)
+            if img == nil { missing.append(name) }
+        }
+        XCTAssertTrue(missing.isEmpty,
+                      "missing pet-state PNGs (will fall back to procedural): \(missing)")
+    }
+
     func test_all_walk_frames_resolve() {
         // 8 directions × 4 frames each = 32 walk frames for Descent walking.
         let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)

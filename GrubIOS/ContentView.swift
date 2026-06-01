@@ -342,28 +342,54 @@ struct ViewportView: View {
                 let petX = size.width / 2 - 16 * scale
                 let petY = size.height * 0.45 - 16 * scale
 
-                // PNG-state dispatch:
-                //   - "eating"/"drinking": use grub_S_eat (with fallback to procedural
-                //     if the asset is missing — see UIImage(named:) guard below)
-                //   - calm/normal states: use grub_S + blink alternation + transforms
-                //   - danger/action states (angry/sick/starving/dying/dead/tap_*):
-                //     fall back to procedural where body-color tint carries info
-                let proceduralStates: Set<String> = [
-                    "angry", "sick", "starving", "dying", "dead"
-                ]
+                // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
+                // PNG with the same character lineage (1e12a98f). Procedural fallback only
+                // for tap_* action animations and any unmapped state.
                 let anim = game.currentPetAnim
-                let isEating = (anim == "eating" || anim == "drinking")
-                let stateNeedsProcedural = proceduralStates.contains(anim) || anim.hasPrefix("tap_")
+                let baseAssetName: String? = {
+                    switch anim {
+                    case "idle", "energized", "sleeping":  return "grub_S"
+                    case "eating", "drinking":             return "grub_S_eat"
+                    case "sad", "unhappy":                 return "grub_S_sad"
+                    case "sick":                           return "grub_S_sick"
+                    case "starving", "hungry":             return "grub_S_starving"
+                    case "angry":                          return "grub_S_angry"
+                    case "dying":                          return "grub_S_dying"
+                    case "dead":                           return "grub_S_dead"
+                    default:                               return nil   // tap_*, unmapped
+                    }
+                }()
 
-                // Eating PNG path (only if the asset actually shipped — graceful fallback)
-                if isEating, UIImage(named: "grub_S_eat") != nil {
-                    // Same transform stack as idle, but slightly more bounce to feel chompy
+                if let baseName = baseAssetName, UIImage(named: baseName) != nil {
+                    // Per-state animation profile (bob amplitude, speed, breathing).
+                    // Dead = fully static. Dying = weak/heavy. Eating = chompy.
+                    // Everything else = normal idle.
                     let t = Double(game.animTick)
-                    let bobPhase = sin(t * 0.16)               // 2x faster than idle
-                    let bob = CGFloat(bobPhase * 4.0)          // 4px instead of 3
-                    let breathe = 1.0 + sin(t * 0.04) * 0.02
-                    let stretchY = CGFloat(breathe + bobPhase * 0.04)
-                    let stretchX = CGFloat(breathe - bobPhase * 0.025)
+                    let bobAmp:     Double
+                    let bobSpeed:   Double
+                    let breatheAmp: Double
+                    let stretchMod: Double
+                    let useBlink:   Bool
+
+                    switch anim {
+                    case "dead":
+                        bobAmp = 0; bobSpeed = 0.08; breatheAmp = 0; stretchMod = 0;     useBlink = false
+                    case "dying":
+                        bobAmp = 1.5; bobSpeed = 0.04; breatheAmp = 0.015; stretchMod = 0.01; useBlink = false
+                    case "eating", "drinking":
+                        bobAmp = 4.0; bobSpeed = 0.16; breatheAmp = 0.02; stretchMod = 0.04;  useBlink = false
+                    case "idle", "energized", "sleeping":
+                        bobAmp = 3.0; bobSpeed = 0.08; breatheAmp = 0.02; stretchMod = 0.025; useBlink = true
+                    default:
+                        // Stat-driven states (sad/sick/starving/angry/hungry/unhappy): gentle idle, no blink
+                        bobAmp = 3.0; bobSpeed = 0.08; breatheAmp = 0.02; stretchMod = 0.025; useBlink = false
+                    }
+
+                    let bobPhase = sin(t * bobSpeed)
+                    let bob = CGFloat(bobPhase * bobAmp)
+                    let breathe = 1.0 + sin(t * 0.04) * breatheAmp
+                    let stretchY = CGFloat(breathe + bobPhase * stretchMod)
+                    let stretchX = CGFloat(breathe - bobPhase * (stretchMod * 0.6))
 
                     let baseDraw = 32 * scale
                     let drawW = baseDraw * stretchX
@@ -372,38 +398,14 @@ struct ViewportView: View {
                     let drawX = petX + (baseDraw - drawW) / 2
                     let drawY = feetY - drawH + bob
 
-                    let eater = Image("grub_S_eat").interpolation(.none)
-                    context.draw(eater, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
-                } else if !stateNeedsProcedural && !isEating {
-                    // PNG hero idle animation — pure transforms, no per-frame art:
-                    //   * bob: vertical sine, ~3px peak-to-peak
-                    //   * breathe: slow ambient vertical scale pulse (~2.5%)
-                    //   * squash & stretch: bob-coupled — taller going up,
-                    //     squatter at the bottom; X anti-correlates to suggest
-                    //     volume preservation. Feet stay grounded.
-                    let t = Double(game.animTick)
-                    let bobPhase = sin(t * 0.08)                 // -1..1
-                    let bob = CGFloat(bobPhase * 3.0)            // pixels
-                    let breathe = 1.0 + sin(t * 0.04) * 0.02     // 0.98..1.02
-                    let stretchY = CGFloat(breathe + bobPhase * 0.025) // taller at peak
-                    let stretchX = CGFloat(breathe - bobPhase * 0.015) // narrower at peak
-
-                    let baseDraw = 32 * scale
-                    let drawW = baseDraw * stretchX
-                    let drawH = baseDraw * stretchY
-                    let feetY = petY + baseDraw                  // anchor at "ground"
-                    let drawX = petX + (baseDraw - drawW) / 2    // keep centered horizontally
-                    let drawY = feetY - drawH + bob              // grow upward, then bob
-
-                    // Blink: ~5 ticks closed every ~80 ticks (~0.25s blink, ~4s cycle).
-                    let blinkPhase = game.animTick % 80
-                    let isBlinking = blinkPhase < 5
-                    let assetName = isBlinking ? "grub_S_blink" : "grub_S"
-                    let hero = Image(assetName).interpolation(.none)
-                    context.draw(hero,
-                                 in: CGRect(x: drawX, y: drawY,
-                                            width: drawW, height: drawH))
+                    // Idle-only blink alternation (~5 ticks closed every 80)
+                    let assetName: String = (useBlink && (game.animTick % 80) < 5)
+                        ? "grub_S_blink"
+                        : baseName
+                    let sprite = Image(assetName).interpolation(.none)
+                    context.draw(sprite, in: CGRect(x: drawX, y: drawY, width: drawW, height: drawH))
                 } else {
+                    // Procedural fallback for tap_* and any unmapped state
                     let sprite = SpriteRenderer.makeGrubSprite(state: anim, tick: game.animTick)
                     SpriteRenderer.drawSprite(context: &context, sprite: sprite,
                                               origin: CGPoint(x: petX, y: petY),
