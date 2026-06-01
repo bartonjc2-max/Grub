@@ -38,4 +38,19 @@ final class GrubAssetTests: XCTestCase {
               ?? UIImage(named: "grub_S_eat")
         XCTAssertNotNil(img, "grub_S_eat not found in bundle — eating animation will fall back to procedural")
     }
+
+    func test_all_walk_frames_resolve() {
+        // 8 directions × 4 frames each = 32 walk frames for Descent walking.
+        let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)
+        let dirs = SpriteRenderer.Direction8.allCases
+        var missing: [String] = []
+        for d in dirs {
+            for f in 0..<4 {
+                let name = "grub_\(d.rawValue)_walk_\(f)"
+                let img = UIImage(named: name, in: appBundle, with: nil) ?? UIImage(named: name)
+                if img == nil { missing.append(name) }
+            }
+        }
+        XCTAssertTrue(missing.isEmpty, "missing walk frames: \(missing)")
+    }
 }
