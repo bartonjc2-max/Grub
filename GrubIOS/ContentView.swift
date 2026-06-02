@@ -3,6 +3,12 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var game: GameState
 
+    /// Upward shift applied to the whole scene (cave + atmosphere + Grub) as one unit,
+    /// so Grub's head rises above the screen centerline. Negative = up. The bottom of
+    /// the bottom-anchored cave lifts off the screen bottom by this much; the void_color
+    /// backdrop fills behind it (and the button dock covers that gap anyway).
+    static let sceneShiftY: CGFloat = -150
+
     var body: some View {
         ZStack {
             // Full-screen background
@@ -18,6 +24,7 @@ struct ContentView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .scaleEffect(1.25, anchor: .bottom)
+                .offset(y: Self.sceneShiftY)        // lift scene so Grub sits above center
                 .ignoresSafeArea()
                 .clipped()
 
@@ -25,6 +32,7 @@ struct ContentView: View {
             Canvas { ctx, size in
                 SpriteRenderer.drawAtmosphere(context: &ctx, size: size, tick: game.animTick)
             }
+            .offset(y: Self.sceneShiftY)
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
@@ -32,6 +40,7 @@ struct ContentView: View {
             //    MUST share the cave's full-screen coordinate space — otherwise the
             //    safe-area-inset Canvas makes 0.76 map above the cave floor (floating).
             GrubLayer(game: game)
+                .offset(y: Self.sceneShiftY)
                 .ignoresSafeArea()
 
             // 4. Floating HUD (respects safe area)
@@ -487,7 +496,7 @@ struct GrubLayer: View {
                         // same pixel grid as the sprite (matches the art instead of a smooth
                         // vector ellipse). Shrinks + fades as Grub bobs up to sell weight.
                         let liftT = max(0, bobPhase)                       // 0 grounded … 1 peak
-                        let pxg = max(2, scale * 2)                        // shadow pixel = ~2 sprite px
+                        let pxg = max(1, scale)                            // shadow pixel = 1 sprite px (finer)
                         let shW = baseDraw * (0.78 - 0.10 * liftT)
                         let shH = shW * 0.22
                         let shAlpha = 0.42 - 0.16 * liftT
