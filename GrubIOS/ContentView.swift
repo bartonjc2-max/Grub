@@ -741,9 +741,12 @@ struct ActionButtonsView: View {
                 game.showInventoryOverlay = true
             }
         }
-        .padding(.horizontal, 8)
+        // Horizontal inset keeps icons off the rounded screen corners; the panel
+        // background bleeds to the very bottom edge while the CONTENT stays above
+        // the home indicator (extra bottom padding) so labels don't clip.
+        .padding(.horizontal, 16)
         .padding(.top, 8)
-        .padding(.bottom, 6)
+        .padding(.bottom, 24)
         .background(GrubPalette.moss.opacity(0.55).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
