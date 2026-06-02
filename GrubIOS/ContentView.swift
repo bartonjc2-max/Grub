@@ -8,26 +8,51 @@ struct ContentView: View {
             // Full-screen background
             GrubPalette.void_color.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                // Safe area top fill
-                GrubPalette.moss.ignoresSafeArea(edges: .top)
-                    .frame(height: 0)
+            // ---- Full-screen cave habitat ----
+            // 1. Static backdrop PNG (full-bleed)
+            Image("cave_home")
+                .interpolation(.none)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .ignoresSafeArea()
 
-                TopBarView(game: game)
-                ViewportView(game: game)
-                if game.isDying {
-                    DyingBannerView(game: game)
-                } else if game.isNight {
-                    NapBannerView(game: game)
-                } else if game.isOnExpedition {
-                    ExpeditionBannerView(game: game)
+            // 2. Animated atmosphere (particles + time-of-day tint) over the PNG
+            Canvas { ctx, size in
+                SpriteRenderer.drawAtmosphere(context: &ctx, size: size, tick: game.animTick)
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+
+            // 3. Grub (transparent layer; tap to interact)
+            GrubLayer(game: game)
+
+            // 4. Floating HUD
+            VStack(spacing: 0) {
+                HStack(alignment: .top) {
+                    IdentityCluster(game: game)
+                    Spacer()
+                    MetaNavCluster(game: game)
                 }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+
+                // Banner appears just under the identity row when active
+                Group {
+                    if game.isDying {
+                        DyingBannerView(game: game)
+                    } else if game.isNight {
+                        NapBannerView(game: game)
+                    } else if game.isOnExpedition {
+                        ExpeditionBannerView(game: game)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
+
+                Spacer()
+
                 StatBarsView(game: game)
                 ActionButtonsView(game: game)
-
-                // Safe area bottom fill
-                GrubPalette.moss.ignoresSafeArea(edges: .bottom)
-                    .frame(height: 0)
             }
 
             // Overlays
@@ -109,54 +134,47 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Top Bar
-struct TopBarView: View {
+// MARK: - Floating HUD clusters
+private func hudShadow<V: View>(_ v: V) -> some View {
+    v.shadow(color: .black.opacity(0.8), radius: 0, x: 1, y: 1)
+}
+
+/// Top-left: pet name + age, floating over the scene.
+struct IdentityCluster: View {
     @ObservedObject var game: GameState
-
     var body: some View {
-        HStack(spacing: 0) {
-            // Name + age — single source of truth (PetInfoBar removed)
-            Text(game.name.isEmpty ? "GRUB" : game.name)
+        VStack(alignment: .leading, spacing: 2) {
+            hudShadow(Text(game.name.isEmpty ? "GRUB" : game.name)
                 .font(GrubFont.size(12))
-                .foregroundColor(GrubPalette.green)
-
-            Text("AGE \(game.ageDays)D")
+                .foregroundColor(GrubPalette.green))
+            hudShadow(Text("AGE \(game.ageDays)D")
                 .font(GrubFont.size(8))
-                .foregroundColor(GrubPalette.pale.opacity(0.5))
-                .padding(.leading, 8)
+                .foregroundColor(GrubPalette.pale.opacity(0.6)))
+        }
+    }
+}
 
-            Spacer()
-
-            // LVL
-            Text("LV\(game.ownerLevel)")
+/// Top-right: level + journal + settings, floating over the scene.
+struct MetaNavCluster: View {
+    @ObservedObject var game: GameState
+    var body: some View {
+        HStack(spacing: 6) {
+            hudShadow(Text("LV\(game.ownerLevel)")
                 .font(GrubFont.size(10))
-                .foregroundColor(GrubPalette.yellow)
+                .foregroundColor(GrubPalette.yellow))
 
-            // Divider dot
-            Text("\u{00B7}")
-                .font(GrubFont.size(10))
-                .foregroundColor(GrubPalette.pale.opacity(0.3))
-                .padding(.horizontal, 6)
-
-            // Journal button (44pt tap target)
             Button {
                 game.audio.play(.tap)
                 game.journalInitialTab = 0
                 game.showJournalOverlay = true
             } label: {
-                Text("LOG")
+                hudShadow(Text("LOG")
                     .font(GrubFont.size(10))
-                    .foregroundColor(GrubPalette.pale.opacity(0.6))
+                    .foregroundColor(GrubPalette.pale.opacity(0.7)))
                     .frame(minWidth: 36, minHeight: 44)
                     .contentShape(Rectangle())
             }
 
-            Text("\u{00B7}")
-                .font(GrubFont.size(10))
-                .foregroundColor(GrubPalette.pale.opacity(0.3))
-                .padding(.horizontal, 6)
-
-            // Settings button — pixel gear, 44pt tap target
             Button {
                 game.audio.play(.tap)
                 game.showSettingsMenu = true
@@ -166,25 +184,17 @@ struct TopBarView: View {
                     .contentShape(Rectangle())
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 2)
-        .background(GrubPalette.moss.ignoresSafeArea(edges: .top))
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(GrubPalette.deepMoss)
-                .frame(height: 1)
-        }
     }
 }
 
 // MARK: - Viewport
-struct ViewportView: View {
+struct GrubLayer: View {
     @ObservedObject var game: GameState
 
     var body: some View {
         Canvas { context, size in
-            SpriteRenderer.drawBackground(context: &context, size: size, tick: game.animTick)
-
+            // Transparent layer: the cave_home PNG + drawAtmosphere render BELOW this
+            // in ContentView's ZStack. This Canvas draws only Grub (+ expedition scene).
             if game.isOnExpedition {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
@@ -555,33 +565,6 @@ struct ExpeditionBannerView: View {
     }
 }
 
-struct PetInfoBar: View {
-    @ObservedObject var game: GameState
-
-    var body: some View {
-        HStack {
-            Text(game.name.isEmpty ? "???" : game.name)
-                .font(GrubFont.size(13))
-                .foregroundColor(GrubPalette.green)
-
-            Spacer()
-
-            Text("AGE: \(game.ageDays)D")
-                .font(GrubFont.size(11))
-                .foregroundColor(GrubPalette.pale.opacity(0.7))
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(GrubPalette.moss)
-        .overlay(alignment: .top) {
-            Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
-        }
-    }
-}
-
 // MARK: - Stat Bars
 struct StatBarsView: View {
     @ObservedObject var game: GameState
@@ -593,7 +576,7 @@ struct StatBarsView: View {
             PixelStatRow(label: "HNG", iconAsset: "ui_icon_drumstick", value: game.hunger,    color: GrubPalette.green,  tick: game.animTick)
             PixelStatRow(label: "HAP", iconAsset: "ui_icon_star",      value: game.happiness, color: GrubPalette.yellow, tick: game.animTick)
         }
-        .background(GrubPalette.void_color)
+        .background(GrubPalette.void_color.opacity(0.5))
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
@@ -705,7 +688,7 @@ struct ActionButtonsView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 10)
-        .background(GrubPalette.moss.ignoresSafeArea(edges: .bottom))
+        .background(GrubPalette.moss.opacity(0.55).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
