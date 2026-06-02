@@ -34,7 +34,7 @@ struct ContentView: View {
                     MetaNavCluster(game: game)
                 }
                 .padding(.horizontal, 12)
-                .padding(.top, 8)
+                .padding(.top, 12)
 
                 // Banner appears just under the identity row when active
                 Group {
