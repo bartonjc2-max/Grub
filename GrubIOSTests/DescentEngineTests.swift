@@ -78,6 +78,51 @@ final class DescentEngineTests: XCTestCase {
         XCTAssertTrue(e.hasStaticPathToStairs())
     }
 
+    // Frozen-enemy engine: the slime never moves, so attack behavior is tested
+    // in isolation. Default room has grub (1,1), slime (2,2).
+    func makeFrozenEnemyEngine() -> DescentEngine {
+        var t = DescentTuning()
+        t.enemyStepDuration = 9999    // slime effectively never steps during a test
+        return DescentEngine(layout: Self.room, tuning: t)
+    }
+
+    func test_attack_damages_enemy_on_faced_tile() {
+        var e = makeFrozenEnemyEngine()                    // grub (1,1), slime (2,2)
+        // Face the slime: move grub to (1,2) then face east toward (2,2).
+        e.setMove(.s); e.update(e.tuning.grubStepDuration) // (1,2)
+        e.setMove(.e)                                      // face east toward slime
+        XCTAssertEqual(e.facing, .e)
+        e.attack()
+        XCTAssertEqual(e.enemies.first?.hp, 1)            // 2 -> 1
+    }
+
+    func test_two_attacks_kill_two_hp_slime() {
+        var e = makeFrozenEnemyEngine()
+        e.setMove(.s); e.update(e.tuning.grubStepDuration) // (1,2)
+        e.setMove(.e)                                      // face east toward slime (2,2)
+        e.attack()                                         // hp 2 -> 1
+        e.setMove(nil)                                     // release stick so the cooldown-clearing
+                                                           // update doesn't step grub onto the slime
+        e.update(e.tuning.attackCooldown)                  // clear attack cooldown (slime frozen)
+        e.attack()                                         // hp 1 -> 0 -> removed
+        XCTAssertTrue(e.enemies.isEmpty)
+    }
+
+    func test_attack_on_empty_faced_tile_does_nothing() {
+        var e = makeFrozenEnemyEngine()                    // faces .s by default toward (1,2) floor
+        e.attack()
+        XCTAssertEqual(e.enemies.first?.hp, 2)
+    }
+
+    func test_attack_respects_cooldown() {
+        var e = makeFrozenEnemyEngine()
+        e.setMove(.s); e.update(e.tuning.grubStepDuration)
+        e.setMove(.e)
+        e.attack()                                         // hp -> 1
+        e.attack()                                         // still cooling down, no effect
+        XCTAssertEqual(e.enemies.first?.hp, 1)
+    }
+
     func test_static_path_false_when_only_route_is_through_slime_spawn() {
         // A 1-wide corridor where the slime spawn blocks the sole path.
         //   ###

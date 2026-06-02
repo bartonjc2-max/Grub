@@ -90,6 +90,8 @@ struct DescentEngine {
     // Input + timers (private)
     private var heldDirection: Direction8?
     private var moveCooldown: Double = 0          // time until Grub may step
+    private var attackCooldownRemaining: Double = 0
+    private(set) var attackFlashRemaining: Double = 0   // for render
 
     init(layout: [String], tuning: DescentTuning = DescentTuning()) {
         self.tuning = tuning
@@ -156,7 +158,20 @@ struct DescentEngine {
     /// Advance the simulation by dt seconds.
     mutating func update(_ dt: Double) {
         guard status == .playing else { return }
+        attackCooldownRemaining = max(0, attackCooldownRemaining - dt)
+        attackFlashRemaining = max(0, attackFlashRemaining - dt)
         stepGrub(dt)
+    }
+
+    mutating func attack() {
+        guard status == .playing, attackCooldownRemaining <= 0 else { return }
+        attackCooldownRemaining = tuning.attackCooldown
+        attackFlashRemaining = tuning.attackFlashDuration
+        let target = grub + facing
+        if let idx = enemies.firstIndex(where: { $0.tile == target }) {
+            enemies[idx].hp -= 1
+            if enemies[idx].hp <= 0 { enemies.remove(at: idx) }
+        }
     }
 
     private mutating func stepGrub(_ dt: Double) {
