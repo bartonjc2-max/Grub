@@ -270,3 +270,26 @@ struct DescentEngine {
         return nil
     }
 }
+
+extension DescentEngine {
+    /// The single hand-authored prototype room (11 wide x 15 tall).
+    /// Border walls, a couple of interior wall clumps, one slime, a clear
+    /// non-combat path from entry to stairs (floor-1-passable invariant).
+    static let prototypeRoom: [String] = [
+        "###########",
+        "#E........#",
+        "#.........#",
+        "#..####...#",
+        "#.....#...#",
+        "#.....#...#",
+        "#...S.#...#",
+        "#.....#...#",
+        "#.....#...#",
+        "#...###...#",
+        "#.........#",
+        "#.........#",
+        "#........>#",
+        "#.........#",
+        "###########",
+    ]
+}
