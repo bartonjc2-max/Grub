@@ -214,4 +214,47 @@ final class DescentEngineTests: XCTestCase {
         e.update(e.tuning.enemyContactIFrames + 0.05)
         XCTAssertEqual(e.hearts, 1)                           // re-hit landed once i-frames lapsed
     }
+
+    func test_interact_on_stairs_wins() {
+        // Use a slime-free room so we can reach the stairs safely.
+        //   #####
+        //   #E.>#
+        //   #####
+        var e = DescentEngine(layout: ["#####", "#E.>#", "#####"])
+        e.setMove(.e); e.update(e.tuning.grubStepDuration)   // (2,1)
+        e.setMove(.e); e.update(e.tuning.grubStepDuration)   // (3,1) stairs
+        XCTAssertEqual(e.tile(at: e.grub), .stairs)
+        e.interact()
+        XCTAssertEqual(e.status, .won)
+    }
+
+    func test_interact_off_stairs_does_nothing() {
+        var e = DescentEngine(layout: ["#####", "#E.>#", "#####"])
+        e.interact()
+        XCTAssertEqual(e.status, .playing)
+    }
+
+    func test_death_when_hearts_reach_zero() {
+        // 1-heart tuning + slime adjacent: dies on first contact.
+        var t = DescentTuning(); t.startHearts = 1
+        var e = DescentEngine(layout: ["#####", "#ES.#", "#####"], tuning: t)
+        var guardCount = 0
+        while e.status == .playing && guardCount < 50 {
+            e.update(e.tuning.enemyStepDuration); guardCount += 1
+        }
+        XCTAssertEqual(e.status, .dead)
+        XCTAssertEqual(e.hearts, 0)
+    }
+
+    func test_inputs_are_noops_once_terminal() {
+        var e = DescentEngine(layout: ["#####", "#E.>#", "#####"])
+        e.setMove(.e); e.update(e.tuning.grubStepDuration)
+        e.setMove(.e); e.update(e.tuning.grubStepDuration)   // on stairs
+        e.interact()                                          // -> .won
+        let frozen = e.grub
+        e.setMove(.w); e.update(e.tuning.grubStepDuration)    // ignored
+        e.attack()                                            // ignored
+        XCTAssertEqual(e.grub, frozen)
+        XCTAssertEqual(e.status, .won)
+    }
 }

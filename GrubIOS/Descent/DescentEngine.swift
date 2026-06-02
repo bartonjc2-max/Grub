@@ -207,6 +207,13 @@ struct DescentEngine {
         return p
     }
 
+    mutating func interact() {
+        guard status == .playing else { return }
+        if tile(at: grub) == .stairs {
+            status = .won
+        }
+    }
+
     mutating func attack() {
         guard status == .playing, attackCooldownRemaining <= 0 else { return }
         attackCooldownRemaining = tuning.attackCooldown
