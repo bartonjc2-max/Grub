@@ -472,6 +472,23 @@ struct GrubLayer: View {
                     let drawX = petX + (baseDraw - drawW) / 2
                     let drawY = feetY - drawH + bob
 
+                    // Contact shadow — grounds the sprite. Drawn BEFORE the body so it
+                    // sits under the feet. Anchored at the fixed ground line (feetY, ~4px
+                    // above the transparent PNG bottom), and it shrinks + fades as Grub
+                    // bobs UP (bobPhase>0 = higher = smaller/lighter shadow) to sell weight.
+                    if anim != "dead" {
+                        let liftT = max(0, bobPhase)                       // 0 grounded … 1 peak
+                        let shW = baseDraw * (0.78 - 0.10 * liftT)         // wider than body so it reads
+                        let shH = shW * 0.20                               // flat ellipse
+                        let shAlpha = 0.45 - 0.18 * liftT                  // darker; fades with lift
+                        let groundY = petY + baseDraw - 4 * scale          // visible-feet line
+                        let shRect = CGRect(x: petX + (baseDraw - shW) / 2,
+                                            y: groundY - shH / 2,
+                                            width: shW, height: shH)
+                        context.fill(Path(ellipseIn: shRect),
+                                     with: .color(.black.opacity(shAlpha)))
+                    }
+
                     // Idle-only blink alternation (~5 ticks closed every 80)
                     let assetName: String = (useBlink && (game.animTick % 80) < 5)
                         ? "grub_S_blink"
