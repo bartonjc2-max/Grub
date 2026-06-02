@@ -175,7 +175,7 @@ struct DescentEngine {
         if enemies.contains(where: { $0.tile == grub }) {
             hearts -= tuning.enemyTouchDamage
             iframesRemaining = tuning.enemyContactIFrames
-            hurtFlashRemaining = tuning.enemyContactIFrames
+            hurtFlashRemaining = tuning.hurtFlashDuration
             if hearts <= 0 {
                 hearts = 0
                 status = .dead

@@ -13,9 +13,7 @@ struct DescentTuning {
     var enemyStepDuration: Double = 0.22      // seconds per tile (~4.5 tiles/s)
     var enemyTouchDamage: Int = 1            // hearts lost on contact
     var enemyContactIFrames: Double = 0.8     // invuln after a hit
+    var hurtFlashDuration: Double = 0.16      // short red hit flash (decoupled from i-frames)
     // Run
     var startHearts: Int = 3                  // fixed for the prototype
-    // Grid
-    var gridWidth: Int = 11
-    var gridHeight: Int = 15
 }

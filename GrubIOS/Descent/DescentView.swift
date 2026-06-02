@@ -44,6 +44,14 @@ struct DescentView: View {
                 )
             }
 
+            // Hit flash — brief red wash on contact so damage reads clearly.
+            if engine.hurtFlashRemaining > 0 {
+                let intensity = engine.hurtFlashRemaining / engine.tuning.hurtFlashDuration
+                GrubPalette.red.opacity(0.38 * intensity)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+
             if engine.status != .playing { resultCard }
         }
         .statusBarHidden()
