@@ -3,12 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var game: GameState
 
-    /// Upward shift applied to the whole scene (cave + atmosphere + Grub) as one unit,
-    /// so Grub's head rises above the screen centerline. Negative = up. The bottom of
-    /// the bottom-anchored cave lifts off the screen bottom by this much; the void_color
-    /// backdrop fills behind it (and the button dock covers that gap anyway).
-    static let sceneShiftY: CGFloat = -150
-
     var body: some View {
         ZStack {
             // Full-screen background
@@ -24,7 +18,6 @@ struct ContentView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .scaleEffect(1.25, anchor: .bottom)
-                .offset(y: Self.sceneShiftY)        // lift scene so Grub sits above center
                 .ignoresSafeArea()
                 .clipped()
 
@@ -32,7 +25,6 @@ struct ContentView: View {
             Canvas { ctx, size in
                 SpriteRenderer.drawAtmosphere(context: &ctx, size: size, tick: game.animTick)
             }
-            .offset(y: Self.sceneShiftY)
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
@@ -40,7 +32,6 @@ struct ContentView: View {
             //    MUST share the cave's full-screen coordinate space — otherwise the
             //    safe-area-inset Canvas makes 0.76 map above the cave floor (floating).
             GrubLayer(game: game)
-                .offset(y: Self.sceneShiftY)
                 .ignoresSafeArea()
 
             // 4. Floating HUD (respects safe area)
@@ -223,7 +214,7 @@ struct GrubLayer: View {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
                 // Floor-Y (O-4): match the normal pet's floor (0.80, on the dirt path)
-                let baseY = size.height * 0.88 - 32 * miniScale
+                let baseY = size.height * 0.84 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -406,18 +397,15 @@ struct GrubLayer: View {
 
             } else {
                 // Normal — pet sprite in foreground.
-                // Floor-Y (O-4): GrubLayer is full-screen (ignoresSafeArea) so `size`
-                // matches the cave render. Measured geometry: the cave's dark dirt PATH
-                // (walkable ledge) is ~0.78–0.80 of screen height; the bright pool (~0.88)
-                // sits behind the stat dock (top at ~0.855). Stand Grub with feet on the
-                // dirt path at 0.80 — on the visible floor, just above the dock.
-                // Stats moved to the top dock, so the bottom is just the button row
-                // (~0.90 up). Grub can stand lower on the now-visible cave floor.
-                // Target drawn-bottom 0.88 → visible feet ~0.84, on the floor above the buttons.
-                // feetY = petY + 32*scale  =>  petY = 0.88*h - 32*scale.
-                let scale = min(size.width, size.height) / 32.0 * 0.7
+                // Composition: NO scene offset (cave fills the screen → no dark gap). Grub
+                // is drawn LARGER (1.05x vs old 0.7x) so his head rises toward center while
+                // his feet stay grounded near the floor. Feet target ~0.84 (visible feet
+                // ~0.80, just above the bottom button dock). Bigger sprite = taller = head
+                // up, no offset hack needed.
+                // feetY = petY + 32*scale  =>  petY = 0.84*h - 32*scale.
+                let scale = min(size.width, size.height) / 32.0 * 1.05
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.88 - 32 * scale
+                let petY = size.height * 0.84 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
