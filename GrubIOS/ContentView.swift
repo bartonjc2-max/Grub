@@ -22,7 +22,6 @@ struct ContentView: View {
                 } else if game.isOnExpedition {
                     ExpeditionBannerView(game: game)
                 }
-                PetInfoBar(game: game)
                 StatBarsView(game: game)
                 ActionButtonsView(game: game)
 
@@ -116,10 +115,15 @@ struct TopBarView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Name — plain display, no action
+            // Name + age — single source of truth (PetInfoBar removed)
             Text(game.name.isEmpty ? "GRUB" : game.name)
                 .font(GrubFont.size(12))
                 .foregroundColor(GrubPalette.green)
+
+            Text("AGE \(game.ageDays)D")
+                .font(GrubFont.size(8))
+                .foregroundColor(GrubPalette.pale.opacity(0.5))
+                .padding(.leading, 8)
 
             Spacer()
 
@@ -134,7 +138,7 @@ struct TopBarView: View {
                 .foregroundColor(GrubPalette.pale.opacity(0.3))
                 .padding(.horizontal, 6)
 
-            // Journal button
+            // Journal button (44pt tap target)
             Button {
                 game.audio.play(.tap)
                 game.journalInitialTab = 0
@@ -143,6 +147,8 @@ struct TopBarView: View {
                 Text("LOG")
                     .font(GrubFont.size(10))
                     .foregroundColor(GrubPalette.pale.opacity(0.6))
+                    .frame(minWidth: 36, minHeight: 44)
+                    .contentShape(Rectangle())
             }
 
             Text("\u{00B7}")
@@ -150,18 +156,18 @@ struct TopBarView: View {
                 .foregroundColor(GrubPalette.pale.opacity(0.3))
                 .padding(.horizontal, 6)
 
-            // Settings button
+            // Settings button — pixel gear, 44pt tap target
             Button {
                 game.audio.play(.tap)
                 game.showSettingsMenu = true
             } label: {
-                Text("\u{2699}")
-                    .font(.system(size: 16))
-                    .foregroundColor(GrubPalette.pale.opacity(0.6))
+                PixelIcon.gear(size: 18)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.vertical, 2)
         .background(GrubPalette.moss.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) {
             Rectangle()
@@ -582,11 +588,15 @@ struct StatBarsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PixelStatRow(label: "HNG", value: game.hunger, color: GrubPalette.green, tick: game.animTick)
-            PixelStatRow(label: "HAP", value: game.happiness, color: GrubPalette.yellow, tick: game.animTick)
-            PixelStatRow(label: "HP", value: game.health, color: GrubPalette.red, tick: game.animTick)
+            // HP first — "am I alive?" is the most urgent read for a casual player
+            PixelStatRow(label: "HP",  iconAsset: "ui_icon_heart",     value: game.health,    color: GrubPalette.red,    tick: game.animTick)
+            PixelStatRow(label: "HNG", iconAsset: "ui_icon_drumstick", value: game.hunger,    color: GrubPalette.green,  tick: game.animTick)
+            PixelStatRow(label: "HAP", iconAsset: "ui_icon_star",      value: game.happiness, color: GrubPalette.yellow, tick: game.animTick)
         }
         .background(GrubPalette.void_color)
+        .overlay(alignment: .top) {
+            Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
+        }
         .overlay(alignment: .bottom) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
@@ -595,6 +605,7 @@ struct StatBarsView: View {
 
 struct PixelStatRow: View {
     let label: String
+    let iconAsset: String      // PixelLab-generated UI icon; falls back to text label if missing
     let value: Int
     let color: Color
     let tick: Int
@@ -604,10 +615,20 @@ struct PixelStatRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(label)
-                .font(GrubFont.size(7))
-                .foregroundColor(isCritical ? color : color.opacity(0.6))
-                .frame(width: 28, alignment: .leading)
+            // Icon if the generated asset shipped, else fall back to the text label
+            if UIImage(named: iconAsset) != nil {
+                Image(iconAsset)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 14, height: 14)
+                    .opacity(isCritical ? 1.0 : 0.85)
+                    .frame(width: 28, alignment: .leading)
+            } else {
+                Text(label)
+                    .font(GrubFont.size(7))
+                    .foregroundColor(isCritical ? color : color.opacity(0.6))
+                    .frame(width: 28, alignment: .leading)
+            }
 
             // Pixel bar rendered via Canvas
             Canvas { ctx, size in
@@ -661,21 +682,23 @@ struct ActionButtonsView: View {
 
     var body: some View {
         HStack(spacing: 4) {
+            // Category-coded borders: feed=green (food), play=yellow (fun),
+            // dig=orange (effort/forage), pack=pale (inventory)
             ActionButton(icon: { AnyView(PixelIcon.meat(size: 28)) }, label: "FEED", borderColor: GrubPalette.green) {
                 game.audio.play(.tap)
                 game.showFeedOverlay = true
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.dice(size: 28)) }, label: "PLAY", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.dice(size: 28)) }, label: "PLAY", borderColor: GrubPalette.yellow) {
                 game.openPlay()
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 28)) }, label: "DIG", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 28)) }, label: "DIG", borderColor: GrubPalette.orange) {
                 game.audio.play(.dig)
                 game.showForageOverlay = true
             }
 
-            ActionButton(icon: { AnyView(PixelIcon.chest(size: 28)) }, label: "PACK", borderColor: GrubPalette.green) {
+            ActionButton(icon: { AnyView(PixelIcon.chest(size: 28)) }, label: "PACK", borderColor: GrubPalette.bone) {
                 game.audio.play(.tap)
                 game.showInventoryOverlay = true
             }
