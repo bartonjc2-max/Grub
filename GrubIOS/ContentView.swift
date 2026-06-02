@@ -403,7 +403,7 @@ struct GrubLayer: View {
                 // ~0.80, just above the bottom button dock). Bigger sprite = taller = head
                 // up, no offset hack needed.
                 // feetY = petY + 32*scale  =>  petY = 0.84*h - 32*scale.
-                let scale = min(size.width, size.height) / 32.0 * 1.05
+                let scale = min(size.width, size.height) / 32.0 * 0.82
                 let petX = size.width / 2 - 16 * scale
                 let petY = size.height * 0.84 - 32 * scale
 
