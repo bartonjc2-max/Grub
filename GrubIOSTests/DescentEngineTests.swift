@@ -123,6 +123,40 @@ final class DescentEngineTests: XCTestCase {
         XCTAssertEqual(e.enemies.first?.hp, 1)
     }
 
+    // Room with grub far from slime so we can observe approach without contact.
+    //   row0: #######
+    //   row1: #E....#
+    //   row2: #.....#
+    //   row3: #....S#
+    //   row4: #....>#
+    //   row5: #######
+    static let wideRoom: [String] = [
+        "#######",
+        "#E....#",
+        "#.....#",
+        "#....S#",
+        "#....>#",
+        "#######",
+    ]
+
+    func test_enemy_chases_toward_grub() {
+        var e = DescentEngine(layout: Self.wideRoom)
+        let before = e.enemies.first!.tile               // (5,3)
+        e.update(e.tuning.enemyStepDuration)             // one enemy step
+        let after = e.enemies.first!.tile
+        let distBefore = abs(before.x - e.grub.x) + abs(before.y - e.grub.y)
+        let distAfter  = abs(after.x  - e.grub.x) + abs(after.y  - e.grub.y)
+        XCTAssertLessThan(distAfter, distBefore)         // got closer
+    }
+
+    func test_enemy_does_not_step_into_wall() {
+        // Slime boxed against the right wall; chasing left toward grub must stay in bounds.
+        var e = DescentEngine(layout: Self.wideRoom)
+        for _ in 0..<20 { e.update(e.tuning.enemyStepDuration) }
+        let t = e.enemies.first?.tile
+        if let t = t { XCTAssertTrue(e.isPassable(t)) }  // never on a wall / OOB
+    }
+
     func test_static_path_false_when_only_route_is_through_slime_spawn() {
         // A 1-wide corridor where the slime spawn blocks the sole path.
         //   ###

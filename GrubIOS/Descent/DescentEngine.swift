@@ -161,6 +161,31 @@ struct DescentEngine {
         attackCooldownRemaining = max(0, attackCooldownRemaining - dt)
         attackFlashRemaining = max(0, attackFlashRemaining - dt)
         stepGrub(dt)
+        stepEnemies(dt)
+    }
+
+    private mutating func stepEnemies(_ dt: Double) {
+        for i in enemies.indices {
+            enemies[i].stepCooldown -= dt
+            guard enemies[i].stepCooldown <= 0 else { continue }
+            enemies[i].stepCooldown = tuning.enemyStepDuration
+            enemies[i].tile = chaseStep(from: enemies[i].tile)
+        }
+    }
+
+    /// One greedy step toward Grub: reduce the larger-magnitude axis first;
+    /// if that tile is blocked, try the other axis; else stay put.
+    private func chaseStep(from p: GridPoint) -> GridPoint {
+        let dx = grub.x - p.x
+        let dy = grub.y - p.y
+        let stepX = GridPoint(x: p.x + (dx == 0 ? 0 : (dx > 0 ? 1 : -1)), y: p.y)
+        let stepY = GridPoint(x: p.x, y: p.y + (dy == 0 ? 0 : (dy > 0 ? 1 : -1)))
+        let preferX = abs(dx) >= abs(dy)
+        let first = preferX ? stepX : stepY
+        let second = preferX ? stepY : stepX
+        if first != p, isPassable(first) { return first }
+        if second != p, isPassable(second) { return second }
+        return p
     }
 
     mutating func attack() {
