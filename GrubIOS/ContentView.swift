@@ -725,18 +725,18 @@ struct ActionButtonsView: View {
         HStack(spacing: 0) {
             // Borderless icon+label buttons — the icons carry the color, labels are
             // uniform pale. The translucent dock is the only container (no boxy frames).
-            ActionButton(icon: { AnyView(PixelIcon.meat(size: 30)) }, label: "FEED") {
+            ActionButton(icon: { navIcon("ui_btn_feed", fallback: PixelIcon.meat(size: 30)) }, label: "FEED") {
                 game.audio.play(.tap)
                 game.showFeedOverlay = true
             }
-            ActionButton(icon: { AnyView(PixelIcon.dice(size: 30)) }, label: "PLAY") {
+            ActionButton(icon: { navIcon("ui_btn_play", fallback: PixelIcon.dice(size: 30)) }, label: "PLAY") {
                 game.openPlay()
             }
-            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 30)) }, label: "DIG") {
+            ActionButton(icon: { navIcon("ui_btn_dig", fallback: PixelIcon.shovel(size: 30)) }, label: "DIG") {
                 game.audio.play(.dig)
                 game.showForageOverlay = true
             }
-            ActionButton(icon: { AnyView(PixelIcon.chest(size: 30)) }, label: "PACK") {
+            ActionButton(icon: { navIcon("ui_btn_pack", fallback: PixelIcon.chest(size: 30)) }, label: "PACK") {
                 game.audio.play(.tap)
                 game.showInventoryOverlay = true
             }
@@ -751,6 +751,20 @@ struct ActionButtonsView: View {
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
         }
+    }
+
+    /// PixelLab-generated nav icon if the asset shipped, else the hand-coded
+    /// PixelIcon fallback so the dock never renders blank.
+    private func navIcon(_ asset: String, fallback: some View) -> AnyView {
+        if UIImage(named: asset) != nil {
+            return AnyView(
+                Image(asset)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 30, height: 30)
+            )
+        }
+        return AnyView(fallback)
     }
 }
 

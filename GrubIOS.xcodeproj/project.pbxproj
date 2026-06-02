@@ -10,34 +10,53 @@
 		04265678D21CA3F2009AE95B /* ExpeditionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA3AF8C394AE1A6C43C0BFE /* ExpeditionOverlay.swift */; };
 		0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3878A3E074253723060C33C3 /* SplashView.swift */; };
 		3248504C2A940CF171147141 /* PressStart2P-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */; };
+		3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */; };
+		3569DE5FADC5471CE5277831 /* PixelIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */; };
+		357AB0697EA29F96F0C05F9B /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */; };
+		40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560F450949A013DE2033C78 /* RetentionTracker.swift */; };
 		43EED2590935E87C7BE594D8 /* GameSelectorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */; };
 		45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */; };
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
+		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
 		65910566002ED2DBBD73FB8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5624CADC5A38E7D506E60526 /* Assets.xcassets */; };
 		674E84966D90C07CE4062CE0 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34F1663B37A9209A1EE393F /* GameState.swift */; };
+		69BD2479D19B12DA4A729B4C /* NotificationSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */; };
 		6FFAA5F3BC4E953AF3F0C501 /* GameState+Personality.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */; };
 		714109160C04E62C3E61709C /* AdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EE00B6A047FC079E273D80 /* AdService.swift */; };
 		71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F70E2BDA0D9DA2712224C1 /* ContentView.swift */; };
+		72785046F4FBC1B28A6BD372 /* AnalyticsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */; };
+		73BB1B57B3C1D26BE2F48F00 /* SpriteRenderer+Grub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7E3E1041A4085AF82D47E7 /* SpriteRenderer+Grub.swift */; };
 		74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */; };
+		76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */; };
 		78330876D62DF49C7C35CF0C /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCBE326714FB960EC58256D /* GameState+Crafting.swift */; };
+		7FB7BAB0F295707AD899A7FE /* GrubFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BEFF8AB22606442D65D1965 /* GrubFont.swift */; };
 		81C8761B7298E90A9B3E0C54 /* GameState+Ads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */; };
 		84C2FE8A6F8F089F23906C8F /* RecipeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342775127EB6EF1C707709CD /* RecipeData.swift */; };
+		86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */; };
 		8A4ACDC85B525869873E8616 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C7C322C8E54B4DBD2D68AE6A /* GoogleMobileAds */; };
+		8B722AD6B4EC1B0C862A3DA9 /* RetentionTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */; };
+		92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */; };
 		A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECFC767EBDB0D567F0B7422 /* ForageOverlay.swift */; };
+		A13AC48ACFABE45F4DBFCAAB /* NotificationCenterProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */; };
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
+		AF7FF5430971FB0234FAA817 /* SaveVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */; };
+		AFDCDAE5EDDF9C13AB0AD4FF /* GrubPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */; };
 		B2963A1AEDAFDCBED32E5BD7 /* AdConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EB451FA4162A64E6A81F42 /* AdConfig.swift */; };
 		B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */; };
 		BA178D0D6A213A7525D63DC1 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D37C188B461CEADB0424CC /* GameState+Foraging.swift */; };
-		BD09F0E3104DDC180D05B420 /* GameStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBC9FF6A7163A08306E7660 /* GameStateTests.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
 		C5575F7C983DA8C71ACFB19D /* GameState+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */; };
 		CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */; };
+		CF026214B933457A384F2771 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */; };
+		D075D96977834C393C873636 /* RatingPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */; };
 		D5215A9D7BC816489ECF60D2 /* JournalOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */; };
 		D63FD2D70D70574232F1D312 /* GameState+Expeditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B5111B13882012C1497812 /* GameState+Expeditions.swift */; };
+		D8F74F2D63E7FC0835541ACB /* SpriteRenderer+GrubPNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */; };
 		E14039E8EE217AFB2BD12D61 /* InventoryOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */; };
 		ED49DEB62AE1E28428327095 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB530A92485B49730BC1516A /* RootView.swift */; };
 		F36E502CC2963502AED8F155 /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */; };
+		F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,39 +70,58 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStateHooksTests.swift; sourceTree = "<group>"; };
 		18F70E2BDA0D9DA2712224C1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Ads.swift"; sourceTree = "<group>"; };
+		1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpriteRenderer+GrubPNG.swift"; sourceTree = "<group>"; };
 		20099951754158E5258BC160 /* SpriteRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteRenderer.swift; sourceTree = "<group>"; };
 		23532E87C898D774055B275C /* GrubIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubIOSApp.swift; sourceTree = "<group>"; };
 		23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalOverlay.swift; sourceTree = "<group>"; };
 		24D37C188B461CEADB0424CC /* GameState+Foraging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Foraging.swift"; sourceTree = "<group>"; };
+		30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubSpriteView.swift; sourceTree = "<group>"; };
 		342775127EB6EF1C707709CD /* RecipeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeData.swift; sourceTree = "<group>"; };
 		3878A3E074253723060C33C3 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		468BD209A5D080A784FDC7DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEvent.swift; sourceTree = "<group>"; };
 		5624CADC5A38E7D506E60526 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubAssetTests.swift; sourceTree = "<group>"; };
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
+		62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPrompt.swift; sourceTree = "<group>"; };
 		7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
 		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
 		7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuView.swift; sourceTree = "<group>"; };
 		7BCBE326714FB960EC58256D /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
+		8BEFF8AB22606442D65D1965 /* GrubFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubFont.swift; sourceTree = "<group>"; };
 		8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowOverlay.swift; sourceTree = "<group>"; };
+		8D7E3E1041A4085AF82D47E7 /* SpriteRenderer+Grub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpriteRenderer+Grub.swift"; sourceTree = "<group>"; };
 		972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryOverlay.swift; sourceTree = "<group>"; };
+		9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCenterProtocol.swift; sourceTree = "<group>"; };
 		9CAB23882DE94A37931A500A /* GameState+Burrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Burrow.swift"; sourceTree = "<group>"; };
 		A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 		AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Personality.swift"; sourceTree = "<group>"; };
+		AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelIcon.swift; sourceTree = "<group>"; };
 		B6EB451FA4162A64E6A81F42 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
+		BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVersionTests.swift; sourceTree = "<group>"; };
 		BB530A92485B49730BC1516A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTrackerTests.swift; sourceTree = "<group>"; };
+		C560F450949A013DE2033C78 /* RetentionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTracker.swift; sourceTree = "<group>"; };
 		C8B5111B13882012C1497812 /* GameState+Expeditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Expeditions.swift"; sourceTree = "<group>"; };
+		CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
 		D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Journal.swift"; sourceTree = "<group>"; };
-		DBBC9FF6A7163A08306E7660 /* GameStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStateTests.swift; sourceTree = "<group>"; };
 		E72253F310EB1C1D9D78835D /* GrubIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GrubIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PressStart2P-Regular.ttf"; sourceTree = "<group>"; };
 		EECFC767EBDB0D567F0B7422 /* ForageOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForageOverlay.swift; sourceTree = "<group>"; };
+		EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubPalette.swift; sourceTree = "<group>"; };
 		F27A794EA05BAF01994C624E /* GrubIOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GrubIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F34F1663B37A9209A1EE393F /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
+		F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulerTests.swift; sourceTree = "<group>"; };
+		F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereSplitTests.swift; sourceTree = "<group>"; };
+		FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPromptTests.swift; sourceTree = "<group>"; };
 		FDA3AF8C394AE1A6C43C0BFE /* ExpeditionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpeditionOverlay.swift; sourceTree = "<group>"; };
+		FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEventTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +136,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0E63C5EC8299784AF5DC14BB /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				8BEFF8AB22606442D65D1965 /* GrubFont.swift */,
+				EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
 		20ADD7ABE2D4C872C5B81FA9 /* GrubIOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -125,14 +172,29 @@
 				468BD209A5D080A784FDC7DF /* Info.plist */,
 				972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */,
 				23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */,
+				AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */,
 				EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */,
 				342775127EB6EF1C707709CD /* RecipeData.swift */,
 				BB530A92485B49730BC1516A /* RootView.swift */,
 				7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */,
 				3878A3E074253723060C33C3 /* SplashView.swift */,
 				20099951754158E5258BC160 /* SpriteRenderer.swift */,
+				32BD57F148681396E12135B7 /* Analytics */,
+				73E9B9E581AAA3372A167108 /* Growth */,
+				C0AC30544AB4F5365AB91C71 /* Sprites */,
+				0E63C5EC8299784AF5DC14BB /* Theme */,
 			);
 			path = GrubIOS;
+			sourceTree = "<group>";
+		};
+		32BD57F148681396E12135B7 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */,
+				9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */,
+				C560F450949A013DE2033C78 /* RetentionTracker.swift */,
+			);
+			path = Analytics;
 			sourceTree = "<group>";
 		};
 		468AE98831AFE700D326D1ED /* Products */ = {
@@ -147,7 +209,14 @@
 		53EB8EFB558B304632B561B6 /* GrubIOSTests */ = {
 			isa = PBXGroup;
 			children = (
-				DBBC9FF6A7163A08306E7660 /* GameStateTests.swift */,
+				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
+				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */,
+				5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */,
+				F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */,
+				FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */,
+				BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */,
+				BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */,
 			);
 			path = GrubIOSTests;
 			sourceTree = "<group>";
@@ -159,6 +228,26 @@
 				53EB8EFB558B304632B561B6 /* GrubIOSTests */,
 				468AE98831AFE700D326D1ED /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		73E9B9E581AAA3372A167108 /* Growth */ = {
+			isa = PBXGroup;
+			children = (
+				9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */,
+				CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */,
+				62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */,
+			);
+			path = Growth;
+			sourceTree = "<group>";
+		};
+		C0AC30544AB4F5365AB91C71 /* Sprites */ = {
+			isa = PBXGroup;
+			children = (
+				30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */,
+				8D7E3E1041A4085AF82D47E7 /* SpriteRenderer+Grub.swift */,
+				1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */,
+			);
+			path = Sprites;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,7 +346,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BD09F0E3104DDC180D05B420 /* GameStateTests.swift in Sources */,
+				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
+				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */,
+				76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */,
+				69BD2479D19B12DA4A729B4C /* NotificationSchedulerTests.swift in Sources */,
+				D075D96977834C393C873636 /* RatingPromptTests.swift in Sources */,
+				8B722AD6B4EC1B0C862A3DA9 /* RetentionTrackerTests.swift in Sources */,
+				AF7FF5430971FB0234FAA817 /* SaveVersionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +364,8 @@
 				B2963A1AEDAFDCBED32E5BD7 /* AdConfig.swift in Sources */,
 				F36E502CC2963502AED8F155 /* AdManager.swift in Sources */,
 				714109160C04E62C3E61709C /* AdService.swift in Sources */,
+				72785046F4FBC1B28A6BD372 /* AnalyticsEvent.swift in Sources */,
+				357AB0697EA29F96F0C05F9B /* AnalyticsService.swift in Sources */,
 				AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
@@ -284,13 +382,23 @@
 				CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */,
 				6FFAA5F3BC4E953AF3F0C501 /* GameState+Personality.swift in Sources */,
 				674E84966D90C07CE4062CE0 /* GameState.swift in Sources */,
+				7FB7BAB0F295707AD899A7FE /* GrubFont.swift in Sources */,
 				466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */,
+				AFDCDAE5EDDF9C13AB0AD4FF /* GrubPalette.swift in Sources */,
+				55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */,
 				E14039E8EE217AFB2BD12D61 /* InventoryOverlay.swift in Sources */,
 				D5215A9D7BC816489ECF60D2 /* JournalOverlay.swift in Sources */,
+				A13AC48ACFABE45F4DBFCAAB /* NotificationCenterProtocol.swift in Sources */,
+				CF026214B933457A384F2771 /* NotificationScheduler.swift in Sources */,
+				3569DE5FADC5471CE5277831 /* PixelIcon.swift in Sources */,
+				3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */,
 				84C2FE8A6F8F089F23906C8F /* RecipeData.swift in Sources */,
+				40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */,
 				ED49DEB62AE1E28428327095 /* RootView.swift in Sources */,
 				B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */,
 				0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */,
+				73BB1B57B3C1D26BE2F48F00 /* SpriteRenderer+Grub.swift in Sources */,
+				D8F74F2D63E7FC0835541ACB /* SpriteRenderer+GrubPNG.swift in Sources */,
 				C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
