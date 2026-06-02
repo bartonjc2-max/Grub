@@ -722,30 +722,28 @@ struct ActionButtonsView: View {
     @ObservedObject var game: GameState
 
     var body: some View {
-        HStack(spacing: 4) {
-            // Category-coded borders: feed=green (food), play=yellow (fun),
-            // dig=orange (effort/forage), pack=pale (inventory)
-            ActionButton(icon: { AnyView(PixelIcon.meat(size: 28)) }, label: "FEED", borderColor: GrubPalette.green) {
+        HStack(spacing: 0) {
+            // Borderless icon+label buttons — the icons carry the color, labels are
+            // uniform pale. The translucent dock is the only container (no boxy frames).
+            ActionButton(icon: { AnyView(PixelIcon.meat(size: 30)) }, label: "FEED") {
                 game.audio.play(.tap)
                 game.showFeedOverlay = true
             }
-
-            ActionButton(icon: { AnyView(PixelIcon.dice(size: 28)) }, label: "PLAY", borderColor: GrubPalette.yellow) {
+            ActionButton(icon: { AnyView(PixelIcon.dice(size: 30)) }, label: "PLAY") {
                 game.openPlay()
             }
-
-            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 28)) }, label: "DIG", borderColor: GrubPalette.orange) {
+            ActionButton(icon: { AnyView(PixelIcon.shovel(size: 30)) }, label: "DIG") {
                 game.audio.play(.dig)
                 game.showForageOverlay = true
             }
-
-            ActionButton(icon: { AnyView(PixelIcon.chest(size: 28)) }, label: "PACK", borderColor: GrubPalette.bone) {
+            ActionButton(icon: { AnyView(PixelIcon.chest(size: 30)) }, label: "PACK") {
                 game.audio.play(.tap)
                 game.showInventoryOverlay = true
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
         .background(GrubPalette.moss.opacity(0.55).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
             Rectangle().fill(GrubPalette.deepMoss).frame(height: 1)
@@ -756,24 +754,21 @@ struct ActionButtonsView: View {
 struct ActionButton: View {
     let icon: () -> AnyView
     let label: String
-    let borderColor: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            VStack(spacing: 5) {
                 icon()
                 Text(label)
                     .font(GrubFont.size(9))
-                    .foregroundColor(GrubPalette.pale)
+                    .foregroundColor(GrubPalette.pale.opacity(0.9))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .padding(.horizontal, 4)
-            .background(GrubPalette.void_color)
-            .border(borderColor, width: 2)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PixelButtonStyle())
     }
@@ -782,7 +777,9 @@ struct ActionButton: View {
 struct PixelButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            // Press = brief dim + tiny shrink (no border to animate)
+            .opacity(configuration.isPressed ? 0.6 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
     }
 }
 
