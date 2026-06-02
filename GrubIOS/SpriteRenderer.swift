@@ -112,10 +112,39 @@ struct SpriteRenderer {
         }
 
         var isNight: Bool { self == .night }
+
+        /// Full-screen translucent overlay tint — recreates time-of-day mood over a
+        /// static (fixed-lighting) background PNG. Day = clear; others tint + darken.
+        var tintColor: Color {
+            switch self {
+            case .day:   return Color.clear
+            case .dawn:  return Color(red: 0.95, green: 0.55, blue: 0.35).opacity(0.10) // warm
+            case .dusk:  return Color(red: 0.55, green: 0.30, blue: 0.55).opacity(0.16) // purple
+            case .night: return Color(red: 0.04, green: 0.05, blue: 0.12).opacity(0.42) // deep blue, darken
+            }
+        }
     }
 
-    /// Draw the background scene — pixel-art cave burrow (everything snapped to grid)
+    /// Mushroom positions/colors — shared by drawStructure (caps) and drawAtmosphere (glow).
+    private static let mushData: [(CGFloat, Color, Int)] = [
+        (0.08, Color(hex: "#9b3dab"), 3),
+        (0.28, Color(hex: "#7b2d8b"), 2),
+        (0.72, Color(hex: "#ab4dbb"), 4),
+        (0.9, Color(hex: "#8b3d9b"), 2),
+    ]
+
+    /// Full background = hand-drawn cave structure + animated atmosphere.
+    /// Kept as a wrapper so existing callers are unaffected. The full-screen home
+    /// layout calls drawAtmosphere() ONLY, over the cave_home PNG.
     static func drawBackground(context: inout GraphicsContext, size: CGSize, tick: Int) {
+        drawStructure(context: &context, size: size, tick: tick)
+        drawAtmosphere(context: &context, size: size, tick: tick)
+    }
+
+    /// Hand-drawn pixel cave: sky bands, stalactites, rock spots, ground, mushrooms.
+    /// Time-of-day color is baked into these fills. NOT used by the home layout
+    /// (the cave_home PNG replaces it); retained for fallback / other callers.
+    static func drawStructure(context: inout GraphicsContext, size: CGSize, tick: Int) {
         let w = size.width
         let h = size.height
 
@@ -235,13 +264,7 @@ struct SpriteRenderer {
         }
 
         // Mushrooms — blocky pixel art
-        let mushData: [(CGFloat, Color, Int)] = [
-            (0.08, Color(hex: "#9b3dab"), 3),
-            (0.28, Color(hex: "#7b2d8b"), 2),
-            (0.72, Color(hex: "#ab4dbb"), 4),
-            (0.9, Color(hex: "#8b3d9b"), 2),
-        ]
-        for (mx, capColor, capW) in mushData {
+        for (mx, capColor, capW) in Self.mushData {
             let baseX = floor(mx * w / px) * px
             let baseY = grassY - px
             let stemColor = Color(hex: "#c0b89a")
@@ -252,6 +275,42 @@ struct SpriteRenderer {
             block(baseX - totalCapW / 2 + px / 2, baseY - px * 2, totalCapW, px, capColor)
             // Cap highlight
             block(baseX - totalCapW / 2 + px / 2, baseY - px * 2, px, px, capColor.opacity(0.7))
+        }
+    }
+
+    /// Animated, structure-independent atmosphere: stars, spores, drips, mushroom
+    /// glow, ambient particles, vignette, + a time-of-day tint rect. Composites
+    /// over either drawStructure() or a static backdrop PNG (the home layout).
+    static func drawAtmosphere(context: inout GraphicsContext, size: CGSize, tick: Int) {
+        let w = size.width
+        let h = size.height
+        let px: CGFloat = max(4, floor(min(w, h) / 64))
+
+        func block(_ x: CGFloat, _ y: CGFloat, _ bw: CGFloat, _ bh: CGFloat, _ color: Color) {
+            let sx = floor(x / px) * px
+            let sy = floor(y / px) * px
+            let sw = ceil(bw / px) * px
+            let sh = ceil(bh / px) * px
+            context.fill(Path(CGRect(x: sx, y: sy, width: sw, height: sh)), with: .color(color))
+        }
+
+        let phase = TimePhase.current
+        let groundStart = h * 0.72
+        let grassY = groundStart
+
+        // Stars (small pixel dots with twinkling)
+        let starPositions: [(CGFloat, CGFloat)] = [
+            (0.1, 0.08), (0.25, 0.15), (0.45, 0.05), (0.6, 0.12),
+            (0.78, 0.08), (0.92, 0.18), (0.15, 0.28), (0.5, 0.22),
+            (0.85, 0.32), (0.35, 0.35), (0.7, 0.25),
+        ]
+        if phase.starOpacity > 0 {
+            let starColor = Color(hex: "#4ecca3")
+            for (i, (sx, sy)) in starPositions.enumerated() {
+                let twinkle = sin(Double(tick + i * 37) * 0.05) * 0.3 + 0.7
+                block(sx * w, sy * groundStart, px, px,
+                      starColor.opacity(phase.starOpacity * twinkle))
+            }
         }
 
         // Animated floating spores
@@ -299,7 +358,7 @@ struct SpriteRenderer {
 
         // Mushroom glow at night
         if phase.mushGlowOpacity > 0 {
-            for (mx, _, capW) in mushData {
+            for (mx, _, capW) in Self.mushData {
                 let glow = sin(Double(tick) * 0.03) * 0.15 + phase.mushGlowOpacity
                 let baseX = floor(mx * w / px) * px
                 let glowSize = CGFloat(capW + 2) * px
@@ -330,5 +389,10 @@ struct SpriteRenderer {
         context.fill(Path(CGRect(origin: .zero, size: size)),
                      with: .radialGradient(vigGradient, center: CGPoint(x: w / 2, y: h * 0.42),
                                            startRadius: h * 0.28, endRadius: h * 0.72))
+
+        // Time-of-day tint over the (static) backdrop. Day = clear (no-op).
+        if phase.tintColor != Color.clear {
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(phase.tintColor))
+        }
     }
 }
