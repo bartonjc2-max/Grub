@@ -72,4 +72,26 @@ final class DescentEngineTests: XCTestCase {
         XCTAssertEqual(Direction8.from(dx: -0.9, dy: -0.1), .w)
         XCTAssertNil(Direction8.from(dx: 0.0, dy: 0.0))         // dead zone
     }
+
+    func test_static_path_exists_from_entry_to_stairs_avoiding_slime_spawn() {
+        let e = makeEngine()
+        XCTAssertTrue(e.hasStaticPathToStairs())
+    }
+
+    func test_static_path_false_when_only_route_is_through_slime_spawn() {
+        // A 1-wide corridor where the slime spawn blocks the sole path.
+        //   ###
+        //   #E#
+        //   #S#
+        //   #>#
+        //   ###
+        let blocked = DescentEngine(layout: [
+            "###",
+            "#E#",
+            "#S#",
+            "#>#",
+            "###",
+        ])
+        XCTAssertFalse(blocked.hasStaticPathToStairs())
+    }
 }

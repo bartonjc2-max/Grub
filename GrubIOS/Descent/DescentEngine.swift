@@ -166,4 +166,41 @@ struct DescentEngine {
         if isPassable(target) { grub = target }
         moveCooldown = tuning.grubStepDuration
     }
+
+    /// True iff a 4-connected path of passable tiles connects the entry to the
+    /// stairs WITHOUT passing through any slime spawn tile. Validates the
+    /// floor-1-passable invariant (combat is optional). Static layout only —
+    /// it cannot account for the live, moving enemy.
+    func hasStaticPathToStairs() -> Bool {
+        guard let start = firstTile(.entry), let goal = firstTile(.stairs) else { return false }
+        let blocked = Set(slimeSpawns.map { [$0.x, $0.y] })
+        var visited = Set<[Int]>()
+        var queue = [start]
+        visited.insert([start.x, start.y])
+        let steps = [GridPoint(x: 1, y: 0), GridPoint(x: -1, y: 0),
+                     GridPoint(x: 0, y: 1), GridPoint(x: 0, y: -1)]
+        while let cur = queue.first {
+            queue.removeFirst()
+            if cur == goal { return true }
+            for d in steps {
+                let nxt = GridPoint(x: cur.x + d.x, y: cur.y + d.y)
+                let key = [nxt.x, nxt.y]
+                if visited.contains(key) { continue }
+                if blocked.contains(key) { continue }
+                if !isPassable(nxt) { continue }
+                visited.insert(key)
+                queue.append(nxt)
+            }
+        }
+        return false
+    }
+
+    private func firstTile(_ t: Tile) -> GridPoint? {
+        for y in 0..<height {
+            for x in 0..<width where tiles[y][x] == t {
+                return GridPoint(x: x, y: y)
+            }
+        }
+        return nil
+    }
 }
