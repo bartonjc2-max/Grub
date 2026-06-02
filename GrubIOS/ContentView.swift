@@ -24,17 +24,21 @@ struct ContentView: View {
             .allowsHitTesting(false)
 
             // 3. Grub (transparent layer; tap to interact)
+            //    MUST share the cave's full-screen coordinate space — otherwise the
+            //    safe-area-inset Canvas makes 0.76 map above the cave floor (floating).
             GrubLayer(game: game)
+                .ignoresSafeArea()
 
-            // 4. Floating HUD
+            // 4. Floating HUD (respects safe area)
             VStack(spacing: 0) {
-                HStack(alignment: .top) {
+                // Top bar — identity left, nav right, vertically centered as a unit
+                HStack(alignment: .center) {
                     IdentityCluster(game: game)
                     Spacer()
                     MetaNavCluster(game: game)
                 }
-                .padding(.horizontal, 12)
-                .padding(.top, 12)
+                .padding(.horizontal, 16)
+                .padding(.top, 6)
 
                 // Banner appears just under the identity row when active
                 Group {
@@ -46,13 +50,16 @@ struct ContentView: View {
                         ExpeditionBannerView(game: game)
                     }
                 }
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 16)
                 .padding(.top, 6)
 
                 Spacer()
 
-                StatBarsView(game: game)
-                ActionButtonsView(game: game)
+                // Bottom dock — stats + buttons, translucent so the floor shows through
+                VStack(spacing: 0) {
+                    StatBarsView(game: game)
+                    ActionButtonsView(game: game)
+                }
             }
 
             // Overlays
@@ -198,8 +205,8 @@ struct GrubLayer: View {
             if game.isOnExpedition {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
-                // Floor-Y (O-4): match the cave_home floor band (~0.76) like the normal pet
-                let baseY = size.height * 0.76 - 32 * miniScale
+                // Floor-Y (O-4): match the normal pet's floor (0.66, clear of bottom dock)
+                let baseY = size.height * 0.66 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -382,11 +389,13 @@ struct GrubLayer: View {
 
             } else {
                 // Normal — pet sprite in foreground.
-                // Floor-Y (O-4): cave_home floor band is ~0.78 down. Place feet there:
-                // feetY = petY + baseDraw(=32*scale), so petY = floorFrac*h - 32*scale.
+                // Floor-Y (O-4): GrubLayer is now full-screen (ignoresSafeArea), so `size`
+                // matches the cave. The bottom HUD dock (stats+buttons) covers the cave's
+                // own floor (~0.78), so stand Grub at 0.66 — visually on the cave floor but
+                // clear of the dock. feetY = petY + 32*scale.
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.76 - 32 * scale
+                let petY = size.height * 0.66 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
@@ -689,7 +698,7 @@ struct ActionButtonsView: View {
                 game.showInventoryOverlay = true
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(GrubPalette.moss.opacity(0.55).ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) {
