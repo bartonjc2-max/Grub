@@ -45,7 +45,11 @@ struct ContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 6)
 
-                // Banner appears just under the identity row when active
+                // Stat bars — top dock, just under identity (frees the bottom for buttons)
+                StatBarsView(game: game)
+                    .padding(.top, 4)
+
+                // Banner appears under the stats when active
                 Group {
                     if game.isDying {
                         DyingBannerView(game: game)
@@ -60,11 +64,8 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Bottom dock — stats + buttons, translucent so the floor shows through
-                VStack(spacing: 0) {
-                    StatBarsView(game: game)
-                    ActionButtonsView(game: game)
-                }
+                // Bottom dock — action buttons only
+                ActionButtonsView(game: game)
             }
 
             // Overlays
@@ -213,7 +214,7 @@ struct GrubLayer: View {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
                 // Floor-Y (O-4): match the normal pet's floor (0.80, on the dirt path)
-                let baseY = size.height * 0.84 - 32 * miniScale
+                let baseY = size.height * 0.88 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -401,14 +402,13 @@ struct GrubLayer: View {
                 // (walkable ledge) is ~0.78–0.80 of screen height; the bright pool (~0.88)
                 // sits behind the stat dock (top at ~0.855). Stand Grub with feet on the
                 // dirt path at 0.80 — on the visible floor, just above the dock.
-                // Cave is now zoomed 1.25x (bottom-anchored), so its painted dirt path
-                // sits higher on screen (~0.75). Keep Grub's visible feet just above the
-                // stat dock (~0.855). PNG has ~4px padding below feet, so target
-                // drawn-bottom 0.84 → visible feet ~0.80.
-                // feetY = petY + 32*scale  =>  petY = 0.84*h - 32*scale.
+                // Stats moved to the top dock, so the bottom is just the button row
+                // (~0.90 up). Grub can stand lower on the now-visible cave floor.
+                // Target drawn-bottom 0.88 → visible feet ~0.84, on the floor above the buttons.
+                // feetY = petY + 32*scale  =>  petY = 0.88*h - 32*scale.
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.84 - 32 * scale
+                let petY = size.height * 0.88 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
@@ -483,16 +483,35 @@ struct GrubLayer: View {
                     // above the transparent PNG bottom), and it shrinks + fades as Grub
                     // bobs UP (bobPhase>0 = higher = smaller/lighter shadow) to sell weight.
                     if anim != "dead" {
+                        // Pixel-snapped contact shadow: a chunky blocky ellipse drawn on the
+                        // same pixel grid as the sprite (matches the art instead of a smooth
+                        // vector ellipse). Shrinks + fades as Grub bobs up to sell weight.
                         let liftT = max(0, bobPhase)                       // 0 grounded … 1 peak
-                        let shW = baseDraw * (0.78 - 0.10 * liftT)         // wider than body so it reads
-                        let shH = shW * 0.20                               // flat ellipse
-                        let shAlpha = 0.45 - 0.18 * liftT                  // darker; fades with lift
-                        let groundY = petY + baseDraw - 4 * scale          // visible-feet line
-                        let shRect = CGRect(x: petX + (baseDraw - shW) / 2,
-                                            y: groundY - shH / 2,
-                                            width: shW, height: shH)
-                        context.fill(Path(ellipseIn: shRect),
-                                     with: .color(.black.opacity(shAlpha)))
+                        let pxg = max(2, scale * 2)                        // shadow pixel = ~2 sprite px
+                        let shW = baseDraw * (0.78 - 0.10 * liftT)
+                        let shH = shW * 0.22
+                        let shAlpha = 0.42 - 0.16 * liftT
+                        let cx = petX + baseDraw / 2
+                        let cy = petY + baseDraw - 4 * scale               // visible-feet line
+                        let rx = shW / 2
+                        let ry = shH / 2
+                        // Walk columns across the ellipse; for each, fill one snapped block
+                        // spanning the ellipse's vertical extent at that x. Snapping to pxg
+                        // gives the chunky stair-stepped pixel edge.
+                        var gx = cx - rx
+                        while gx <= cx + rx {
+                            let nx = (gx - cx) / rx                        // -1..1
+                            let half = ry * (1 - nx * nx).squareRoot()     // ellipse half-height
+                            if half > 0 {
+                                let bx = (gx / pxg).rounded(.down) * pxg
+                                let by = ((cy - half) / pxg).rounded(.down) * pxg
+                                let bh = (half * 2 / pxg).rounded(.up) * pxg
+                                context.fill(
+                                    Path(CGRect(x: bx, y: by, width: pxg, height: max(pxg, bh))),
+                                    with: .color(.black.opacity(shAlpha)))
+                            }
+                            gx += pxg
+                        }
                     }
 
                     // Idle-only blink alternation (~5 ticks closed every 80)
