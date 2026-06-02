@@ -64,7 +64,9 @@ New files under `GrubIOS/Descent/` (matches direction spec §6.5, stripped to pr
 | `DescentControlsView.swift` | Left virtual joystick (8-way quantized) + right Attack/Interact buttons. Emits intents. | Yes |
 | `DescentView.swift` | Container: owns `@State var engine`, drives the `TimelineView(.animation)` loop, hosts scene + controls, overlays win/death cards, handles dismissal back to home. | Yes |
 
-The engine is a **`struct`**, not an `ObservableObject` — kept SwiftUI/Combine-free so it is a pure, trivially testable value type (direction spec §6.5 requires a "SwiftUI-free, unit-testable" engine). The view holds it in `@State`; each `TimelineView` tick calls `engine.update(dt:)` and the mutation re-renders. No `GameState+Descent.swift` in this phase because there is nothing to persist.
+The engine is a **`struct`**, not an `ObservableObject` — kept SwiftUI/Combine-free so it is a pure, trivially testable value type. (The direction spec §6.5 requires the engine be "SwiftUI-free, unit-testable"; it does not mandate `struct` vs. `final class` — `struct` is this prototype's choice for value-type testability.) The view holds it in `@State`; each `TimelineView` tick calls `engine.update(dt:)` and the mutation re-renders. No `GameState+Descent.swift` in this phase because there is nothing to persist.
+
+**Terminal-state input rule:** once `RunStatus` becomes `.won` or `.dead`, all engine intents (`move`, `attack`, `interact`) and `update(dt:)` are no-ops — the run is frozen behind the result card until the player taps Back. This is enforced in the engine (not just the view) and is unit-tested (§10).
 
 ## 5. The room & tile model
 
@@ -72,7 +74,7 @@ The engine is a **`struct`**, not an `ObservableObject` — kept SwiftUI/Combine
 - `[[Character]]` using the direction spec's legend: `#` wall (impassable), `.` floor (passable), `E` entry/Grub spawn, `>` stairs down (Interact target), `S` slime spawn. Unknown chars → treated as floor and logged in DEBUG.
 - Border walls plus a couple of interior wall clumps so movement and collision are visually legible.
 - Tile size in points = `floor(sceneWidth / 11)`, pixel-snapped; the scene is centered.
-- **Floor-1-passable rule (direction spec §5.6/SC3):** a clear path from `E` to `>` exists that does **not** require killing the slime — combat is optional, so the room is always beatable even if the combat feel is wrong. (Engine test asserts this path exists.)
+- **Floor-1-passable rule (direction spec §5.6/SC3):** a clear path from `E` to `>` exists that does **not** require killing the slime — combat is optional, so the room is always beatable even if the combat feel is wrong. The invariant is over the **static layout**: a 4-connected path of passable (`.`/`E`/`>`) tiles from `E` to `>` exists that never passes through the slime's **spawn** tile (`S`) or any wall. (It cannot constrain the live, moving chase enemy — only the authored layout.) Engine test asserts this static path exists.
 
 ## 6. Movement & controls
 
@@ -123,7 +125,8 @@ The engine is a **`struct`**, not an `ObservableObject` — kept SwiftUI/Combine
 - Contact removes a heart and starts i-frames; a second contact **during** i-frames removes nothing; after i-frames expire, contact removes again.
 - Hearts reaching 0 sets `.dead`.
 - Interact on `>` sets `.won`; Interact off the stairs does nothing.
-- An `E`→`>` path exists that never enters the slime's tile (floor-1-passable invariant).
+- A static 4-connected `E`→`>` path of passable tiles exists that never passes through the slime spawn tile `S` (floor-1-passable invariant).
+- Terminal-state freeze: once `.won`/`.dead`, `move`/`attack`/`interact`/`update(dt:)` are all no-ops (state does not change).
 
 All existing tests (28) must stay green.
 
