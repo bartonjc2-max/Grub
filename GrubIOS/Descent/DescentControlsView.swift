@@ -41,19 +41,33 @@ struct DescentControlsView: View {
     }
 
     private var buttons: some View {
-        VStack(spacing: 16) {
-            actionButton("DIG IN", color: GrubPalette.green, enabled: interactEnabled, action: onInteract)
-            actionButton("HIT", color: GrubPalette.red, enabled: true, action: onAttack)
+        VStack(alignment: .trailing, spacing: 14) {
+            // DIG IN (exit) — secondary, only lit when standing on the stairs.
+            actionButton("DIG IN", color: GrubPalette.green, enabled: interactEnabled,
+                         size: CGSize(width: 96, height: 50), font: 11, action: onInteract)
+            // HIT — primary action: big round thumb target.
+            actionButton("HIT", color: GrubPalette.red, enabled: true,
+                         size: CGSize(width: 116, height: 116), font: 16, round: true, action: onAttack)
         }
     }
 
-    private func actionButton(_ label: String, color: Color, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func actionButton(_ label: String, color: Color, enabled: Bool,
+                              size: CGSize, font: CGFloat, round: Bool = false,
+                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(label)
-                .font(GrubFont.size(12))
+                .font(GrubFont.size(font))
                 .foregroundColor(GrubPalette.void_color)
-                .frame(width: 84, height: 64)
-                .background(color.opacity(enabled ? 0.9 : 0.3))
+                .frame(width: size.width, height: size.height)
+                .background(
+                    Group {
+                        if round {
+                            Circle().fill(color.opacity(enabled ? 0.92 : 0.3))
+                        } else {
+                            Rectangle().fill(color.opacity(enabled ? 0.9 : 0.3))
+                        }
+                    }
+                )
         }
         .disabled(!enabled)
         .buttonStyle(PixelButtonStyle())

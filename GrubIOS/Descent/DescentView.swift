@@ -14,14 +14,16 @@ struct DescentView: View {
 
             TimelineView(.animation) { timeline in
                 let now = timeline.date.timeIntervalSinceReferenceDate
+                let shake = shakeOffset(now: now)
                 // Render the scene; advance the engine as a side-effect of the tick.
                 DescentSceneView(engine: engine)
                     .ignoresSafeArea()
+                    .offset(x: shake.width, y: shake.height)
                     .onChange(of: now) { _, t in step(to: t) }
             }
 
-            // Hearts HUD (top-left)
-            VStack {
+            // Top HUD: hearts + the objective so the goal is never a mystery.
+            VStack(spacing: 6) {
                 HStack(spacing: 4) {
                     ForEach(0..<engine.tuning.startHearts, id: \.self) { i in
                         Image(systemName: i < engine.hearts ? "heart.fill" : "heart")
@@ -29,9 +31,15 @@ struct DescentView: View {
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 18).padding(.top, 12)
+                HStack(spacing: 6) {
+                    Text("REACH THE PORTAL")
+                        .font(GrubFont.size(10))
+                        .foregroundColor(GrubPalette.yellow)
+                    Spacer()
+                }
                 Spacer()
             }
+            .padding(.horizontal, 18).padding(.top, 12)
 
             // Controls
             VStack {
@@ -55,6 +63,15 @@ struct DescentView: View {
             if engine.status != .playing { resultCard }
         }
         .statusBarHidden()
+    }
+
+    /// Small screen shake driven by the engine's flash timers — bigger on a hurt,
+    /// a touch on a hit. Oscillates with wall-clock time so it reads as a shudder.
+    private func shakeOffset(now: TimeInterval) -> CGSize {
+        let mag = (engine.hurtFlashRemaining > 0 ? 7.0 : 0) + (engine.attackFlashRemaining > 0 ? 2.5 : 0)
+        guard mag > 0 else { return .zero }
+        return CGSize(width: CGFloat(sin(now * 90) * mag),
+                      height: CGFloat(cos(now * 110) * mag))
     }
 
     private func step(to t: TimeInterval) {

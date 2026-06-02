@@ -67,6 +67,7 @@ struct EnemyInstance: Equatable {
     var tile: GridPoint
     var hp: Int
     var stepCooldown: Double   // seconds until next AI step
+    var hitFlash: Double = 0   // seconds remaining on the "I got hit" flash (render)
 }
 
 // MARK: - Engine
@@ -165,6 +166,7 @@ struct DescentEngine {
         attackFlashRemaining = max(0, attackFlashRemaining - dt)
         iframesRemaining = max(0, iframesRemaining - dt)
         hurtFlashRemaining = max(0, hurtFlashRemaining - dt)
+        for i in enemies.indices { enemies[i].hitFlash = max(0, enemies[i].hitFlash - dt) }
         stepGrub(dt)
         stepEnemies(dt)
         resolveContact()
@@ -214,15 +216,32 @@ struct DescentEngine {
         }
     }
 
+    /// HIT: auto-targets the NEAREST enemy within `attackRange` (Chebyshev tiles)
+    /// — no precise facing needed. Grub turns to face the target and the enemy
+    /// flashes. Forgiving + juicy, per the v2 action-skill direction.
     mutating func attack() {
         guard status == .playing, attackCooldownRemaining <= 0 else { return }
         attackCooldownRemaining = tuning.attackCooldown
         attackFlashRemaining = tuning.attackFlashDuration
-        let target = grub + facing
-        if let idx = enemies.firstIndex(where: { $0.tile == target }) {
-            enemies[idx].hp -= 1
-            if enemies[idx].hp <= 0 { enemies.remove(at: idx) }
+        guard let idx = nearestEnemyInRange() else { return }
+        if let dir = Direction8.from(dx: Double(enemies[idx].tile.x - grub.x),
+                                     dy: Double(enemies[idx].tile.y - grub.y)) {
+            facing = dir
         }
+        enemies[idx].hp -= 1
+        enemies[idx].hitFlash = tuning.attackFlashDuration
+        if enemies[idx].hp <= 0 { enemies.remove(at: idx) }
+    }
+
+    /// Index of the nearest enemy within `attackRange` (Chebyshev), or nil.
+    private func nearestEnemyInRange() -> Int? {
+        var best: Int? = nil
+        var bestDist = Int.max
+        for (i, en) in enemies.enumerated() {
+            let d = max(abs(en.tile.x - grub.x), abs(en.tile.y - grub.y))
+            if d <= tuning.attackRange && d < bestDist { bestDist = d; best = i }
+        }
+        return best
     }
 
     private mutating func stepGrub(_ dt: Double) {

@@ -20,34 +20,75 @@ struct DescentSceneView: View {
             for y in 0..<rows {
                 for x in 0..<cols {
                     let t = engine.tiles[y][x]
-                    let color: Color
+                    let r = rect(x, y)
                     switch t {
-                    case .wall:   color = GrubPalette.deepMoss
-                    case .stairs: color = GrubPalette.yellow.opacity(0.85)
-                    default:      color = GrubPalette.moss.opacity(0.35)
+                    case .wall:
+                        // Darker base + a lighter top lip for a touch of depth.
+                        ctx.fill(Path(r), with: .color(GrubPalette.deepMoss))
+                        let lip = CGRect(x: r.minX, y: r.minY, width: r.width, height: max(1, tile * 0.16))
+                        ctx.fill(Path(lip), with: .color(GrubPalette.moss.opacity(0.5)))
+                    case .stairs:
+                        drawFloor(&ctx, r, x: x, y: y, tile: tile)   // floor under the portal
+                    default:
+                        drawFloor(&ctx, r, x: x, y: y, tile: tile)
                     }
-                    ctx.fill(Path(rect(x, y)), with: .color(color))
                 }
+            }
+
+            // Exit portal on the stairs tile — clearly "go here".
+            if let s = stairsTile {
+                let r = rect(s.x, s.y)
+                let c = CGPoint(x: r.midX, y: r.midY)
+                func ring(_ frac: CGFloat, _ color: Color) {
+                    let d = tile * frac
+                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - d/2, y: c.y - d/2, width: d, height: d)),
+                             with: .color(color))
+                }
+                ring(1.05, GrubPalette.yellow.opacity(0.20))   // glow
+                ring(0.78, GrubPalette.yellow.opacity(0.85))
+                ring(0.58, GrubPalette.void_color)             // dark mouth
+                // downward chevron hint
+                var chev = Path()
+                let w = tile * 0.22, h = tile * 0.12, cy = c.y + tile * 0.02
+                chev.move(to: CGPoint(x: c.x - w, y: cy - h))
+                chev.addLine(to: CGPoint(x: c.x, y: cy + h))
+                chev.addLine(to: CGPoint(x: c.x + w, y: cy - h))
+                ctx.stroke(chev, with: .color(GrubPalette.yellow), lineWidth: max(1, tile * 0.06))
+            }
+
+            // Grub contact shadow (grounds him on the floor).
+            let gr = rect(engine.grub.x, engine.grub.y)
+            if engine.status != .dead {
+                let sh = CGRect(x: gr.minX + tile*0.18, y: gr.maxY - tile*0.22,
+                                width: tile*0.64, height: tile*0.20)
+                ctx.fill(Path(ellipseIn: sh), with: .color(.black.opacity(0.30)))
             }
 
             // Enemies (slime): PNG if present else procedural spiky red blob.
             for enemy in engine.enemies {
-                let r = rect(enemy.tile.x, enemy.tile.y).insetBy(dx: tile * 0.1, dy: tile * 0.1)
-                if let _ = UIImage(named: "descent_slime") {
-                    ctx.draw(Image("descent_slime").interpolation(.none).resizable(),
-                             in: r)
+                let er = rect(enemy.tile.x, enemy.tile.y)
+                // contact shadow
+                let esh = CGRect(x: er.minX + tile*0.20, y: er.maxY - tile*0.20,
+                                 width: tile*0.60, height: tile*0.18)
+                ctx.fill(Path(ellipseIn: esh), with: .color(.black.opacity(0.28)))
+                let r = er.insetBy(dx: tile * 0.08, dy: tile * 0.08)
+                if UIImage(named: "descent_slime") != nil {
+                    ctx.draw(Image("descent_slime").interpolation(.none).resizable(), in: r)
                 } else {
                     ctx.fill(Path(ellipseIn: r), with: .color(GrubPalette.red))
                     ctx.fill(Path(ellipseIn: r.insetBy(dx: tile*0.28, dy: tile*0.28)),
-                             with: .color(.black.opacity(0.8)))   // angry core
+                             with: .color(.black.opacity(0.8)))
+                }
+                // White hit flash when freshly struck.
+                if enemy.hitFlash > 0 {
+                    ctx.fill(Path(ellipseIn: r), with: .color(.white.opacity(0.7)))
                 }
             }
 
             // Grub: directional PNG, dimmed/blinking during i-frames.
-            let gr = rect(engine.grub.x, engine.grub.y)
             let blink = engine.isInIFrames ? 0.45 : 1.0
             let assetName = grubAsset(for: engine.facing)
-            if let _ = UIImage(named: assetName) {
+            if UIImage(named: assetName) != nil {
                 ctx.opacity = blink
                 ctx.draw(Image(assetName).interpolation(.none).resizable(), in: gr)
                 ctx.opacity = 1.0
@@ -56,13 +97,29 @@ struct DescentSceneView: View {
                          with: .color(GrubPalette.green.opacity(blink)))
             }
 
-            // Attack flash on the faced tile.
+            // Attack swipe flash on the faced tile.
             if engine.attackFlashRemaining > 0 {
                 let f = engine.grub + engine.facing
-                ctx.fill(Path(rect(f.x, f.y)), with: .color(.white.opacity(0.5)))
+                ctx.fill(Path(rect(f.x, f.y)), with: .color(.white.opacity(0.35)))
             }
         }
         .background(GrubPalette.void_color)
+    }
+
+    /// Floor tile with a subtle checker so movement reads against a grid.
+    private func drawFloor(_ ctx: inout GraphicsContext, _ r: CGRect, x: Int, y: Int, tile: CGFloat) {
+        let base = (x + y) % 2 == 0 ? 0.32 : 0.26
+        ctx.fill(Path(r), with: .color(GrubPalette.moss.opacity(base)))
+    }
+
+    /// The stairs/exit tile, if any (scanned from the engine grid).
+    private var stairsTile: GridPoint? {
+        for y in 0..<engine.height {
+            for x in 0..<engine.width where engine.tiles[y][x] == .stairs {
+                return GridPoint(x: x, y: y)
+            }
+        }
+        return nil
     }
 
     /// Map a Direction8 to the existing 8-dir Grub asset names.

@@ -86,38 +86,37 @@ final class DescentEngineTests: XCTestCase {
         return DescentEngine(layout: Self.room, tuning: t)
     }
 
-    func test_attack_damages_enemy_on_faced_tile() {
-        var e = makeFrozenEnemyEngine()                    // grub (1,1), slime (2,2)
-        // Face the slime: move grub to (1,2) then face east toward (2,2).
-        e.setMove(.s); e.update(e.tuning.grubStepDuration) // (1,2)
-        e.setMove(.e)                                      // face east toward slime
-        XCTAssertEqual(e.facing, .e)
+    func test_attack_auto_targets_adjacent_enemy_without_facing() {
+        // v2: HIT auto-targets the nearest in-range enemy — no precise facing.
+        var e = makeFrozenEnemyEngine()                    // grub (1,1), slime (2,2) diag-adjacent
+        // Default facing is .s (toward (1,2) floor), NOT the slime — auto-target still hits.
         e.attack()
         XCTAssertEqual(e.enemies.first?.hp, 1)            // 2 -> 1
     }
 
+    func test_attack_faces_the_targeted_enemy() {
+        var e = makeFrozenEnemyEngine()                    // grub (1,1), slime (2,2) -> SE
+        e.attack()
+        XCTAssertEqual(e.facing, .se)                     // turned to face the auto-target
+    }
+
     func test_two_attacks_kill_two_hp_slime() {
-        var e = makeFrozenEnemyEngine()
-        e.setMove(.s); e.update(e.tuning.grubStepDuration) // (1,2)
-        e.setMove(.e)                                      // face east toward slime (2,2)
+        var e = makeFrozenEnemyEngine()                    // grub (1,1), slime (2,2) in range
         e.attack()                                         // hp 2 -> 1
-        e.setMove(nil)                                     // release stick so the cooldown-clearing
-                                                           // update doesn't step grub onto the slime
-        e.update(e.tuning.attackCooldown)                  // clear attack cooldown (slime frozen)
+        e.update(e.tuning.attackCooldown)                  // clear cooldown (grub idle, slime frozen)
         e.attack()                                         // hp 1 -> 0 -> removed
         XCTAssertTrue(e.enemies.isEmpty)
     }
 
-    func test_attack_on_empty_faced_tile_does_nothing() {
-        var e = makeFrozenEnemyEngine()                    // faces .s by default toward (1,2) floor
+    func test_attack_with_no_enemy_in_range_does_nothing() {
+        // wideRoom puts the slime at (5,3), far outside attackRange of grub (1,1).
+        var e = DescentEngine(layout: Self.wideRoom)
         e.attack()
-        XCTAssertEqual(e.enemies.first?.hp, 2)
+        XCTAssertEqual(e.enemies.first?.hp, 2)            // nothing in range -> no damage
     }
 
     func test_attack_respects_cooldown() {
-        var e = makeFrozenEnemyEngine()
-        e.setMove(.s); e.update(e.tuning.grubStepDuration)
-        e.setMove(.e)
+        var e = makeFrozenEnemyEngine()                    // slime in range
         e.attack()                                         // hp -> 1
         e.attack()                                         // still cooling down, no effect
         XCTAssertEqual(e.enemies.first?.hp, 1)
