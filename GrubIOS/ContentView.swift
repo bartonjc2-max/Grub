@@ -9,12 +9,17 @@ struct ContentView: View {
             GrubPalette.void_color.ignoresSafeArea()
 
             // ---- Full-screen cave habitat ----
-            // 1. Static backdrop PNG (full-bleed)
+            // 1. Static backdrop PNG (full-bleed, zoomed in to crop empty ceiling).
+            //    scaleEffect 1.25 anchored .bottom shows the bottom ~80% of the cave so
+            //    the tall empty ceiling crops off and the scene frames Grub instead of
+            //    dwarfing him. The painted floor lands at ~0.72 screen (see GrubLayer).
             Image("cave_home")
                 .interpolation(.none)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .scaleEffect(1.25, anchor: .bottom)
                 .ignoresSafeArea()
+                .clipped()
 
             // 2. Animated atmosphere (particles + time-of-day tint) over the PNG
             Canvas { ctx, size in
@@ -208,7 +213,7 @@ struct GrubLayer: View {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
                 // Floor-Y (O-4): match the normal pet's floor (0.80, on the dirt path)
-                let baseY = size.height * 0.865 - 32 * miniScale
+                let baseY = size.height * 0.84 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -396,13 +401,14 @@ struct GrubLayer: View {
                 // (walkable ledge) is ~0.78–0.80 of screen height; the bright pool (~0.88)
                 // sits behind the stat dock (top at ~0.855). Stand Grub with feet on the
                 // dirt path at 0.80 — on the visible floor, just above the dock.
-                // The PNG has ~4px transparent padding below the feet, so the visible
-                // feet land ~0.04*h above the drawn bottom. Target drawn-bottom 0.865 so
-                // visible feet plant ~0.82, just above the stat dock (top ~0.855).
-                // feetY = petY + 32*scale  =>  petY = 0.865*h - 32*scale.
+                // Cave is now zoomed 1.25x (bottom-anchored), so its painted dirt path
+                // sits higher on screen (~0.75). Keep Grub's visible feet just above the
+                // stat dock (~0.855). PNG has ~4px padding below feet, so target
+                // drawn-bottom 0.84 → visible feet ~0.80.
+                // feetY = petY + 32*scale  =>  petY = 0.84*h - 32*scale.
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.865 - 32 * scale
+                let petY = size.height * 0.84 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
