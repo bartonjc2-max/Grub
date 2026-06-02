@@ -207,8 +207,8 @@ struct GrubLayer: View {
             if game.isOnExpedition {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
-                // Floor-Y (O-4): match the normal pet's floor (0.66, clear of bottom dock)
-                let baseY = size.height * 0.66 - 32 * miniScale
+                // Floor-Y (O-4): match the normal pet's floor (0.80, on the dirt path)
+                let baseY = size.height * 0.865 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -391,13 +391,18 @@ struct GrubLayer: View {
 
             } else {
                 // Normal — pet sprite in foreground.
-                // Floor-Y (O-4): GrubLayer is now full-screen (ignoresSafeArea), so `size`
-                // matches the cave. The bottom HUD dock (stats+buttons) covers the cave's
-                // own floor (~0.78), so stand Grub at 0.66 — visually on the cave floor but
-                // clear of the dock. feetY = petY + 32*scale.
+                // Floor-Y (O-4): GrubLayer is full-screen (ignoresSafeArea) so `size`
+                // matches the cave render. Measured geometry: the cave's dark dirt PATH
+                // (walkable ledge) is ~0.78–0.80 of screen height; the bright pool (~0.88)
+                // sits behind the stat dock (top at ~0.855). Stand Grub with feet on the
+                // dirt path at 0.80 — on the visible floor, just above the dock.
+                // The PNG has ~4px transparent padding below the feet, so the visible
+                // feet land ~0.04*h above the drawn bottom. Target drawn-bottom 0.865 so
+                // visible feet plant ~0.82, just above the stat dock (top ~0.855).
+                // feetY = petY + 32*scale  =>  petY = 0.865*h - 32*scale.
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.66 - 32 * scale
+                let petY = size.height * 0.865 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
