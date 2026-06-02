@@ -39,6 +39,19 @@ final class GrubAssetTests: XCTestCase {
         XCTAssertNotNil(img, "grub_S_eat not found in bundle — eating animation will fall back to procedural")
     }
 
+    func test_ui_stat_icons_resolve() {
+        // PixelLab-generated stat icons (heart/drumstick/star) for HP/HNG/HAP.
+        let appBundle = Bundle(identifier: "com.jessedev.GrubIOS") ?? Bundle(for: GrubAssetTests.self)
+        let icons = ["ui_icon_heart", "ui_icon_drumstick", "ui_icon_star"]
+        var missing: [String] = []
+        for name in icons {
+            let img = UIImage(named: name, in: appBundle, with: nil) ?? UIImage(named: name)
+            if img == nil { missing.append(name) }
+        }
+        XCTAssertTrue(missing.isEmpty,
+                      "missing UI stat icons (stat rows fall back to text labels): \(missing)")
+    }
+
     func test_all_pet_state_pngs_resolve() {
         // 6 state variants from PixelLab (sad/sick/starving/angry/dying/dead),
         // all derived from canonical 1e12a98f via create_character_state.
