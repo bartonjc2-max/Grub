@@ -96,6 +96,8 @@ struct DescentEngine {
     private var iframesRemaining: Double = 0
     private(set) var hurtFlashRemaining: Double = 0   // for render
     var isInIFrames: Bool { iframesRemaining > 0 }
+    /// True while the joystick is held and the run is live — drives the walk cycle.
+    var isMoving: Bool { heldDirection != nil && status == .playing }
 
     init(layout: [String], tuning: DescentTuning = DescentTuning()) {
         self.tuning = tuning

@@ -15,8 +15,9 @@ struct DescentView: View {
             TimelineView(.animation) { timeline in
                 let now = timeline.date.timeIntervalSinceReferenceDate
                 let shake = shakeOffset(now: now)
+                let walkFrame = Int(now * 8) % 4   // 8 fps walk cycle
                 // Render the scene; advance the engine as a side-effect of the tick.
-                DescentSceneView(engine: engine)
+                DescentSceneView(engine: engine, walkFrame: walkFrame)
                     .ignoresSafeArea()
                     .offset(x: shake.width, y: shake.height)
                     .onChange(of: now) { _, t in step(to: t) }

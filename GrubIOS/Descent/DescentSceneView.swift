@@ -3,6 +3,7 @@ import SwiftUI
 /// Renders a DescentEngine frame pixel-perfect. Pure presentation — no logic.
 struct DescentSceneView: View {
     let engine: DescentEngine
+    var walkFrame: Int = 0          // 0..3 walk-cycle index (driven by the loop)
 
     var body: some View {
         Canvas { ctx, size in
@@ -85,12 +86,11 @@ struct DescentSceneView: View {
                 }
             }
 
-            // Grub: directional PNG, dimmed/blinking during i-frames.
+            // Grub: directional PNG (walk cycle when moving), dimmed during i-frames.
             let blink = engine.isInIFrames ? 0.45 : 1.0
-            let assetName = grubAsset(for: engine.facing)
-            if UIImage(named: assetName) != nil {
+            if let name = resolvedGrubAsset() {
                 ctx.opacity = blink
-                ctx.draw(Image(assetName).interpolation(.none).resizable(), in: gr)
+                ctx.draw(Image(name).interpolation(.none).resizable(), in: gr)
                 ctx.opacity = 1.0
             } else {
                 ctx.fill(Path(ellipseIn: gr.insetBy(dx: tile*0.1, dy: tile*0.1)),
@@ -122,16 +122,29 @@ struct DescentSceneView: View {
         return nil
     }
 
-    /// Map a Direction8 to the existing 8-dir Grub asset names.
-    private func grubAsset(for dir: Direction8) -> String {
+    /// The Grub asset to draw: the per-direction walk frame while moving,
+    /// the static directional frame when idle. Falls back through walk → idle →
+    /// nil (procedural ellipse) so a missing asset never blanks Grub.
+    private func resolvedGrubAsset() -> String? {
+        let base = dirCode(engine.facing)            // e.g. "grub_SE"
+        if engine.isMoving {
+            let walk = "\(base)_walk_\(walkFrame)"    // e.g. "grub_SE_walk_2"
+            if UIImage(named: walk) != nil { return walk }
+        }
+        if UIImage(named: base) != nil { return base }
+        return nil
+    }
+
+    /// Map a Direction8 to the asset-name direction code.
+    private func dirCode(_ dir: Direction8) -> String {
         switch dir {
-        case .n: return "grub_N"
+        case .n:  return "grub_N"
         case .ne: return "grub_NE"
-        case .e: return "grub_E"
+        case .e:  return "grub_E"
         case .se: return "grub_SE"
-        case .s: return "grub_S"
+        case .s:  return "grub_S"
         case .sw: return "grub_SW"
-        case .w: return "grub_W"
+        case .w:  return "grub_W"
         case .nw: return "grub_NW"
         }
     }
