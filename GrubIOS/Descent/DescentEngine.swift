@@ -92,6 +92,9 @@ struct DescentEngine {
     private var moveCooldown: Double = 0          // time until Grub may step
     private var attackCooldownRemaining: Double = 0
     private(set) var attackFlashRemaining: Double = 0   // for render
+    private var iframesRemaining: Double = 0
+    private(set) var hurtFlashRemaining: Double = 0   // for render
+    var isInIFrames: Bool { iframesRemaining > 0 }
 
     init(layout: [String], tuning: DescentTuning = DescentTuning()) {
         self.tuning = tuning
@@ -160,8 +163,24 @@ struct DescentEngine {
         guard status == .playing else { return }
         attackCooldownRemaining = max(0, attackCooldownRemaining - dt)
         attackFlashRemaining = max(0, attackFlashRemaining - dt)
+        iframesRemaining = max(0, iframesRemaining - dt)
+        hurtFlashRemaining = max(0, hurtFlashRemaining - dt)
         stepGrub(dt)
         stepEnemies(dt)
+        resolveContact()
+    }
+
+    private mutating func resolveContact() {
+        guard iframesRemaining <= 0 else { return }
+        if enemies.contains(where: { $0.tile == grub }) {
+            hearts -= tuning.enemyTouchDamage
+            iframesRemaining = tuning.enemyContactIFrames
+            hurtFlashRemaining = tuning.enemyContactIFrames
+            if hearts <= 0 {
+                hearts = 0
+                status = .dead
+            }
+        }
     }
 
     private mutating func stepEnemies(_ dt: Double) {

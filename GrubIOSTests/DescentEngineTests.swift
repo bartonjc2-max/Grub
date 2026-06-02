@@ -173,4 +173,45 @@ final class DescentEngineTests: XCTestCase {
         ])
         XCTAssertFalse(blocked.hasStaticPathToStairs())
     }
+
+    func test_contact_removes_a_heart_and_starts_iframes() {
+        var e = makeEngine()                              // grub (1,1), slime (2,2)
+        // Let the slime reach grub. Don't move grub.
+        var guardCount = 0
+        while e.hearts == e.tuning.startHearts && guardCount < 50 {
+            e.update(e.tuning.enemyStepDuration)
+            guardCount += 1
+        }
+        XCTAssertEqual(e.hearts, e.tuning.startHearts - 1)
+        XCTAssertTrue(e.isInIFrames)
+    }
+
+    func test_no_second_hit_during_iframes() {
+        var e = makeEngine()
+        var guardCount = 0
+        while e.hearts == e.tuning.startHearts && guardCount < 50 {
+            e.update(e.tuning.enemyStepDuration); guardCount += 1
+        }
+        let afterFirst = e.hearts
+        // Advance a small amount, still within the 0.8s i-frame window.
+        e.update(0.1)
+        XCTAssertEqual(e.hearts, afterFirst)             // no extra damage
+    }
+
+    func test_contact_removes_again_after_iframes_expire() {
+        // Spec §10: after i-frames expire, a subsequent contact removes another heart.
+        var t = DescentTuning(); t.startHearts = 3
+        var e = DescentEngine(layout: Self.room, tuning: t)   // grub (1,1), slime (2,2)
+        var guardCount = 0
+        while e.hearts == t.startHearts && guardCount < 50 {  // take the first hit
+            e.update(e.tuning.enemyStepDuration); guardCount += 1
+        }
+        XCTAssertEqual(e.hearts, 2)
+        XCTAssertTrue(e.isInIFrames)
+        // One update past the i-frame window (0.8s): the slime is still on grub's
+        // tile (chase from grub's own tile is a no-op), so in this same tick the
+        // i-frames lapse and resolveContact lands a fresh hit (which re-arms them).
+        e.update(e.tuning.enemyContactIFrames + 0.05)
+        XCTAssertEqual(e.hearts, 1)                           // re-hit landed once i-frames lapsed
+    }
 }
