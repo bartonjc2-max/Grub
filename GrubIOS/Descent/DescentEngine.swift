@@ -28,6 +28,29 @@ enum Direction8: CaseIterable {
         case .e, .w: return 0
         }
     }
+
+    /// Quantize a joystick vector (y down) to the nearest of 8 directions.
+    /// Returns nil inside a small dead zone.
+    static func from(dx: Double, dy: Double) -> Direction8? {
+        let mag = (dx * dx + dy * dy).squareRoot()
+        guard mag > 0.2 else { return nil }
+        // Sector index 0..7 starting at east, going clockwise (screen y down).
+        let angle = atan2(dy, dx)                 // -pi..pi, +x=east, +y=south
+        let twoPi = Double.pi * 2
+        let normalized = (angle + twoPi).truncatingRemainder(dividingBy: twoPi) // 0..2pi
+        let sector = Int((normalized / (twoPi / 8)).rounded()) % 8
+        // sector 0=e,1=se,2=s,3=sw,4=w,5=nw,6=n,7=ne
+        switch sector {
+        case 0: return .e
+        case 1: return .se
+        case 2: return .s
+        case 3: return .sw
+        case 4: return .w
+        case 5: return .nw
+        case 6: return .n
+        default: return .ne
+        }
+    }
 }
 
 enum Tile: Character {
@@ -63,6 +86,10 @@ struct DescentEngine {
     private(set) var hearts: Int
     private(set) var enemies: [EnemyInstance]
     private(set) var status: RunStatus = .playing
+
+    // Input + timers (private)
+    private var heldDirection: Direction8?
+    private var moveCooldown: Double = 0          // time until Grub may step
 
     init(layout: [String], tuning: DescentTuning = DescentTuning()) {
         self.tuning = tuning
@@ -113,5 +140,30 @@ struct DescentEngine {
     func tile(at p: GridPoint) -> Tile? {
         guard p.y >= 0, p.y < height, p.x >= 0, p.x < width else { return nil }
         return tiles[p.y][p.x]
+    }
+
+    /// Joystick changed. nil = released. Facing updates immediately; a newly
+    /// pressed direction resets the step cooldown so the first step is instant.
+    mutating func setMove(_ dir: Direction8?) {
+        guard status == .playing else { return }
+        if let dir = dir {
+            if heldDirection == nil { moveCooldown = 0 }   // instant first step
+            facing = dir
+        }
+        heldDirection = dir
+    }
+
+    /// Advance the simulation by dt seconds.
+    mutating func update(_ dt: Double) {
+        guard status == .playing else { return }
+        stepGrub(dt)
+    }
+
+    private mutating func stepGrub(_ dt: Double) {
+        moveCooldown -= dt
+        guard let dir = heldDirection, moveCooldown <= 0 else { return }
+        let target = grub + dir
+        if isPassable(target) { grub = target }
+        moveCooldown = tuning.grubStepDuration
     }
 }
