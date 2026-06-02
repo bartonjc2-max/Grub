@@ -171,6 +171,13 @@ struct SplashView: View {
                     timer.invalidate()
                     loadingDone = true
                     showTapPrompt = true
+                    #if DEBUG
+                    // Auto-advance in DEBUG so headless sim screenshots skip the manual tap.
+                    // (No effect on release builds.)
+                    if ProcessInfo.processInfo.environment["GRUB_AUTOSTART"] == "1" {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { onFinish() }
+                    }
+                    #endif
                 }
             }
         }

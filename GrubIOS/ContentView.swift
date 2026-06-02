@@ -198,7 +198,8 @@ struct GrubLayer: View {
             if game.isOnExpedition {
                 let tick = game.animTick
                 let miniScale = min(size.width, size.height) / 32.0 * 0.18
-                let baseY = size.height * 0.58 - 16 * miniScale
+                // Floor-Y (O-4): match the cave_home floor band (~0.76) like the normal pet
+                let baseY = size.height * 0.76 - 32 * miniScale
                 let px = max(2, min(size.width, size.height) / 64)
                 let w = size.width
 
@@ -380,10 +381,12 @@ struct GrubLayer: View {
                     at: CGPoint(x: w / 2, y: size.height * 0.32))
 
             } else {
-                // Normal — pet sprite in foreground
+                // Normal — pet sprite in foreground.
+                // Floor-Y (O-4): cave_home floor band is ~0.78 down. Place feet there:
+                // feetY = petY + baseDraw(=32*scale), so petY = floorFrac*h - 32*scale.
                 let scale = min(size.width, size.height) / 32.0 * 0.7
                 let petX = size.width / 2 - 16 * scale
-                let petY = size.height * 0.45 - 16 * scale
+                let petY = size.height * 0.76 - 32 * scale
 
                 // PNG-state dispatch — every gameplay state maps to a PixelLab-generated
                 // PNG with the same character lineage (1e12a98f). Procedural fallback only
