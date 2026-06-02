@@ -8,17 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		04265678D21CA3F2009AE95B /* ExpeditionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA3AF8C394AE1A6C43C0BFE /* ExpeditionOverlay.swift */; };
+		0D5A1E3C5C8030D7868F3FDA /* DescentSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */; };
 		0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3878A3E074253723060C33C3 /* SplashView.swift */; };
+		2C9F3DD96C2B7B99E2D63DEA /* DescentTuning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B70E0FC31C838D246B046BFA /* DescentTuning.swift */; };
 		3248504C2A940CF171147141 /* PressStart2P-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */; };
 		3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */; };
 		3569DE5FADC5471CE5277831 /* PixelIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */; };
 		357AB0697EA29F96F0C05F9B /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */; };
+		40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F4544FE870E40E92958514 /* DescentControlsView.swift */; };
 		40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560F450949A013DE2033C78 /* RetentionTracker.swift */; };
 		43EED2590935E87C7BE594D8 /* GameSelectorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */; };
 		45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */; };
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
 		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
+		5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */; };
 		65910566002ED2DBBD73FB8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5624CADC5A38E7D506E60526 /* Assets.xcassets */; };
 		674E84966D90C07CE4062CE0 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34F1663B37A9209A1EE393F /* GameState.swift */; };
 		69BD2479D19B12DA4A729B4C /* NotificationSchedulerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */; };
@@ -31,12 +35,14 @@
 		76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */; };
 		78330876D62DF49C7C35CF0C /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCBE326714FB960EC58256D /* GameState+Crafting.swift */; };
 		7FB7BAB0F295707AD899A7FE /* GrubFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BEFF8AB22606442D65D1965 /* GrubFont.swift */; };
+		8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */; };
 		81C8761B7298E90A9B3E0C54 /* GameState+Ads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */; };
 		84C2FE8A6F8F089F23906C8F /* RecipeData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342775127EB6EF1C707709CD /* RecipeData.swift */; };
 		86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */; };
 		8A4ACDC85B525869873E8616 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = C7C322C8E54B4DBD2D68AE6A /* GoogleMobileAds */; };
 		8B722AD6B4EC1B0C862A3DA9 /* RetentionTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */; };
 		92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */; };
+		9586D5985F915C8EA44275F7 /* DescentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5947FAA9A9CED0D6148CE5 /* DescentEngine.swift */; };
 		A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECFC767EBDB0D567F0B7422 /* ForageOverlay.swift */; };
 		A13AC48ACFABE45F4DBFCAAB /* NotificationCenterProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */; };
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
@@ -50,6 +56,7 @@
 		CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */; };
 		CF026214B933457A384F2771 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */; };
 		D075D96977834C393C873636 /* RatingPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */; };
+		D408AD0BEC14A5D5CCAE7EF0 /* DescentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D69D02BE6B49AFFCA45A20C /* DescentView.swift */; };
 		D5215A9D7BC816489ECF60D2 /* JournalOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */; };
 		D63FD2D70D70574232F1D312 /* GameState+Expeditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B5111B13882012C1497812 /* GameState+Expeditions.swift */; };
 		D8F74F2D63E7FC0835541ACB /* SpriteRenderer+GrubPNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */; };
@@ -78,14 +85,18 @@
 		23532E87C898D774055B275C /* GrubIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubIOSApp.swift; sourceTree = "<group>"; };
 		23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalOverlay.swift; sourceTree = "<group>"; };
 		24D37C188B461CEADB0424CC /* GameState+Foraging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Foraging.swift"; sourceTree = "<group>"; };
+		2D69D02BE6B49AFFCA45A20C /* DescentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentView.swift; sourceTree = "<group>"; };
 		30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubSpriteView.swift; sourceTree = "<group>"; };
 		342775127EB6EF1C707709CD /* RecipeData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeData.swift; sourceTree = "<group>"; };
 		3878A3E074253723060C33C3 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		39F4544FE870E40E92958514 /* DescentControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentControlsView.swift; sourceTree = "<group>"; };
 		468BD209A5D080A784FDC7DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4A5947FAA9A9CED0D6148CE5 /* DescentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngine.swift; sourceTree = "<group>"; };
 		4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEvent.swift; sourceTree = "<group>"; };
 		5624CADC5A38E7D506E60526 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubAssetTests.swift; sourceTree = "<group>"; };
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
+		5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngineTests.swift; sourceTree = "<group>"; };
 		62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPrompt.swift; sourceTree = "<group>"; };
 		7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
 		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
@@ -102,12 +113,15 @@
 		AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Personality.swift"; sourceTree = "<group>"; };
 		AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelIcon.swift; sourceTree = "<group>"; };
 		B6EB451FA4162A64E6A81F42 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
+		B70E0FC31C838D246B046BFA /* DescentTuning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentTuning.swift; sourceTree = "<group>"; };
 		BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVersionTests.swift; sourceTree = "<group>"; };
 		BB530A92485B49730BC1516A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTrackerTests.swift; sourceTree = "<group>"; };
 		C560F450949A013DE2033C78 /* RetentionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTracker.swift; sourceTree = "<group>"; };
 		C8B5111B13882012C1497812 /* GameState+Expeditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Expeditions.swift"; sourceTree = "<group>"; };
 		CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
+		D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentSceneSmokeTests.swift; sourceTree = "<group>"; };
+		D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentSceneView.swift; sourceTree = "<group>"; };
 		D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
 		D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Journal.swift"; sourceTree = "<group>"; };
 		E72253F310EB1C1D9D78835D /* GrubIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GrubIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -180,6 +194,7 @@
 				3878A3E074253723060C33C3 /* SplashView.swift */,
 				20099951754158E5258BC160 /* SpriteRenderer.swift */,
 				32BD57F148681396E12135B7 /* Analytics */,
+				7B88B760E468373347B264A5 /* Descent */,
 				73E9B9E581AAA3372A167108 /* Growth */,
 				C0AC30544AB4F5365AB91C71 /* Sprites */,
 				0E63C5EC8299784AF5DC14BB /* Theme */,
@@ -211,6 +226,8 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
+				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
 				02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */,
 				5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */,
 				F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */,
@@ -238,6 +255,18 @@
 				62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */,
 			);
 			path = Growth;
+			sourceTree = "<group>";
+		};
+		7B88B760E468373347B264A5 /* Descent */ = {
+			isa = PBXGroup;
+			children = (
+				39F4544FE870E40E92958514 /* DescentControlsView.swift */,
+				4A5947FAA9A9CED0D6148CE5 /* DescentEngine.swift */,
+				D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */,
+				B70E0FC31C838D246B046BFA /* DescentTuning.swift */,
+				2D69D02BE6B49AFFCA45A20C /* DescentView.swift */,
+			);
+			path = Descent;
 			sourceTree = "<group>";
 		};
 		C0AC30544AB4F5365AB91C71 /* Sprites */ = {
@@ -348,6 +377,8 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
+				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
 				86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */,
 				76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */,
 				69BD2479D19B12DA4A729B4C /* NotificationSchedulerTests.swift in Sources */,
@@ -369,6 +400,11 @@
 				AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
+				40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */,
+				9586D5985F915C8EA44275F7 /* DescentEngine.swift in Sources */,
+				0D5A1E3C5C8030D7868F3FDA /* DescentSceneView.swift in Sources */,
+				2C9F3DD96C2B7B99E2D63DEA /* DescentTuning.swift in Sources */,
+				D408AD0BEC14A5D5CCAE7EF0 /* DescentView.swift in Sources */,
 				04265678D21CA3F2009AE95B /* ExpeditionOverlay.swift in Sources */,
 				A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */,
 				45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */,
