@@ -162,10 +162,12 @@ struct IdentityCluster: View {
 }
 
 /// Top-right: level + journal + settings, floating over the scene.
+/// Tap targets stay ≥44pt tall, but visible glyphs sit on an even rhythm so the
+/// row doesn't look bunched-then-gapped.
 struct MetaNavCluster: View {
     @ObservedObject var game: GameState
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 14) {
             hudShadow(Text("LV\(game.ownerLevel)")
                 .font(GrubFont.size(10))
                 .foregroundColor(GrubPalette.yellow))
@@ -178,7 +180,7 @@ struct MetaNavCluster: View {
                 hudShadow(Text("LOG")
                     .font(GrubFont.size(10))
                     .foregroundColor(GrubPalette.pale.opacity(0.7)))
-                    .frame(minWidth: 36, minHeight: 44)
+                    .frame(height: 44)
                     .contentShape(Rectangle())
             }
 
@@ -186,8 +188,8 @@ struct MetaNavCluster: View {
                 game.audio.play(.tap)
                 game.showSettingsMenu = true
             } label: {
-                PixelIcon.gear(size: 18)
-                    .frame(minWidth: 44, minHeight: 44)
+                PixelIcon.gear(size: 16)
+                    .frame(width: 28, height: 44)
                     .contentShape(Rectangle())
             }
         }
