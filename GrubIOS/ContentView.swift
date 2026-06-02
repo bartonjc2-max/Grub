@@ -3,6 +3,10 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var game: GameState
 
+    #if DEBUG
+    @State private var showDescentPrototype = false
+    #endif
+
     var body: some View {
         ZStack {
             // Full-screen background
@@ -65,7 +69,11 @@ struct ContentView: View {
                 Spacer()
 
                 // Bottom dock — action buttons only
+                #if DEBUG
+                ActionButtonsView(game: game, onDebugDescent: { showDescentPrototype = true })
+                #else
                 ActionButtonsView(game: game)
+                #endif
             }
 
             // Overlays
@@ -144,6 +152,16 @@ struct ContentView: View {
             game.onForeground()
         }
         .statusBarHidden()
+        #if DEBUG
+        .fullScreenCover(isPresented: $showDescentPrototype) {
+            DescentView(onExit: { showDescentPrototype = false })
+        }
+        .onAppear {
+            if ProcessInfo.processInfo.environment["GRUB_DESCENT"] == "1" {
+                showDescentPrototype = true
+            }
+        }
+        #endif
     }
 }
 
@@ -721,6 +739,10 @@ struct PixelStatRow: View {
 struct ActionButtonsView: View {
     @ObservedObject var game: GameState
 
+    #if DEBUG
+    var onDebugDescent: () -> Void = {}
+    #endif
+
     var body: some View {
         HStack(spacing: 0) {
             // Borderless icon+label buttons — the icons carry the color, labels are
@@ -733,8 +755,12 @@ struct ActionButtonsView: View {
                 game.openPlay()
             }
             ActionButton(icon: { navIcon("ui_btn_dig", fallback: PixelIcon.shovel(size: 30)) }, label: "DIG") {
+                #if DEBUG
+                onDebugDescent()
+                #else
                 game.audio.play(.dig)
                 game.showForageOverlay = true
+                #endif
             }
             ActionButton(icon: { navIcon("ui_btn_pack", fallback: PixelIcon.chest(size: 30)) }, label: "PACK") {
                 game.audio.play(.tap)
