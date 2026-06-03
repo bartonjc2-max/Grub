@@ -16,6 +16,11 @@ struct DescentSceneView: View {
                 CGRect(x: originX + CGFloat(x) * tile, y: originY + CGFloat(y) * tile,
                        width: tile, height: tile)
             }
+            // Fractional-tile rect for smoothly interpolated entities.
+            func rectF(_ fx: Double, _ fy: Double) -> CGRect {
+                CGRect(x: originX + CGFloat(fx) * tile, y: originY + CGFloat(fy) * tile,
+                       width: tile, height: tile)
+            }
 
             // Tiles
             for y in 0..<rows {
@@ -57,8 +62,9 @@ struct DescentSceneView: View {
                 ctx.stroke(chev, with: .color(GrubPalette.yellow), lineWidth: max(1, tile * 0.06))
             }
 
-            // Grub contact shadow (grounds him on the floor).
-            let gr = rect(engine.grub.x, engine.grub.y)
+            // Grub contact shadow (grounds him on the floor). Uses the smoothly
+            // interpolated visual position so he glides tile-to-tile, not snaps.
+            let gr = rectF(engine.grubVisualX, engine.grubVisualY)
             if engine.status != .dead {
                 let sh = CGRect(x: gr.minX + tile*0.18, y: gr.maxY - tile*0.22,
                                 width: tile*0.64, height: tile*0.20)
@@ -67,7 +73,8 @@ struct DescentSceneView: View {
 
             // Enemies (slime): PNG if present else procedural spiky red blob.
             for enemy in engine.enemies {
-                let er = rect(enemy.tile.x, enemy.tile.y)
+                let ev = engine.enemyVisualPosition(enemy)
+                let er = rectF(ev.x, ev.y)
                 // contact shadow
                 let esh = CGRect(x: er.minX + tile*0.20, y: er.maxY - tile*0.20,
                                  width: tile*0.60, height: tile*0.18)

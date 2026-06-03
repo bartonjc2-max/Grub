@@ -68,6 +68,7 @@ struct EnemyInstance: Equatable {
     var hp: Int
     var stepCooldown: Double   // seconds until next AI step
     var hitFlash: Double = 0   // seconds remaining on the "I got hit" flash (render)
+    var prevTile: GridPoint    // tile stepped from, for smooth visual interpolation
 }
 
 // MARK: - Engine
@@ -83,6 +84,7 @@ struct DescentEngine {
     let slimeSpawns: [GridPoint]          // original 'S' tiles (for the static-path invariant)
 
     private(set) var grub: GridPoint
+    private(set) var prevGrub: GridPoint      // tile stepped from, for smooth visual interpolation
     private(set) var facing: Direction8 = .s
     private(set) var hearts: Int
     private(set) var enemies: [EnemyInstance]
@@ -98,6 +100,23 @@ struct DescentEngine {
     var isInIFrames: Bool { iframesRemaining > 0 }
     /// True while the joystick is held and the run is live — drives the walk cycle.
     var isMoving: Bool { heldDirection != nil && status == .playing }
+
+    /// 0..1 progress of Grub's current step slide (for smooth rendering).
+    var grubStepProgress: Double {
+        guard tuning.grubStepDuration > 0 else { return 1 }
+        return min(1, max(0, 1 - moveCooldown / tuning.grubStepDuration))
+    }
+    /// Grub's interpolated visual position in tile units (lerp prevGrub→grub).
+    var grubVisualX: Double { Double(prevGrub.x) + (Double(grub.x) - Double(prevGrub.x)) * grubStepProgress }
+    var grubVisualY: Double { Double(prevGrub.y) + (Double(grub.y) - Double(prevGrub.y)) * grubStepProgress }
+
+    /// An enemy's interpolated visual position in tile units.
+    func enemyVisualPosition(_ e: EnemyInstance) -> (x: Double, y: Double) {
+        let d = tuning.enemyStepDuration
+        let p = d > 0 ? min(1, max(0, 1 - e.stepCooldown / d)) : 1
+        return (Double(e.prevTile.x) + (Double(e.tile.x) - Double(e.prevTile.x)) * p,
+                Double(e.prevTile.y) + (Double(e.tile.y) - Double(e.prevTile.y)) * p)
+    }
 
     init(layout: [String], tuning: DescentTuning = DescentTuning()) {
         self.tuning = tuning
@@ -137,7 +156,8 @@ struct DescentEngine {
         self.tiles = parsed
         self.slimeSpawns = spawns
         self.grub = grubStart
-        self.enemies = spawns.map { EnemyInstance(tile: $0, hp: tuning.enemyHP, stepCooldown: tuning.enemyStepDuration) }
+        self.prevGrub = grubStart
+        self.enemies = spawns.map { EnemyInstance(tile: $0, hp: tuning.enemyHP, stepCooldown: tuning.enemyStepDuration, prevTile: $0) }
     }
 
     func isPassable(_ p: GridPoint) -> Bool {
@@ -192,6 +212,7 @@ struct DescentEngine {
             enemies[i].stepCooldown -= dt
             guard enemies[i].stepCooldown <= 0 else { continue }
             enemies[i].stepCooldown = tuning.enemyStepDuration
+            enemies[i].prevTile = enemies[i].tile
             enemies[i].tile = chaseStep(from: enemies[i].tile)
         }
     }
@@ -250,6 +271,7 @@ struct DescentEngine {
         moveCooldown -= dt
         guard let dir = heldDirection, moveCooldown <= 0 else { return }
         let target = grub + dir
+        prevGrub = grub                       // anchor the slide's start (no slide if blocked)
         if isPassable(target) { grub = target }
         moveCooldown = tuning.grubStepDuration
     }
