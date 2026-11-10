@@ -33,7 +33,10 @@ struct BurrowHomeView: View {
         .overlay(alignment: .bottom) { bottomHUD }
         .overlay {
             if showBag {
-                FindsBagView(bag: model.bag) { withAnimation(.easeOut(duration: 0.15)) { showBag = false } }
+                FindsBagView(bag: model.bag, canAct: model.canAct, freeSlots: model.freeSlots.count,
+                             onEat: { k in closeBag(); model.feed(kind: k) },
+                             onPlace: { k in closeBag(); model.startPlacing(k) },
+                             close: closeBag)
                     .transition(.opacity)
             }
         }
@@ -46,7 +49,10 @@ struct BurrowHomeView: View {
             }
         }
         #if DEBUG
-        .task { await runDemoIfRequested() }
+        .task {
+            if BurrowDebug.showBag { showBag = true }
+            await runDemoIfRequested()
+        }
         #endif
     }
 
@@ -55,17 +61,29 @@ struct BurrowHomeView: View {
         model.layout = L
     }
 
+    private func closeBag() { withAnimation(.easeOut(duration: 0.15)) { showBag = false } }
+
     #if DEBUG
-    /// `-burrowDemo`: scripts dig → dig → feed → pet → Finds for headless screenshots.
+    /// `-burrowDemo` (use with `-burrowReset`). Times are seconds after the view appears:
+    ///  1.5/3.0/4.5 dig all three · 6.0 eat berry · 7.5 eat root (variety → +joy; fed state until 10.0)
+    /// 10.0 start placing the crystal (slots glow until 12.5) · 12.5 place it in slot 2
+    /// 15.0 pet · 16.0 select the crystal (REMOVE bar until 19.0) · 19.0 remove · 21.5 open Finds
     private func runDemoIfRequested() async {
         guard BurrowDebug.demo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
         await wait(1.5)
-        if let f = model.buried.first { model.dig(spot: f.spot) }
-        await wait(1.5); if let f = model.buried.first { model.dig(spot: f.spot) }
-        await wait(1.5); model.feed()
-        await wait(1.5); model.pet()
-        await wait(2.0); withAnimation { showBag = true }
+        for _ in 0..<3 {
+            if let f = model.buried.first { model.dig(spot: f.spot) }
+            await wait(1.5)
+        }
+        model.feed(); await wait(1.5)                   //  6.0
+        model.feed(); await wait(2.5)                   //  7.5
+        model.startPlacing(.crystal); await wait(2.5)   // 10.0
+        model.tapSlot(2); await wait(2.5)               // 12.5
+        model.pet(); await wait(1.0)                    // 15.0
+        model.tapSlot(2); await wait(3.0)               // 16.0
+        model.removeSelected(); await wait(2.5)         // 19.0
+        withAnimation { showBag = true }                // 21.5
     }
     #endif
 
@@ -96,6 +114,7 @@ struct BurrowHomeView: View {
     @ViewBuilder
     private func livingLayer(_ L: BurrowLayout, t: TimeInterval) -> some View {
         ZStack(alignment: .topLeading) {
+            ForEach(0..<BurrowRules.decorSlots, id: \.self) { i in decorSlot(i, L, t) }
             ForEach(model.buried, id: \.spot) { f in
                 if let a = BurrowSpots.anchor(f.spot) { marker(spot: f.spot, anchor: a, L, t) }
             }
@@ -129,6 +148,42 @@ struct BurrowHomeView: View {
             .accessibilityLabel("Buried find")
             .accessibilityHint("Dig it up")
             .accessibilityAddTraits(.isButton)
+    }
+
+    @ViewBuilder
+    private func decorSlot(_ i: Int, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
+        if let p = L.decorSlot(i) {
+            let kind = model.placed[i]
+            let lit = model.placing != nil && kind == nil && Int(t / 0.3) % 2 == 0
+            let selected = model.selectedSlot == i
+            let base = L.point(Double(p.x - 3), Double(p.y))
+            PixelImage(buffer: lit ? IconArt.pedestalLit : IconArt.pedestalDim, cell: L.cell)
+                .position(x: base.x + 3 * L.cell, y: base.y + L.cell)
+            if let kind {
+                let spr = kind.sprite
+                let bob = selected && Int(t / 0.25) % 2 == 0 ? 1 : 0
+                // Whole-cell top-left so 5-wide sprites stay on the pixel grid: centred on the
+                // 6-wide pedestal (x-3…x+2), bottom row just above the pedestal top (row p.y).
+                let left = p.x - 3 + (6 - spr.width) / 2
+                let top = p.y - bob - spr.height
+                let o = L.point(Double(left), Double(top))
+                PixelImage(buffer: spr, cell: L.cell)
+                    .position(x: o.x + CGFloat(spr.width) * L.cell / 2,
+                              y: o.y + CGFloat(spr.height) * L.cell / 2)
+            }
+            let tappable = (model.placing != nil && kind == nil) || (model.placing == nil && kind != nil)
+            if tappable {
+                Color.clear
+                    .frame(width: 48, height: 48)
+                    .contentShape(Rectangle())
+                    .position(L.point(Double(p.x), Double(p.y - 3)))
+                    .onTapGesture { model.tapSlot(i) }
+                    .accessibilityElement()
+                    .accessibilityLabel(kind.map { "\($0.label.capitalized) decoration" } ?? "Empty spot")
+                    .accessibilityHint(kind == nil ? "Place it here" : "Remove it")
+                    .accessibilityAddTraits(.isButton)
+            }
+        }
     }
 
     private func grub(_ L: BurrowLayout, _ t: TimeInterval) -> some View {
@@ -206,7 +261,7 @@ struct BurrowHomeView: View {
 
     private var bottomHUD: some View {
         VStack(spacing: 10) {
-            if let msg = model.toast {
+            if let msg = model.toast {      // toasts stay visible above a bar (e.g. TOO FULL! while placing)
                 Text(msg)
                     .font(GrubFont.size(9)).lineSpacing(6).multilineTextAlignment(.center)
                     .foregroundColor(Color(ink: BurrowInk.cream))
@@ -214,6 +269,13 @@ struct BurrowHomeView: View {
                     .background(Color(ink: BurrowInk.hollow))
                     .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 3))
                     .transition(.opacity)
+            }
+            if let kind = model.placing {
+                hudBar("PLACE \(kind.label):\nTAP A GLOWING SPOT", button: "CANCEL",
+                       action: { model.cancelPlacing() })
+            } else if let slot = model.selectedSlot, let kind = model.placed[slot] {
+                hudBar("REMOVE \(kind.label)?", button: "REMOVE", secondary: "KEEP",
+                       action: { model.removeSelected() }, secondaryAction: { model.clearSelection() })
             }
             VStack(spacing: 14) {
                 HStack(spacing: 12) {
@@ -226,6 +288,8 @@ struct BurrowHomeView: View {
                     hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
                               hot: model.digsLeft > 0 && !model.buried.isEmpty) { model.digHint() }
                     hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
+                        model.cancelPlacing()
+                        model.clearSelection()
                         withAnimation(.easeOut(duration: 0.15)) { showBag = true }
                     }
                 }
@@ -237,6 +301,8 @@ struct BurrowHomeView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
         .animation(.easeOut(duration: 0.15), value: model.toast)
+        .animation(.easeOut(duration: 0.15), value: model.placing)
+        .animation(.easeOut(duration: 0.15), value: model.selectedSlot)
     }
 
     private func statBar(_ label: String, _ value: Int, _ ink: UInt32, tag: String? = nil) -> some View {
@@ -280,6 +346,32 @@ struct BurrowHomeView: View {
         .buttonStyle(PixelPressStyle())
         .accessibilityLabel("\(title.capitalized), \(count)")
     }
+
+    private func hudBar(_ text: String, button: String, secondary: String? = nil,
+                        action: @escaping () -> Void, secondaryAction: (() -> Void)? = nil) -> some View {
+        HStack(spacing: 10) {
+            Text(text)
+                .font(GrubFont.size(8)).lineSpacing(5)
+                .foregroundColor(Color(ink: BurrowInk.cream))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let secondary, let secondaryAction {
+                pixelButton(secondary, ink: BurrowInk.creamDim, action: secondaryAction)
+            }
+            pixelButton(button, ink: BurrowInk.amber, action: action)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(Color(ink: BurrowInk.hollow))
+        .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.teal), lineWidth: 3))
+    }
+
+    private func pixelButton(_ title: String, ink: UInt32, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.hollow))
+                .padding(.horizontal, 10).padding(.vertical, 9)
+                .background(Color(ink: ink))
+        }
+        .buttonStyle(PixelPressStyle())
+    }
 }
 
 // MARK: - Pieces
@@ -302,33 +394,28 @@ struct PixelPressStyle: ButtonStyle {
     }
 }
 
-/// What the grub has dug up. Berries feed it; the rest becomes decor (gameplay-flow step 4).
+/// What the grub has dug up (spec §3). Pick a find, then EAT it (food) or PLACE it (decor).
 struct FindsBagView: View {
     let bag: [FindKind: Int]
+    let canAct: Bool
+    let freeSlots: Int
+    let onEat: (FindKind) -> Void
+    let onPlace: (FindKind) -> Void
     let close: () -> Void
+    @State private var picked: FindKind?
+
+    private let columns = Array(repeating: GridItem(.fixed(64), spacing: 10), count: 4)
 
     var body: some View {
         ZStack {
             Color.black.opacity(0.6).ignoresSafeArea().onTapGesture(perform: close)
-            VStack(spacing: 18) {
+            VStack(spacing: 16) {
                 Text("FINDS").font(GrubFont.size(14)).foregroundColor(Color(ink: BurrowInk.cream))
-                HStack(spacing: 10) {
-                    ForEach(FindKind.allCases) { k in
-                        let n = bag[k] ?? 0
-                        VStack(spacing: 8) {
-                            PixelImage(buffer: n > 0 ? k.sprite : k.sprite.silhouette(BurrowInk.root), cell: 6)
-                                .frame(width: 60, height: 60)
-                                .background(Color(ink: n > 0 ? BurrowInk.cream : BurrowInk.soil4))
-                                .overlay(Rectangle().strokeBorder(Color(ink: n > 0 ? BurrowInk.amberLo : BurrowInk.soil1), lineWidth: 3))
-                                .accessibilityLabel(n > 0 ? "\(k.label.capitalized), \(n)" : "Not found yet")
-                            Text(n > 0 ? k.label : "???").font(GrubFont.size(6))
-                                .foregroundColor(Color(ink: BurrowInk.cream))
-                            Text(n > 0 ? "x\(n)" : " ").font(GrubFont.size(8))
-                                .foregroundColor(Color(ink: BurrowInk.amber))
-                        }
-                    }
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(FindKind.allCases) { cell($0) }
                 }
-                Text("BERRIES FEED YOUR GRUB.\nTHE REST WILL BE DECOR.")
+                actionRow
+                Text("FOOD FEEDS YOUR GRUB.\nDECOR GOES IN THE ROOMS.")
                     .font(GrubFont.size(7)).lineSpacing(6).multilineTextAlignment(.center)
                     .foregroundColor(Color(ink: BurrowInk.mutedText))
                 Button(action: close) {
@@ -342,6 +429,50 @@ struct FindsBagView: View {
             .background(Color(ink: BurrowInk.hollow))
             .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 4))
             .padding(20)
+        }
+        .onChange(of: bag) { _, newBag in
+            if let k = picked, (newBag[k] ?? 0) == 0 { picked = nil }
+        }
+    }
+
+    private func cell(_ k: FindKind) -> some View {
+        let n = bag[k] ?? 0
+        let isPicked = picked == k
+        return Button { picked = isPicked ? nil : k } label: {
+            VStack(spacing: 6) {
+                PixelImage(buffer: n > 0 ? k.sprite : k.sprite.silhouette(BurrowInk.root), cell: 6)
+                    .frame(width: 60, height: 60)
+                    .background(Color(ink: n > 0 ? BurrowInk.cream : BurrowInk.soil4))
+                    .overlay(Rectangle().strokeBorder(
+                        Color(ink: isPicked ? BurrowInk.teal : (n > 0 ? BurrowInk.amberLo : BurrowInk.soil1)),
+                        lineWidth: 3))
+                Text(n > 0 ? k.label : "???").font(GrubFont.size(6))
+                    .foregroundColor(Color(ink: BurrowInk.cream))
+                Text(n > 0 ? "x\(n)" : " ").font(GrubFont.size(8))
+                    .foregroundColor(Color(ink: BurrowInk.amber))
+            }
+        }
+        .buttonStyle(PixelPressStyle())
+        .disabled(n == 0)
+        .accessibilityLabel(n > 0 ? "\(k.label.capitalized), \(n)" : "Not found yet")
+    }
+
+    @ViewBuilder
+    private var actionRow: some View {
+        if let k = picked, canAct {
+            let full = k.isDecor && freeSlots == 0
+            Button { k.isFood ? onEat(k) : onPlace(k) } label: {
+                Text(k.isFood ? "EAT \(k.label)" : (full ? "ROOMS FULL" : "PLACE \(k.label)"))
+                    .font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                    .padding(.horizontal, 16).padding(.vertical, 11)
+                    .background(Color(ink: full ? BurrowInk.creamDim : BurrowInk.teal))
+            }
+            .buttonStyle(PixelPressStyle())
+            .disabled(full)
+        } else {
+            Text(canAct ? "TAP A FIND" : " ")
+                .font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.mutedText))
+                .frame(height: 34)
         }
     }
 }
