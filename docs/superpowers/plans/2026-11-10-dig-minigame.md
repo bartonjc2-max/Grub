@@ -106,7 +106,11 @@ cd /Users/jessedev/Documents/Code/grub/GrubIOS && sed -n 1,20p GrubIOSTests/Burr
 
 - [ ] **Step 2: Create `BurrowRNG.swift` with that exact algorithm**
 
-Copy the body of `SeededRNG` unchanged; only the type name changes.
+Copy the `next()` body unchanged — it is already SplitMix64, and retyping the constants risks
+changing every seeded test's stream.
+
+**The initialiser label does change.** The old `SeededRNG` has an unlabelled `init(_ seed: UInt64)`;
+the new one is labelled, so the four call sites become `BurrowRNG(seed: 42)`, not `BurrowRNG(42)`.
 
 ```swift
 import Foundation
@@ -116,7 +120,7 @@ import Foundation
 struct BurrowRNG: RandomNumberGenerator {
     private var state: UInt64
     init(seed: UInt64) { state = seed }
-    // ... body copied verbatim from the old SeededRNG ...
+    // ... next() copied verbatim from the old SeededRNG ...
 }
 ```
 
@@ -158,6 +162,12 @@ final class DigTypesTests: XCTestCase {
         XCTAssertEqual(DigGrid.distance(0, 5), 1)       // next row, same column
         XCTAssertEqual(DigGrid.distance(0, 6), 2)       // diagonal
         XCTAssertEqual(DigGrid.distance(0, 24), 8)      // opposite corners
+    }
+
+    func test_the_find_tile_itself_reads_hot() {
+        // `strike` emits `.tileBroken` for the winning tile too, so d == 0 needs an answer.
+        XCTAssertEqual(DigGrid.heat(distance: 0, wet: false), .hot)
+        XCTAssertEqual(DigGrid.heat(distance: 0, wet: true), .hot)
     }
 
     func test_heat_from_distance() {
@@ -212,6 +222,10 @@ enum DigTile: Codable, Equatable {
         case .root, .broken: return 0
         }
     }
+
+    /// Needed by the generation tests and the `-burrowDigDemo` precondition assert, so it
+    /// lives in the app target rather than as a private test helper.
+    var isRock: Bool { if case .rock = self { return true }; return false }
 }
 
 /// A per-spot twist, rolled when the find is buried. `nil` means a plain spot.
@@ -254,9 +268,11 @@ enum DigGrid {
     }
 
     /// Spec §1: d == 1 is hot, d == 2 is warm (cold when wet), further is cold.
+    /// d == 0 is the find tile itself — `strike` reports a heat for it too, and "hot" is the
+    /// only answer that isn't a lie.
     static func heat(distance d: Int, wet: Bool) -> Heat {
         switch d {
-        case 1: return .hot
+        case 0, 1: return .hot
         case 2: return wet ? .cold : .warm
         default: return .cold
         }
@@ -413,13 +429,16 @@ final class BurrowSpotsTests: XCTestCase {
 }
 ```
 
-`CellRect.contains(x:y:)` may not exist — add it if not:
+`CellRect` has `x, y, w, h, maxX, maxY, midX` and no `contains`. Add one — **in `BurrowArt.swift` beside the type, not as a private test helper**, because Task 16 needs it too:
+
 ```swift
 extension CellRect {
-    func contains(x: Int, y: Int) -> Bool { (self.x..<maxX).contains(x) && (self.y..<maxY).contains(y) }
+    /// Design-space hit test.
+    func contains(x: Int, y: Int) -> Bool {
+        (self.x..<maxX).contains(x) && (self.y..<maxY).contains(y)
+    }
 }
 ```
-(Check the real property names on `CellRect` in `BurrowArt.swift` first and match them.)
 
 - [ ] **Step 2: Run; expect compile failure on `BurrowSpots.layer` / `.resolve`**
 
@@ -456,13 +475,19 @@ enum BurrowSpots {
 
     static func layer(_ spot: Int) -> SoilLayer { spots[spot].layer }
 
-    /// The spot's cell in bitmap coordinates, for the given layout.
+    /// The spot's cell in **design** space — the same space `BurrowLayout.resolve(_:)`
+    /// returned, and the space `CellRect` (chamber, side rooms) uses.
+    ///
+    /// Do **not** add `L.x0` here. Both consumers add it themselves: `L.point(dx, dy)`
+    /// computes `originX + (x0 + dx) * cell`, and `backdrop`'s `r()` helper fills at
+    /// `L.x0 + x`. Returning bitmap coordinates would shift every marker and hole right by
+    /// `x0` — which is 0 on most sizes and 2 on the SE, so it would survive a casual look.
     static func resolve(_ spot: Int, _ L: BurrowLayout) -> (x: Int, y: Int) {
         let s = spots[spot]
         let band = L.rows(for: s.layer)
         let span = max(1, band.count - 1)
         let y = band.lowerBound + Int((Double(span) * s.t).rounded())
-        return (L.x0 + s.x, min(y, band.upperBound - 1))
+        return (s.x, min(y, band.upperBound - 1))
     }
 }
 ```
@@ -471,17 +496,35 @@ enum BurrowSpots {
 
 They will not all pass first time — that is the point of the test. Adjust each failing spot's `x` or `t` (never its layer, which the spec fixes) and re-run. Keep the spots spread out: don't solve a collision by stacking two spots in one corner.
 
-- [ ] **Step 5: Update the three call sites that used `CellAnchor`**
+**The two deep spots are the tight ones.** On iPad Pro 11″ the chamber occupies rows 38..<69 at design columns 14..<50, while the deep band is only rows 59..<74 — so spots 3 and 7 have to thread between the chamber's bottom edge and the band's. Expect to move them horizontally (clear of columns 14–50) rather than vertically.
 
-- `BurrowHomeModel.swift:83` — `var holes: [CellAnchor]` becomes `var holes: [Int] { save.holes }` (the view resolves).
-- `BurrowArt.backdrop(_:holes:)` — takes `holes: [Int]` and resolves internally via `BurrowSpots.resolve`.
-- `BurrowHomeView.swift` — `BurrowBackdrop(layout:holes:)` passes the `[Int]`; the marker loop calls `BurrowSpots.resolve(spot, L)` instead of `L.resolve(anchor)`.
+- [ ] **Step 5: Update every `BurrowSpots.anchor` / `CellAnchor` call site**
 
-`BurrowBackdrop` is `.equatable()`; `[Int]` is `Equatable`, so this keeps working.
+There are six, not three. Missing any of them breaks the build:
 
-- [ ] **Step 6: Run the full suite; expect all green**
+| Where | Change |
+|---|---|
+| `BurrowHomeModel.swift:83` | `var holes: [CellAnchor]` → `var holes: [Int] { save.holes }` (the view resolves) |
+| `BurrowHomeModel.swift:208` | `.dugUp` FX: `guard let L = layout, let a = BurrowSpots.anchor(spot)` → `BurrowSpots.resolve(spot, L)` (non-optional, so restructure the `guard`) |
+| `BurrowHomeModel.swift:216` | `.bonusFind` FX: same shape. (Chunk 5 deletes this case entirely; just make it compile for now.) |
+| `BurrowArt.swift:84` | `backdrop(_:holes: [CellAnchor])` → `holes: [Int]`, resolving internally |
+| `BurrowHomeView.swift:189, 197` | the marker loop passes `spot` instead of a `CellAnchor`; `BurrowBackdrop(layout:holes:)` takes `[Int]` |
+| `GrubIOSTests/BurrowRulesTests.swift:229-230` | `test_spot_table_matches_rules` asserts `BurrowSpots.anchors.count` and `anchor(spotCount) == nil`; rewrite against `BurrowSpots.spots.count` |
 
-- [ ] **Step 7: Screenshot all four sizes and look at them**
+`BurrowBackdrop` is `.equatable()` over its stored properties; `[Int]` is `Equatable`, so that keeps working.
+
+**The marker's animation phase needs a new seed.** `BurrowHomeView.swift:197` computes `Double((anchor.x * 7 + anchor.dy) % 10) / 10`, but the new `Spot` has no `dy` (`t` is a `Double`, so `% 10` won't compile). Use the spot index: `Double((spot * 7) % 10) / 10`.
+
+- [ ] **Step 6: Delete `CellAnchor` and `BurrowLayout.resolve(_:)` if nothing else uses them**
+
+```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && grep -rn "CellAnchor\|\.resolve(" GrubIOS GrubIOSTests
+```
+`BurrowLayout.decorSlot` may still use them — if so, leave both in place. Either way, fix the stale comment at `BurrowTypes.swift:78` ("index into BurrowSpots.anchors").
+
+- [ ] **Step 7: Run the full suite; expect all green**
+
+- [ ] **Step 8: Screenshot all four sizes and look at them**
 
 ```bash
 cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodebuild -project GrubIOS.xcodeproj -scheme GrubIOS -configuration Debug -destination 'id=8AABF67E-2193-4949-8A0E-0954E9789898' -derivedDataPath build/sim build 2>&1 | grep -E "error:|BUILD" | tail -3
@@ -490,12 +533,12 @@ xcrun simctl launch 8AABF67E-2193-4949-8A0E-0954E9789898 com.jessedev.GrubIOS -b
 sleep 3 && xcrun simctl io 8AABF67E-2193-4949-8A0E-0954E9789898 screenshot /tmp/spots-iphone.png
 ```
 
-Confirm by eye that no marker sits on a tunnel wall, inside a room, or under the title. Do the same on an iPad simulator if one is available (`xcrun simctl list devices | grep iPad`); if none is installed, say so rather than claiming it was checked.
+Confirm by eye that no marker sits on a tunnel wall, inside a room, or under the title. Only `iPhone 13` is installed; for the other sizes either create them (`xcrun simctl create "iPad Pro 11" com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-M4-8GB`) or say plainly that only one size was checked on screen and the rest rest on the unit test. Never claim a size was eyeballed when it wasn't.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add GrubIOS/Burrow/BurrowSpots.swift GrubIOS/Burrow/BurrowArt.swift GrubIOS/Burrow/BurrowHomeModel.swift GrubIOS/Burrow/BurrowHomeView.swift GrubIOSTests/BurrowSpotsTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "fix: resolve dig spots against the layout so they stay in their soil layer
+git add GrubIOS/Burrow/BurrowSpots.swift GrubIOS/Burrow/BurrowArt.swift GrubIOS/Burrow/BurrowHomeModel.swift GrubIOS/Burrow/BurrowHomeView.swift GrubIOS/Burrow/BurrowTypes.swift GrubIOSTests/BurrowSpotsTests.swift GrubIOSTests/BurrowRulesTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "fix: resolve dig spots against the layout so they stay in their soil layer
 
 Fixed row offsets put spots 3 and 7 below the deepest band on iPad."
 ```
@@ -705,14 +748,20 @@ enum DigGen {
 }
 ```
 
-- [ ] **Step 4: Run; expect all DigGen tests passing**
+**One divergence from the spec, deliberate:** §1 step 5 says the fallback drops obstacles "in reverse placement order", but re-placing from scratch with one fewer obstacle is simpler and equally deterministic. Update that sentence in the spec rather than leaving them disagreeing.
+
+- [ ] **Step 4: Regenerate and run; expect all DigGen tests passing**
+
+```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+```
 
 If `test_every_grid_leaves_enough_clues_to_read` fails for a particular combination, the fallback has a bug — do not relax the assertion.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add GrubIOS/Burrow/DigGen.swift GrubIOSTests/DigGenTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: dig grid generation"
+git add GrubIOS/Burrow/DigGen.swift GrubIOSTests/DigGenTests.swift docs/superpowers/specs/2026-11-10-dig-minigame-design.md && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: dig grid generation"
 ```
 
 ---
@@ -825,26 +874,70 @@ git add GrubIOS/Burrow/BurrowTypes.swift GrubIOSTests/BurrowStoreTests.swift && 
 
 - [ ] **Step 1: Write the failing tests**
 
+First lift Task 6's fixture into a shared helper, since three tests now need it:
+
+```swift
+/// A v1 payload — `BuriedFind` had only `spot` and `kind`, and there was no grid.
+/// `lastTick` is a bare number because JSONDecoder's default date strategy is
+/// `.deferredToDate` (seconds since the reference date, as a Double).
+static let v1JSON = """
+{"version":1,"stage":"larva","name":"PIP","eggCracks":3,"belly":6,"joy":6,"molt":2,
+ "digs":3,"buried":[{"spot":0,"kind":"berry"},{"spot":3,"kind":"crystal"}],
+ "holes":[1],"bag":{"root":2},"placed":{},"eaten":{},"specimens":[],
+ "lastTick":750000000,"digTimer":0,"buryTimer":0,"bellyTimer":0,"joyTimer":0,
+ "lastPetAt":749990000}
+"""
+
+/// A store in a fresh temp dir, pre-loaded with `json`.
+func storeHolding(_ json: String) throws -> BurrowStore {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-\(UUID().uuidString)")
+    addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let store = BurrowStore(directory: dir)
+    try Data(json.utf8).write(to: store.fileURL)
+    return store
+}
+```
+
+Then:
+
 ```swift
 func test_a_v1_save_gains_grids_and_becomes_v2() throws {
-    // ... same fixture as Task 6 ...
-    let save = store.load()
+    let save = try storeHolding(Self.v1JSON).load()
     XCTAssertEqual(save.version, 2)
+    XCTAssertEqual(save.buried.count, 2)
     for f in save.buried {
         XCTAssertEqual(f.tiles.count, DigGrid.tileCount, "spot \(f.spot) got a grid")
-        XCTAssertNotEqual(f.tiles[f.findTile], .root)
+        XCTAssertNotEqual(f.tiles[f.findTile], .root, "spot \(f.spot)")
     }
 }
 
-func test_migrating_the_same_save_twice_gives_the_same_grids() throws {
-    // write the fixture, load, capture; write the same fixture again, load again
-    XCTAssertEqual(first.buried.map(\.tiles), second.buried.map(\.tiles))
+func test_the_migrated_save_is_written_back_so_it_only_happens_once() throws {
+    let store = try storeHolding(Self.v1JSON)
+    _ = store.load()
+    let onDisk = try JSONDecoder().decode(BurrowSave.self, from: Data(contentsOf: store.fileURL))
+    XCTAssertEqual(onDisk.version, 2, "the upgrade was saved, not redone every launch")
+    XCTAssertEqual(onDisk.buried.first?.tiles.count, DigGrid.tileCount)
 }
 
-func test_a_future_version_is_still_moved_aside() throws {
-    // version 99 payload → fresh egg, burrow.corrupt.json exists
+func test_migrating_the_same_save_twice_gives_the_same_grids() throws {
+    let first = try storeHolding(Self.v1JSON).load()
+    let second = try storeHolding(Self.v1JSON).load()
+    XCTAssertEqual(first.buried.map(\.tiles), second.buried.map(\.tiles),
+                   "the spot-derived seed must make migration repeatable")
+    XCTAssertEqual(first.buried.map(\.findTile), second.buried.map(\.findTile))
+}
+
+func test_a_part_written_v2_save_is_repaired() throws {
+    // version 2, but a buried find with no grid — a hand-edit, or a crash mid-write.
+    let broken = Self.v1JSON.replacingOccurrences(of: "\"version\":1", with: "\"version\":2")
+    let save = try storeHolding(broken).load()
+    XCTAssertEqual(save.buried.first?.tiles.count, DigGrid.tileCount,
+                   "a missing grid is repaired regardless of version")
 }
 ```
+
+`test_a_future_version_is_still_moved_aside` already exists as `test_store_future_version_is_moved_aside` (`BurrowStoreTests.swift:65`) and covers this once `currentVersion` is 2 — don't write a second one, but do re-run it.
 
 - [ ] **Step 2: Run; expect `save.version == 2` to fail (it is 1)**
 
@@ -1022,7 +1115,11 @@ The old test asserts `foodWeight == 70` against `FindKind.buryWeight`. That glob
 
 Leave `FindKind.buryWeight` and `BurrowRules.weightedKind` in place for now — `dig` still calls `weightedKind` for the bonus find, and that goes in Chunk 5.
 
-- [ ] **Step 5: Run; expect green**
+- [ ] **Step 5: Run — and expect the pacing tests to wobble**
+
+Rewriting `bury` changes the RNG draw order inside `advance` (spot before kind) and drops the food share from 70 % to 67.5 %. `BurrowPacingTests` asserts 2.3 / 2.4 / 4.5 days ±0.5 over 30 seeds and still runs through the old `BurrowRules.dig`, so it may drift.
+
+If it does: **do not widen the tolerance.** Those tests are re-measured properly in Task 15 Step 5, two tasks from now. Note the drift, leave the assertions alone, and if a test is genuinely red, mark it `XCTSkip` with a comment pointing at Task 15 — then make sure Task 15 un-skips it.
 
 - [ ] **Step 6: Amend the parent spec**
 
@@ -1042,7 +1139,7 @@ git add GrubIOS/Burrow/BurrowRules.swift GrubIOS/Burrow/DigGen.swift GrubIOSTest
 
 **Files:**
 - Create: `GrubIOS/Burrow/DigRules.swift`
-- Modify: `GrubIOS/Burrow/BurrowRules.swift` (new `Refusal` cases, new `BurrowEvent` cases)
+- Modify: `GrubIOS/Burrow/BurrowRules.swift` (new `Refusal` cases, new `BurrowEvent` cases), `GrubIOS/Burrow/BurrowHomeModel.swift` (the toast text — see Step 3, this is a build break if skipped)
 - Test: `GrubIOSTests/DigRulesTests.swift`
 
 - [ ] **Step 1: Write the failing tests**
@@ -1141,6 +1238,19 @@ Add to `BurrowEvent`:
 
 Leave `.bonusFind` for now; Chunk 5 removes it.
 
+**This breaks the build until you also add the toast text.** `BurrowHomeModel.message(_:)` (`BurrowHomeModel.swift:279-294`) switches over `Refusal` with **no `default`**, so four new cases make it non-exhaustive. Add, in the same step:
+
+```swift
+case .noStrikes:     return "OUT OF STRIKES"
+case .rootTile:      return "A ROOT.\nDIG ELSEWHERE"
+case .alreadyBroken: return "ALREADY DUG"
+case .badTile:       return "CAN'T DIG THERE"
+```
+
+**Leave `.wrongStage` alone.** It already reads "NOT NOW" and is shared with `feed`, `pet`, `place`, `remove`, `startMolt`, `name` and `crackEgg`; changing it would silently reword all seven.
+
+`BurrowEvent` needs no such care — `handle`'s `switch` ends in `default: break` (`:274-275`), so the new events compile with no FX. That also means forgetting the FX fails silently; Task 13 adds them.
+
 - [ ] **Step 4: Write `DigRules.swift`**
 
 ```swift
@@ -1188,7 +1298,8 @@ Note `tripStrikes` is called **after** the charge is spent but reads only stats,
 - [ ] **Step 6: Commit**
 
 ```bash
-git add GrubIOS/Burrow/DigRules.swift GrubIOS/Burrow/BurrowRules.swift GrubIOSTests/DigRulesTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: startTrip spends a charge and grants strikes"
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+git add GrubIOS/Burrow/DigRules.swift GrubIOS/Burrow/BurrowRules.swift GrubIOS/Burrow/BurrowHomeModel.swift GrubIOSTests/DigRulesTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: startTrip spends a charge and grants strikes"
 ```
 
 ---
@@ -1202,12 +1313,21 @@ git add GrubIOS/Burrow/DigRules.swift GrubIOS/Burrow/BurrowRules.swift GrubIOSTe
 - [ ] **Step 1: Write the failing tests**
 
 ```swift
-/// A save whose spot-0 grid is fully known: find at tile 12 (the centre), one rock at 7.
+/// A save whose spot-0 grid is fully known.
+///
+///     col:  0  1  2  3  4
+///  row 0:   R  .  .  .  .     R = root (tile 0)
+///  row 1:   .  .  .  .  .
+///  row 2:   K  .  F  .  .     K = rock, 2 hp (tile 10) — d == 2 from the find
+///  row 3:   .  .  .  .  .     F = the find (tile 12, the centre)
+///  row 4:   .  .  .  .  .
+///
+/// Tile 11 is plain soil at d == 1 (hot); tile 24 is soil at d == 4 (cold).
 func rigged() -> BurrowSave {
     var s = save()
     var tiles = [DigTile](repeating: .soil, count: 25)
-    tiles[7] = .rock(hp: 2)
     tiles[0] = .root
+    tiles[10] = .rock(hp: 2)
     s.buried = [BuriedFind(spot: 0, kind: .berry, condition: nil,
                            findTile: 12, tiles: tiles)]
     return s
@@ -1225,16 +1345,17 @@ func test_distant_tiles_read_cold() {
 }
 
 func test_a_rock_takes_two_strikes() {
-    let first = BurrowRules.strike(rigged(), spot: 0, tile: 7, strikesLeft: 3)
-    XCTAssertEqual(first.events, [.rockChipped(tile: 7)])
-    XCTAssertEqual(first.save.buried[0].tiles[7], .rock(hp: 1))
+    let first = BurrowRules.strike(rigged(), spot: 0, tile: 10, strikesLeft: 3)
+    XCTAssertEqual(first.events, [.rockChipped(tile: 10)])
+    XCTAssertEqual(first.save.buried[0].tiles[10], .rock(hp: 1))
 
-    let second = BurrowRules.strike(first.save, spot: 0, tile: 7, strikesLeft: 2)
-    XCTAssertEqual(second.events, [.tileBroken(tile: 7, heat: .warm)])   // d == 2
-    XCTAssertEqual(second.save.buried[0].tiles[7], .broken)
+    let second = BurrowRules.strike(first.save, spot: 0, tile: 10, strikesLeft: 2)
+    XCTAssertEqual(second.events, [.tileBroken(tile: 10, heat: .warm)])   // d == 2
+    XCTAssertEqual(second.save.buried[0].tiles[10], .broken)
 }
 
 func test_finding_the_item_fills_the_bag_and_clears_the_spot() {
+    // Striking the find tile is d == 0, which reads hot (see DigGrid.heat).
     let r = BurrowRules.strike(rigged(), spot: 0, tile: 12, strikesLeft: 1)
     XCTAssertEqual(r.events, [.tileBroken(tile: 12, heat: .hot), .dugUp(spot: 0, kind: .berry)])
     XCTAssertEqual(r.save.bag[.berry], 2, "fresh starts with one berry")
@@ -1244,11 +1365,11 @@ func test_finding_the_item_fills_the_bag_and_clears_the_spot() {
 
 func test_a_rock_can_hide_the_find() {
     var s = rigged()
-    s.buried[0].findTile = 7                    // the rock tile
-    let first = BurrowRules.strike(s, spot: 0, tile: 7, strikesLeft: 2)
-    XCTAssertEqual(first.events, [.rockChipped(tile: 7)], "still buried after one hit")
-    let second = BurrowRules.strike(first.save, spot: 0, tile: 7, strikesLeft: 1)
-    XCTAssertEqual(second.events, [.tileBroken(tile: 7, heat: .hot), .dugUp(spot: 0, kind: .berry)])
+    s.buried[0].findTile = 10                   // the rock tile
+    let first = BurrowRules.strike(s, spot: 0, tile: 10, strikesLeft: 2)
+    XCTAssertEqual(first.events, [.rockChipped(tile: 10)], "still buried after one hit")
+    let second = BurrowRules.strike(first.save, spot: 0, tile: 10, strikesLeft: 1)
+    XCTAssertEqual(second.events, [.tileBroken(tile: 10, heat: .hot), .dugUp(spot: 0, kind: .berry)])
 }
 
 func test_strike_refusals_cost_nothing() {
@@ -1369,18 +1490,28 @@ import Foundation
 enum DigSolver {
     /// Would a player who always makes the locally best move find the item in `strikes`?
     static func solves(tiles: [DigTile], findTile: Int, wet: Bool, strikes: Int) -> Bool {
+        play(tiles: tiles, findTile: findTile, wet: wet, strikes: strikes) != nil
+    }
+
+    /// The tiles it would strike, in order, ending on the find — or nil if it runs out.
+    /// The pacing sim needs the sequence, not just the verdict, so it can apply real
+    /// `BurrowRules.strike` calls and let the save do the bookkeeping.
+    static func play(tiles: [DigTile], findTile: Int, wet: Bool, strikes: Int) -> [Int]? {
         var tiles = tiles
         var left = strikes
+        var struck: [Int] = []
         // Every tile that could still hold the find, given what has been revealed.
         var candidates = Set(tiles.indices.filter { tiles[$0] != .root })
 
         while left > 0 {
-            guard let pick = choose(tiles: tiles, candidates: candidates) else { return false }
+            guard let pick = choose(tiles: tiles, candidates: candidates) else { return nil }
             let cost = tiles[pick].cost
-            if cost > left { return false }
+            if cost > left { return nil }
             left -= cost
+            // One entry per strike, so a 2-hp rock appears twice.
+            struck.append(contentsOf: Array(repeating: pick, count: cost))
             tiles[pick] = .broken
-            if pick == findTile { return true }
+            if pick == findTile { return struck }
             candidates.remove(pick)
             // Keep only the candidates consistent with the heat just revealed.
             let heat = DigGrid.heat(distance: DigGrid.distance(pick, findTile), wet: wet)
@@ -1388,10 +1519,13 @@ enum DigSolver {
                 DigGrid.heat(distance: DigGrid.distance(pick, $0), wet: wet) == heat
             }
         }
-        return false
+        return nil
     }
 
     /// Highest (expected candidates eliminated ÷ strike cost); ties go to the lowest index.
+    /// Note it will happily pick a 2-cost rock with 1 strike left, forfeiting the trip —
+    /// a real player wouldn't. That keeps the solver (and so the pacing figures)
+    /// conservative, which is the safe direction to be wrong in.
     private static func choose(tiles: [DigTile], candidates: Set<Int>) -> Int? {
         var best: (score: Double, tile: Int)?
         for tile in tiles.indices where tiles[tile].isDiggable {
@@ -1419,13 +1553,20 @@ enum DigSolver {
 }
 ```
 
-**Note the simplification:** `expectedElimination` ignores wetness when bucketing, so the solver is slightly pessimistic on wet spots. That's deliberate — it keeps the choice function independent of the condition and the pacing figures conservative. Say so in a comment.
+**Three deliberate simplifications**, all in the pessimistic direction. Put them in a comment so nobody "fixes" them later and quietly moves the pacing numbers:
+
+1. `expectedElimination` ignores wetness when bucketing, so on a wet spot the solver over-estimates how much a d = 2 strike tells it.
+2. The candidate set starts as every non-root tile, including glinting's already-broken one, and the solver never reads that free clue.
+3. `choose` can pick a 2-cost rock with 1 strike left and forfeit.
 
 - [ ] **Step 3: Run; expect green**
+
+If `test_the_solver_always_finds_an_easy_spot` fails on a seed, don't weaken it to "most seeds" — print the failing grid and check whether simplification 3 is the cause. If it is, that's a solver bug worth fixing (skip tiles whose cost exceeds the strikes left); if the grid is genuinely unsolvable in 6 strikes, that's a generation problem and belongs back in Task 5.
 
 - [ ] **Step 4: Commit**
 
 ```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
 git add GrubIOS/Burrow/DigSolver.swift GrubIOSTests/DigSolverTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: deterministic dig solver for pacing and balance"
 ```
 
@@ -1439,6 +1580,15 @@ git add GrubIOS/Burrow/DigSolver.swift GrubIOSTests/DigSolverTests.swift && git 
 - [ ] **Step 1: Write a test that reports every layer × condition success rate**
 
 ```swift
+/// A spot in each layer, so `tripStrikes` reads the right strike count.
+func spotFor(_ layer: SoilLayer) -> Int {
+    switch layer {
+    case .loose: return 1
+    case .clay:  return 0
+    case .deep:  return 3
+    }
+}
+
 func test_no_combination_is_hopeless() {
     var worst: (String, Double) = ("", 1)
     for layer in SoilLayer.allCases {
@@ -1471,14 +1621,28 @@ func test_no_combination_is_hopeless() {
 ... -only-testing:GrubIOSTests/DigBalanceTests 2>&1 | grep -E "%|Executed"
 ```
 
-- [ ] **Step 3: If anything is below 70 %, tune and re-run**
+- [ ] **Step 3: If anything is below 70 %, STOP and ask Jesse**
 
-Most likely culprit is rocky clay (6 rocks against 5 strikes). Tune in this order, re-running after each: give rocky +1 strike; failing that, drop rocky's extra rocks from 3 to 2. **Update the spec's Conditions table in the same commit** so the document and the code agree.
+The likely culprit is rocky clay: 6 rocks against 5 strikes leaves room for about two clues. There are two fixes and they feel different to play, so this is his call, not the implementer's:
+
+- **rocky gives +1 strike** — the condition stays visually dense but costs you less.
+- **rocky adds 2 extra rocks instead of 3** — it stays as punishing per rock, but there are fewer.
+
+Report the measured table and ask. **If there is no answer and work can't stop**, take the +1 strike option (the smaller change to the grid) and flag it clearly as provisional.
+
+Whichever is chosen, update **all four** places in the same commit, or they'll disagree:
+- `DigRules.swift` (`tripStrikes`) or `DigGen.swift` (the obstacle count)
+- the spec's Conditions table
+- `DigRulesTests.test_wet_adds_two_and_rooty_takes_one`, which currently asserts
+  `strikes(save(spot: 0, condition: .rocky)) == 5` with the comment *"rocky costs tiles, not
+  strikes"* — that assertion and its comment are wrong if rocky gains a strike
+- `DigGenTests.test_conditions_add_their_obstacles`, which asserts 6 rocks
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add GrubIOSTests/DigBalanceTests.swift GrubIOS/Burrow/DigTypes.swift docs/superpowers/specs/2026-11-10-dig-minigame-design.md && git commit -m "test: balance pass over every layer and condition"
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+git add GrubIOSTests/DigBalanceTests.swift GrubIOSTests/DigRulesTests.swift GrubIOSTests/DigGenTests.swift GrubIOS/Burrow/DigRules.swift GrubIOS/Burrow/DigGen.swift GrubIOS/Burrow/DigTypes.swift docs/superpowers/specs/2026-11-10-dig-minigame-design.md && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "test: balance pass over every layer and condition"
 ```
 
 ---
@@ -1493,40 +1657,64 @@ git add GrubIOSTests/DigBalanceTests.swift GrubIOS/Burrow/DigTypes.swift docs/su
 
 - [ ] **Step 1: Write the failing tests**
 
+`larvaModel()` follows the existing `moltReadyModel()` helper (`BurrowHomeModelTests.swift:9-19`): a temp-dir store, `BurrowSave.fresh(now: t0)` with `stage = .larva` and `name = "GRUB"`, saved, then `BurrowHomeModel(store:clock:)` on a fixed clock. `init` calls `tick()`, but with `lastTick == clock()` `advance` short-circuits, so `digs` stays 3. `fresh` gives belly 6 / joy 6 — neither happy nor sulking — so spot 0 (clay) grants exactly 5 strikes.
+
+**Rig the grid rather than trusting `fresh`.** Spot 0 is clay, so its generated grid has 3 rocks somewhere; a test that assumes tile 11 is plain soil is a coin flip against the seed. Give the helper an explicit grid, as `rigged()` does in Task 10:
+
 ```swift
+/// A larva model whose spot-0 grid is known: find at 12, rock at 10, root at 0.
+func larvaModel() throws -> (BurrowHomeModel, BurrowStore) {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-dig-\(UUID().uuidString)")
+    addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+    let store = BurrowStore(directory: dir)
+    var s = BurrowSave.fresh(now: t0)
+    s.stage = .larva; s.name = "GRUB"
+    var tiles = [DigTile](repeating: .soil, count: 25)
+    tiles[0] = .root
+    tiles[10] = .rock(hp: 2)
+    s.buried = [BuriedFind(spot: 0, kind: .berry, condition: nil, findTile: 12, tiles: tiles)]
+    try store.save(s)
+    let t0 = self.t0
+    return (BurrowHomeModel(store: store, clock: { t0 }), store)
+}
+
 func test_starting_a_trip_opens_the_grid_with_strikes() throws {
-    let m = try larvaModel()
+    let (m, _) = try larvaModel()
     m.startTrip(spot: 0)
     XCTAssertEqual(m.trip?.spot, 0)
     XCTAssertEqual(m.trip?.strikesLeft, 5, "clay")
-    XCTAssertEqual(m.digs, 2)
+    XCTAssertEqual(m.digsLeft, 2)
 }
 
-func test_a_strike_decrements_and_persists() throws {
-    let m = try larvaModel()
+func test_a_strike_is_written_to_disk_before_the_trip_ends() throws {
+    let (m, store) = try larvaModel()
     m.startTrip(spot: 0)
     m.strike(tile: 11)
     XCTAssertEqual(m.trip?.strikesLeft, 4)
+    // The whole point of persisting per strike: a kill mid-trip keeps the progress.
+    XCTAssertEqual(store.load(now: t0).buried.first?.tiles[11], .broken)
 }
 
 func test_a_refused_strike_costs_nothing() throws {
-    let m = try larvaModel()
+    let (m, _) = try larvaModel()
     m.startTrip(spot: 0)
-    m.strike(tile: 11); m.strike(tile: 11)      // the second is already-broken
-    XCTAssertEqual(m.trip?.strikesLeft, 4, "a refusal is free")
+    m.strike(tile: 11)          // soil, breaks
+    m.strike(tile: 11)          // already broken → refused
+    m.strike(tile: 0)           // root → refused
+    XCTAssertEqual(m.trip?.strikesLeft, 4, "only the first strike counted")
 }
 
 func test_running_out_ends_the_trip_and_keeps_progress() throws {
-    let m = try larvaModel()
+    let (m, _) = try larvaModel()
     m.startTrip(spot: 0)
-    for t in [0, 1, 2, 3, 4] where m.trip != nil { m.strike(tile: t) }
+    for t in [1, 2, 3, 4, 5] { m.strike(tile: t) }   // 5 soil tiles, none is the find
     XCTAssertNil(m.trip, "out of strikes")
     XCTAssertEqual(m.save.buried.first?.tiles.filter { $0 == .broken }.count, 5,
                    "the holes stay dug")
 }
 
 func test_leaving_keeps_progress_too() throws {
-    let m = try larvaModel()
+    let (m, _) = try larvaModel()
     m.startTrip(spot: 0)
     m.strike(tile: 11)
     m.leaveTrip()
@@ -1535,15 +1723,17 @@ func test_leaving_keeps_progress_too() throws {
 }
 
 func test_cannot_start_a_trip_while_one_is_running() throws {
-    let m = try larvaModel()
+    let (m, _) = try larvaModel()
     m.startTrip(spot: 0)
     XCTAssertFalse(m.canStartTrip)
 }
 ```
 
-`larvaModel()` follows the existing `moltReadyModel()` helper: a temp-dir store, a larva named GRUB, a fixed clock.
+- [ ] **Step 2: Hoist the two view-local panel flags into the model**
 
-- [ ] **Step 2: Add trip state to the model**
+`canStartTrip` has to know whether the finds bag or the molt panel is open, but both are `@State private var` inside `BurrowHomeView` (`:9` `showBag`, `:10` `showMolt`) — the model can't see them. Move both onto `BurrowHomeModel` as `@Published var showBag` / `showMolt` beside the existing `showBox`, and update their uses in the view. That's the smaller change; the alternative (passing the flags into every call) spreads the problem around.
+
+- [ ] **Step 3: Add trip state to the model**
 
 ```swift
 struct DigTrip: Equatable {
@@ -1555,10 +1745,13 @@ struct DigTrip: Equatable {
 
 /// Spec §2 "Stage gating". `canAct` is only `stage == .larva`, so it can't be reused here —
 /// digging is allowed during the egg stage too.
+///
+/// There's no `!inCocoon` clause because there's no cocoon state to check: `startMolt` sets
+/// `stage = .adult` synchronously, so the stage test below already excludes it.
 var canStartTrip: Bool {
     (save.stage == .egg || save.stage == .larva)
         && trip == nil && revealing == nil && placing == nil
-        && !namingEgg && !confirmingMolt && !showBox && !showFinds
+        && !namingEgg && !confirmingMolt && !showBox && !showBag && !showMolt
 }
 
 func startTrip(spot: Int) {
@@ -1571,39 +1764,38 @@ func startTrip(spot: Int) {
 func strike(tile: Int) {
     guard var t = trip else { return }
     let r = BurrowRules.strike(save, spot: t.spot, tile: tile, strikesLeft: t.strikesLeft)
-    apply(r)
+    apply(r)                 // `apply` already persists when the save changed
     if r.events.contains(where: { if case .refused = $0 { return true }; return false }) { return }
     t.strikesLeft -= 1
     trip = t
-    persist()
     if r.events.contains(where: { if case .dugUp = $0 { return true }; return false }) {
-        trip = nil                       // found it
+        trip = nil                       // found it — Task 17 replaces this with the return leg
     } else if t.strikesLeft == 0 {
-        toast("OUT OF STRIKES")
-        trip = nil
+        say(Self.message(.noStrikes))
+        trip = nil                       // ditto
     }
 }
 
 func leaveTrip() { trip = nil }
 ```
 
-Add toast text for the four new refusals in `message`:
-```swift
-case .noStrikes:     return "OUT OF STRIKES"
-case .rootTile:      return "A ROOT.\nDIG ELSEWHERE"
-case .alreadyBroken: return "ALREADY DUG"
-case .badTile:       return "CAN'T DIG THERE"
-```
-**Do not touch `.wrongStage`** — it already reads "NOT NOW" and is shared with `feed`, `pet`, `place`, `remove`, `startMolt`, `name` and `crackEgg`.
+Three API details the obvious spelling gets wrong:
+- The toast method is `private func say(_:)` (`:307`); `toast` is a `private(set)` published property, not a function. Use `say(Self.message(.noStrikes))` so the string isn't duplicated against the refusal text added in Task 9.
+- The dig read-out is `digsLeft` (`:80`), not `digs`.
+- `apply(_:)` already calls `persist()` when the save changed (`:197-202`), so no extra `persist()` is needed here.
 
-Handle the new events in `handle` for FX: `.tileBroken` → a dirt burst at the tile, `.rockChipped` → a sharper one.
+**Add the FX, or they'll be forgotten silently:** `handle`'s switch ends in `default: break`, so `.tileBroken` and `.rockChipped` compile with no effect at all. Add a dirt burst at the struck tile for `.tileBroken` and a sharper chip for `.rockChipped`.
 
-- [ ] **Step 3: Run; expect green**
+- [ ] **Step 4: Leave a trip when the app goes to the background**
 
-- [ ] **Step 4: Commit**
+Spec §2: leaving early is the same as running out. `BurrowHomeView.swift:82-88` already watches `scenePhase` and calls `model.persist()`; add `model.leaveTrip()` beside it for the non-active phases.
+
+- [ ] **Step 5: Run; expect green**
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add GrubIOS/Burrow/BurrowHomeModel.swift GrubIOSTests/BurrowHomeModelTests.swift && git commit -m "feat: trip state in the home model"
+git add GrubIOS/Burrow/BurrowHomeModel.swift GrubIOS/Burrow/BurrowHomeView.swift GrubIOSTests/BurrowHomeModelTests.swift && git commit -m "feat: trip state in the home model"
 ```
 
 ---
@@ -1614,11 +1806,13 @@ git add GrubIOS/Burrow/BurrowHomeModel.swift GrubIOSTests/BurrowHomeModelTests.s
 - Create: `GrubIOS/Burrow/DigGridView.swift`
 - Modify: `GrubIOS/Burrow/BurrowHomeView.swift` (overlay), `GrubIOS/Burrow/BurrowArt.swift` (tile art)
 
-No unit tests here — this is drawing. It gets verified in the simulator in Task 16.
+No unit tests here — this is drawing. Step 5 below verifies it by hand in the simulator.
 
 - [ ] **Step 1: Add tile art to `BurrowArt`**
 
-A `DigArt` enum beside `IconArt`, with buffers for: unbroken soil, rock (2 hp and 1 hp — the chipped one visibly cracked), root, and broken tiles in each heat (hot / warm / cold). Use the existing `BurrowInk` palette: `soil2` for unbroken, `hollow` for broken-cold, `amberHi` for hot, a dimmer amber for warm. Each tile is drawn at a larger pixel size than the burrow so the grid reads clearly.
+A `DigArt` enum beside `IconArt`, with buffers for: unbroken soil, rock (2 hp and 1 hp — the chipped one visibly cracked), root, and broken tiles in each heat (hot / warm / cold). Use the existing `BurrowInk` palette: `soil2` for unbroken, `hollow` for broken-cold, `amberHi` for hot, a dimmer amber for warm.
+
+**Pin the tile size:** each tile is a 9 × 9 pixel buffer drawn at `layout.cell * 2` points per pixel, so the grid is 5 × 9 × 2 = 90 cells wide — wider than the 64-cell burrow, which is what makes the zoom read as a zoom. Task 18's zoom target depends on this number, so don't leave it to taste. `PixelImage` already sets `.interpolation(.none)` and `.antialiased(false)`, so a `.scaleEffect` zoom stays crisp.
 
 **Heat must not be colour-only** (spec §6): give hot a small `▲` glyph, warm a `·`, cold nothing.
 
@@ -1663,16 +1857,26 @@ The heat of an already-broken tile has to come from somewhere, since the save st
 
 - [ ] **Step 3: Show it from `BurrowHomeView`**
 
-An overlay when `model.trip != nil`, over a dimmed burrow. The HUD and markers are already inert because `canStartTrip` is false.
+An overlay when `model.trip != nil`.
 
-- [ ] **Step 4: Build, install, play one dig by hand in the simulator**
+**It needs its own dimmer, and it has to go in the right group.** The markers are effectively inert (their handler calls `startTrip`, which guards on `canStartTrip`), but the HUD's DIG and FINDS buttons (`:440-446`) and the grub's tap gesture (`:298`) are not gated at all. And `bottomHUD` is attached at `:34`, *before* the full-screen panels at `:37-80` — so put the trip overlay in that later group and give it `Color.black.opacity(0.6).ignoresSafeArea()` underneath, exactly as the other panels do. Without the dimmer swallowing hits, the HUD stays tappable through the grid.
+
+- [ ] **Step 4: Point the marker tap at `startTrip` so this is testable now**
+
+`BurrowHomeView.swift:216` is still `.onTapGesture { model.dig(spot: spot) }` until Task 15. Change it here instead — otherwise Step 5 would exercise the *old* one-tap dig and prove nothing. Task 15 then only has the deletions left to do.
+
+- [ ] **Step 5: Build, install, play one dig by hand in the simulator**
 
 ```bash
-xcrun simctl launch 8AABF67E-2193-4949-8A0E-0954E9789898 com.jessedev.GrubIOS -burrowReset -burrowMoltReady
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+xcodebuild -project GrubIOS.xcodeproj -scheme GrubIOS -configuration Debug -destination 'id=8AABF67E-2193-4949-8A0E-0954E9789898' -derivedDataPath build/sim build 2>&1 | grep -E "error:|BUILD" | tail -3
+xcrun simctl install 8AABF67E-2193-4949-8A0E-0954E9789898 build/sim/Build/Products/Debug-iphonesimulator/GrubIOS.app
+xcrun simctl launch 8AABF67E-2193-4949-8A0E-0954E9789898 com.jessedev.GrubIOS -burrowReset
 ```
-Tap a marker, work the grid, confirm the clues make sense and the find pops.
 
-- [ ] **Step 5: Commit**
+`-burrowReset` leaves you as an egg, which the spec allows you to dig as. Tap a marker, work the grid, confirm the clues make sense and the find pops. (Don't bother with `-burrowMoltReady` — `isMoltReady` requires `.larva`, so after a reset it does nothing.)
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add GrubIOS/Burrow/DigGridView.swift GrubIOS/Burrow/BurrowArt.swift GrubIOS/Burrow/BurrowHomeView.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: the dig grid screen"
@@ -1694,34 +1898,73 @@ This is the one commit where the game changes hands. Do it all together so the b
 - `BurrowRules.weightedKind`
 - `BurrowRules.bonusFindChance`
 - `FindKind.buryWeight`
-- `BurrowEvent.bonusFind` and its case in `BurrowHomeModel.handle`
+- `BurrowEvent.bonusFind` and its case in `BurrowHomeModel.handle` (plus the `.bonusFind` FX block at `BurrowHomeModel.swift:216`)
 - `BurrowHomeModel.dig(spot:)`
 
-- [ ] **Step 2: Delete exactly these four tests**
+- [ ] **Step 2: Fix `-burrowDemo`, which calls the method you just deleted**
 
-`test_dig_moves_find_to_bag_and_leaves_hole`, `test_dig_refusals`,
-`test_bonus_find_only_when_happy_at_about_35_percent`, `test_bonus_find_lands_in_bag`.
+`BurrowHomeView.swift:116`, inside `runDemoIfRequested()`, calls `model.dig(spot: f.spot)`. Tests build Debug, so leaving it breaks the build — the one thing this commit promises not to do. Either drop the demo's dig lines or rewrite them as `startTrip` + a scripted strike at `f.findTile`.
 
-**Keep** `test_digs_regrow_one_per_3h_and_cap_at_3`, `test_dig_timer_carries_partial_time_below_cap`, `test_dig_timer_does_not_bank_at_cap` — same name prefix, but they test `advance`, not the dig.
+- [ ] **Step 3: Sweep for anything else referring to the deleted API**
 
-- [ ] **Step 3: Point the marker tap at the new path**
+```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && grep -rn "buryWeight\|weightedKind\|bonusFind\|model\.dig(" GrubIOS GrubIOSTests
+```
 
-In `BurrowHomeView.swift`, the marker's `.onTapGesture { model.dig(spot: spot) }` becomes `{ model.startTrip(spot: spot) }`. Update the accessibility text from "Buried find" / "Dig it up" to name the spot's layer and whether it has been started, and drop the "TAP A ! TO DIG" toast and the `digHintAt` flash (Task 17 replaces the markers wholesale; a plain marker is fine in the meantime).
+Known live hits beyond the tests in Step 4: `BurrowRulesTests.swift:74, 75, 77` (`test_bury_weights`, rewritten in Task 8) and `:239, :240` (`test_find_table_matches_spec`'s "sums to 100" assertion over `buryWeight`). Fix every hit in this commit.
 
-- [ ] **Step 4: Rewrite the pacing simulation**
+- [ ] **Step 4: Delete exactly these four tests**
 
-In `BurrowPacingTests`, a dig becomes: `startTrip`, then ask `DigSolver.solves` with the strikes granted; on success apply strikes until `.dugUp`, on failure mark the spot attempted and move on. Run it and **print the resulting days-to-molt** for the three visit profiles.
+`test_dig_moves_find_to_bag_and_leaves_hole` (`:131`), `test_dig_refusals` (`:140`),
+`test_bonus_find_only_when_happy_at_about_35_percent` (`:148`), `test_bonus_find_lands_in_bag` (`:162`).
 
-- [ ] **Step 5: Update the pacing expectations to the measured values**
+**Keep** `test_digs_regrow_one_per_3h_and_cap_at_3` (`:37`), `test_dig_timer_carries_partial_time_below_cap` (`:45`), `test_dig_timer_does_not_bank_at_cap` (`:51`) — same name prefix, but they test `advance`, not the dig.
+
+- [ ] **Step 5: Decide what the DIG HUD button does now**
+
+Dropping the "TAP A ! TO DIG" toast and the `digHintAt` flash leaves `BurrowHomeModel.digHint()` (`:180-185`) wired to the button (`BurrowHomeView.swift:441`) doing nothing but emitting refusals, and orphans `BurrowHomeView.bangHot` (`:14`) and the `hinted` / `hot` locals (`:201-202`). Simplest coherent answer: keep the button as a "where can I dig?" cue that pulses every buried marker once, and keep `digHintAt` for exactly that. Whatever you choose, remove the dead symbols.
+
+Also update the markers' accessibility text (`:219-220`, currently "Buried find" / "Dig it up") to name the spot's layer and whether it has been started.
+
+- [ ] **Step 6: Rewrite the pacing simulation**
+
+The existing loop is `while s.digs > 0, let f = s.buried.first` (`BurrowPacingTests.swift:20`), which would retry the same spot forever once trips can fail. A dig becomes:
+
+```swift
+var attempted: Set<Int> = []
+while s.digs > 0, let f = s.buried.first(where: { !attempted.contains($0.spot) }) {
+    let started = BurrowRules.startTrip(s, spot: f.spot)
+    s = started.save
+    var strikes = 0
+    for case .tripStarted(_, let n) in started.events { strikes = n }
+    if let order = DigSolver.play(tiles: f.tiles, findTile: f.findTile,
+                                  wet: f.condition == .wet, strikes: strikes) {
+        for tile in order {
+            s = BurrowRules.strike(s, spot: f.spot, tile: tile, strikesLeft: strikes).save
+            strikes -= 1
+        }
+    } else {
+        attempted.insert(f.spot)      // out of strikes; the find stays buried
+    }
+}
+```
+
+`attempted` resets at the start of each simulated visit, since a fresh charge means a fresh trip. Run it and **print the resulting days-to-molt** for the three visit profiles.
+
+- [ ] **Step 7: Update the pacing expectations — and the test names**
 
 The parent spec's 2.3 / 2.4 / 4.5 days were measured against the old dig. Write down whatever the sim now reports, and assert the spec's bars: 2–4 visits/day under **3 days**, once-a-day under **5.5 days**. If either bar fails, tune strike counts (not the bars) and re-run.
 
-- [ ] **Step 6: Run the whole suite; expect green**
+The test *names* encode the old figures — `test_four_visits_a_day_molts_in_about_2_3_days` and friends (`:46-56`). Rename them to the measured numbers, or the suite documents values it no longer asserts. Un-skip anything Task 8 Step 5 skipped.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Run the whole suite; expect green**
+
+- [ ] **Step 9: Commit**
+
+Explicit paths only — `git add GrubIOS` would stage `GrubIOS/GrubIOSApp.swift`, which is Jesse's uncommitted work.
 
 ```bash
-git add GrubIOS/Burrow GrubIOSTests && git commit -m "feat: the dig mini-game replaces the one-tap dig"
+git add GrubIOS/Burrow/BurrowRules.swift GrubIOS/Burrow/BurrowTypes.swift GrubIOS/Burrow/BurrowHomeModel.swift GrubIOS/Burrow/BurrowHomeView.swift GrubIOSTests/BurrowRulesTests.swift GrubIOSTests/BurrowPacingTests.swift && git commit -m "feat: the dig mini-game replaces the one-tap dig"
 ```
 
 ---
@@ -1736,6 +1979,14 @@ git add GrubIOS/Burrow GrubIOSTests && git commit -m "feat: the dig mini-game re
 
 - [ ] **Step 1: Write the failing test**
 
+**The graph is in design space**, the same as `BurrowSpots.resolve` and `CellRect`. Nothing here adds `x0`; the view does that when it draws.
+
+Give the waypoint a named struct rather than a tuple — `XCTAssertEqual` needs `Equatable`, and labelled tuples get an `==` overload without conforming, so tuple assertions won't compile:
+
+```swift
+struct Waypoint: Equatable { let x: Int; let y: Int }
+```
+
 ```swift
 func test_every_spot_is_reachable_from_the_chamber() {
     for (name, size) in BurrowSpotsTests.sizes {
@@ -1743,79 +1994,195 @@ func test_every_spot_is_reachable_from_the_chamber() {
         for spot in 0..<BurrowRules.spotCount {
             let path = BurrowWaypoints.path(to: spot, L)
             XCTAssertGreaterThanOrEqual(path.count, 2, "\(name): spot \(spot) has no path")
-            XCTAssertEqual(path.last!, BurrowSpots.resolve(spot, L),
+            let end = BurrowSpots.resolve(spot, L)
+            XCTAssertEqual(path.last!, Waypoint(x: end.x, y: end.y),
                            "\(name): the path ends at the spot")
         }
     }
 }
 
 func test_the_path_starts_at_the_chamber() {
-    let L = BurrowLayout(size: CGSize(width: 393, height: 852), displayScale: 2)
-    for spot in 0..<BurrowRules.spotCount {
-        let start = BurrowWaypoints.path(to: spot, L)[0]
-        XCTAssertTrue(L.chamber.contains(x: start.x, y: start.y))
+    for (name, size) in BurrowSpotsTests.sizes {
+        let L = BurrowLayout(size: size, displayScale: 2)
+        for spot in 0..<BurrowRules.spotCount {
+            let start = BurrowWaypoints.path(to: spot, L)[0]
+            XCTAssertTrue(L.chamber.contains(x: start.x, y: start.y),
+                          "\(name): spot \(spot) starts outside the chamber")
+        }
     }
 }
 
 func test_steps_are_adjacent_enough_to_animate_smoothly() {
-    let L = BurrowLayout(size: CGSize(width: 393, height: 852), displayScale: 2)
-    for spot in 0..<BurrowRules.spotCount {
-        let p = BurrowWaypoints.path(to: spot, L)
-        for i in 1..<p.count {
-            let d = abs(p[i].x - p[i-1].x) + abs(p[i].y - p[i-1].y)
-            XCTAssertLessThanOrEqual(d, 30, "spot \(spot): step \(i) jumps \(d) cells")
+    for (_, size) in BurrowSpotsTests.sizes {
+        let L = BurrowLayout(size: size, displayScale: 2)
+        for spot in 0..<BurrowRules.spotCount {
+            let p = BurrowWaypoints.path(to: spot, L)
+            for i in 1..<p.count {
+                let d = abs(p[i].x - p[i-1].x) + abs(p[i].y - p[i-1].y)
+                XCTAssertLessThanOrEqual(d, 30, "spot \(spot): step \(i) jumps \(d) cells")
+            }
         }
     }
 }
 ```
 
+`BurrowSpotsTests.sizes` must be non-`private` for this to compile — check Task 4 declared it that way.
+
 - [ ] **Step 2: Build the graph**
 
-Nodes in layout cells: chamber centre, chamber exit, the crawl tunnel's corners, the two connectors, the side rooms. Edges follow the tunnels the backdrop actually draws (see the tunnel-carving block in `BurrowArt.backdrop`). `path(to:_:)` walks from the chamber to the nearest node to the spot, then appends the spot itself — the last leg is the "burrow through soil" stretch.
+Nodes in design-space cells: chamber centre, chamber exit, the crawl tunnel's corners, the two connectors, the side rooms. Edges follow the tunnels the backdrop actually draws (see the tunnel-carving block in `BurrowArt.backdrop`). `path(to:_:)` walks from the chamber to the nearest node to the spot, then appends the spot itself — the last leg is the "burrow through soil" stretch.
 
 Keep it a small hand-written adjacency list, not a pathfinder. Eight spots don't need Dijkstra.
 
 - [ ] **Step 3: Run; adjust nodes until all three tests pass**
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: Regenerate and commit**
+
+```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+git add GrubIOS/Burrow/BurrowWaypoints.swift GrubIOSTests/BurrowWaypointsTests.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: the tunnel waypoint graph"
+```
 
 ---
 
-### Task 17: Crawl and zoom
+### Task 17: Trip phases in the model
 
 **Files:**
-- Create: `GrubIOS/Burrow/DigTripView.swift`
-- Modify: `GrubIOS/Burrow/BurrowHomeView.swift`, `GrubIOS/Burrow/BurrowHomeModel.swift`
+- Modify: `GrubIOS/Burrow/BurrowHomeModel.swift`
+- Test: `GrubIOSTests/BurrowHomeModelTests.swift`
 
-- [ ] **Step 1: Add trip phases to the model**
+Task 13 made `trip` a `private(set)` property that `strike` and `leaveTrip` clear outright — so a successful find currently *skips the return leg entirely*, and the view has no way to drive transitions. Fix that here, where it can be tested, before writing any animation code.
+
+- [ ] **Step 1: Write the failing tests**
+
+```swift
+func test_a_larva_crawls_out_first() throws {
+    let (m, _) = try larvaModel()
+    m.startTrip(spot: 0)
+    XCTAssertEqual(m.trip?.phase, .crawlingOut)
+}
+
+func test_an_egg_skips_the_crawl() throws {
+    let (m, _) = try eggModelWithRiggedSpot()
+    m.startTrip(spot: 0)
+    XCTAssertEqual(m.trip?.phase, .zoomingIn, "an egg can't travel")
+}
+
+func test_phases_run_in_order_and_skip_jumps_one_at_a_time() throws {
+    let (m, _) = try larvaModel()
+    m.startTrip(spot: 0)
+    m.skip(); XCTAssertEqual(m.trip?.phase, .zoomingIn)
+    m.skip(); XCTAssertEqual(m.trip?.phase, .digging)
+    m.skip(); XCTAssertEqual(m.trip?.phase, .digging, "skip does nothing while digging")
+}
+
+func test_finding_the_item_returns_home_rather_than_vanishing() throws {
+    let (m, _) = try larvaModel()
+    m.startTrip(spot: 0); m.advanceTo(.digging)
+    m.strike(tile: 12)                      // the find
+    XCTAssertEqual(m.trip?.phase, .zoomingOut, "the trip plays out backwards")
+    m.skip(); XCTAssertEqual(m.trip?.phase, .crawlingHome)
+    m.skip(); XCTAssertNil(m.trip, "home again")
+}
+
+func test_running_out_also_returns_home() throws {
+    let (m, _) = try larvaModel()
+    m.startTrip(spot: 0); m.advanceTo(.digging)
+    for t in [1, 2, 3, 4, 5] { m.strike(tile: t) }
+    XCTAssertEqual(m.trip?.phase, .zoomingOut)
+}
+
+func test_leaving_ends_the_trip_at_once() throws {
+    let (m, _) = try larvaModel()
+    m.startTrip(spot: 0); m.advanceTo(.digging)
+    m.strike(tile: 11)
+    m.leaveTrip()
+    XCTAssertNil(m.trip, "BACK and backgrounding skip the walk home")
+    XCTAssertEqual(m.save.buried.first?.tiles[11], .broken, "progress is still kept")
+}
+```
+
+- [ ] **Step 2: Add the phase machine**
 
 ```swift
 enum TripPhase: Equatable { case crawlingOut, zoomingIn, digging, zoomingOut, crawlingHome }
+
+struct DigTrip: Equatable {
+    let spot: Int
+    var strikesLeft: Int
+    var phase: TripPhase
+}
 ```
-on `DigTrip`, with the view driving transitions on a timer and `skip()` jumping to the end of the current phase. In the `.egg` stage, `startTrip` goes straight to `.zoomingIn` — an egg can't crawl.
 
-- [ ] **Step 2: Write `DigTripView`**
+- `startTrip` begins at `.crawlingOut`, or `.zoomingIn` when `stage == .egg`.
+- `advance(to:)` / `skip()` step forward one phase; `skip()` is a no-op during `.digging`, which only ends via a strike or BACK.
+- `strike` no longer sets `trip = nil`. On a find, or on the last strike, it moves to `.zoomingOut`.
+- `crawlingHome` → `skip()` or the timer sets `trip = nil`.
+- `leaveTrip()` still clears immediately — BACK and backgrounding shouldn't force you to watch the walk home.
 
-It owns the choreography: interpolate the grub along `BurrowWaypoints.path`, scale the burrow around the spot, cross-fade to `DigGridView`, then reverse. Timings from the spec: crawl ~1–1.5 s by distance, zoom ~0.6 s.
+Expose `advanceTo(_:)` for the tests (and the view's timer) rather than making the view reach into `private(set)` state.
+
+- [ ] **Step 3: Run; expect green**
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add GrubIOS/Burrow/BurrowHomeModel.swift GrubIOSTests/BurrowHomeModelTests.swift && git commit -m "feat: trip phases"
+```
+
+---
+
+### Task 18: Crawl and zoom on screen
+
+**Files:**
+- Create: `GrubIOS/Burrow/DigTripView.swift`
+- Modify: `GrubIOS/Burrow/BurrowHomeView.swift`, `GrubIOS/Burrow/BurrowArt.swift`
+
+- [ ] **Step 1: Write `DigTripView`**
+
+It owns the choreography, driven by `model.trip?.phase`:
+
+| Phase | What it draws | Duration |
+|---|---|---|
+| `crawlingOut` | the grub interpolated along `BurrowWaypoints.path(to:_:)` | 1 s, +0.1 s per 10 cells of path, capped at 1.5 s |
+| `zoomingIn` | the burrow `.scaleEffect`-ing up around the spot, grid fading in | 0.6 s |
+| `digging` | `DigGridView` | until the player leaves |
+| `zoomingOut` | the reverse | 0.6 s |
+| `crawlingHome` | the path reversed | same as `crawlingOut` |
+
+Each non-`digging` phase sets a timer that calls `model.advanceTo(next)`; a tap anywhere calls `model.skip()`. Waypoints are design-space, so draw them through `L.point(Double(w.x) + 0.5, Double(w.y))` — the same call the markers use, which adds `x0` for you.
+
+- [ ] **Step 2: Move the grid overlay behind the phase**
+
+Task 14 showed `DigGridView` whenever `model.trip != nil`. That would now paint the grid over the crawl. The overlay becomes `DigTripView`, which shows the grid only during `.digging`.
 
 - [ ] **Step 3: Draw spurs for visited spots**
 
-`BurrowArt.backdrop` takes a second `spurs: [Int]` parameter, derived in the view as `model.holes + model.save.buried.filter(\.visited).map(\.spot)`. Cap each spur's length and route it from the nearest waypoint so spot 2's doesn't reach the title.
+- `BurrowArt.backdrop` takes a second `spurs: [Int]`.
+- **`BurrowBackdrop` needs the matching stored property**, or the spur won't appear until the layout changes — it's `.equatable()` over `layout` + `holes` (`BurrowHomeView.swift:538-547`), so a new backdrop input that isn't a stored property is invisible to the diff.
+- Derive it in the view: `model.holes + model.save.buried.filter(\.visited).map(\.spot)`.
+- **Cap each spur at 8 cells** and route it from the nearest waypoint. Spot 2 sits ~14 rows from its nearest tunnel, so without a cap its spur reaches the title.
 
 - [ ] **Step 4: Verify in the simulator with a burst of screenshots**
 
 ```bash
-for i in 1 2 3 4 5 6 7 8; do xcrun simctl io 8AABF67E-2193-4949-8A0E-0954E9789898 screenshot /tmp/trip-$i.png; done
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+# build, install, launch -burrowDigDemo (Task 20), then:
+for i in 1 2 3 4 5 6 7 8; do xcrun simctl io 8AABF67E-2193-4949-8A0E-0954E9789898 screenshot /tmp/trip-$i.png; sleep 0.3; done
 ```
-Confirm the grub actually moves along a tunnel rather than through soil, and that the zoom lands on the right spot.
+Confirm the grub moves along a tunnel rather than through soil, that the zoom lands on the right spot, and that the walk home plays after a find.
 
 - [ ] **Step 5: Commit**
+
+```bash
+git add GrubIOS/Burrow/DigTripView.swift GrubIOS/Burrow/BurrowHomeView.swift GrubIOS/Burrow/BurrowArt.swift && git add -f GrubIOS.xcodeproj/project.pbxproj && git commit -m "feat: the grub crawls to the dig and the view zooms in"
+```
 
 ---
 
 ## Chunk 7: Markers, polish and ship
 
-### Task 18: The new spot markers
+### Task 19: The new spot markers
 
 **Files:**
 - Modify: `GrubIOS/Burrow/BurrowArt.swift`, `GrubIOS/Burrow/BurrowHomeView.swift`
@@ -1835,20 +2202,30 @@ let showCrack = find.visited && find.tiles.filter { $0 == .broken }.count > free
 
 In `BurrowArt.backdrop`, nudge `soil1`/`soil2`/`soil3` apart so depth reads at a glance. Keep it subtle — this is a background.
 
-- [ ] **Step 3: Screenshot and eyeball all four sizes**
+- [ ] **Step 3: Screenshot and eyeball**
+
+Only `iPhone 13` is installed. Either create the other sizes (`xcrun simctl create …`) or check that one and say plainly that the rest rest on `BurrowSpotsTests`. Don't claim sizes you didn't look at.
 
 - [ ] **Step 4: Commit**
 
+```bash
+git add GrubIOS/Burrow/BurrowArt.swift GrubIOS/Burrow/BurrowHomeView.swift && git commit -m "feat: spot markers show find, depth, condition and progress"
+```
+
 ---
 
-### Task 19: The demo flag
+### Task 20: The demo flag
 
 **Files:**
 - Modify: `GrubIOS/Burrow/BurrowHomeView.swift` (the DEBUG demo runners), `GrubIOS/Burrow/BurrowHomeModel.swift` (`BurrowDebug`)
 
 - [ ] **Step 1: Add `-burrowDigDemo`**
 
-Hatch to a larva, start a trip to spot 0 (clay — `fresh` always buries it), and strike a scripted sequence: a cold tile, a warm one, a rock twice, then the find.
+Flags are parsed as `args.contains("-burrowDigDemo")`, matching the existing `BurrowDebug` style.
+
+**There is no debug hatch flag** — `BurrowDebug` has only `reset`, `skipHours`, `demo`, `showBag`, `moltReady`, `adult`, `moltDemo`, `loopDemo`. Hatch the way `runLoopDemoIfRequested` does (`BurrowHomeView.swift:136-147`): `nameEgg("DIG")` then three `tapGrub()` calls.
+
+Then start a trip to spot 0 (clay — `fresh` always buries it) and strike a scripted sequence: a cold tile, a warm one, a rock twice, then the find.
 
 **Assert its preconditions rather than silently screenshotting the wrong thing.** The sequence spends clay's 5 strikes exactly, and it assumes the fixed `fresh` seed puts a rock within d ≤ 2 of the find:
 
@@ -1858,13 +2235,19 @@ assert(find.tiles.indices.contains { find.tiles[$0].isRock && DigGrid.distance($
        "the fresh seed no longer puts a rock near the find; rescript the demo")
 ```
 
+(`DigTile.isRock` is on the type itself — Task 2 — so the assert compiles in the app target.)
+
 - [ ] **Step 2: Run it and capture a screenshot of each step**
 
 - [ ] **Step 3: Commit**
 
+```bash
+git add GrubIOS/Burrow/BurrowHomeView.swift GrubIOS/Burrow/BurrowHomeModel.swift && git commit -m "feat: -burrowDigDemo"
+```
+
 ---
 
-### Task 20: Full verification
+### Task 21: Full verification
 
 - [ ] **Step 1: Run the whole suite**
 
@@ -1874,19 +2257,30 @@ Expected: every test green. Note the final count in the commit message.
 
 Fresh install (`-burrowReset`), name the egg, hatch it, dig all three starter spots, feed, and confirm nothing regressed.
 
-- [ ] **Step 3: Verify the migration against a real old save**
+- [ ] **Step 3: Verify the migration against a real old save, on a device-like path**
 
-The surest check. Install the **TestFlight build 5** first, play it enough to have a named grub and some finds, then install the new build over the top **without resetting** and confirm the grub, bag and specimens are all still there.
+The unit tests cover the decode; this covers the app actually starting on top of one. **Note the TestFlight archive can't be used here** — it's an arm64 `iphoneos` binary and `simctl install` only takes simulator builds. Two ways, in order of preference:
+
+**a. Build the old commit for the simulator and play it.** Closest to a real upgrade:
 
 ```bash
-# build 5's .app, from the archive made earlier
-xcrun simctl install 8AABF67E-2193-4949-8A0E-0954E9789898 <path to the old app>
-# ... play a little ...
-xcrun simctl install 8AABF67E-2193-4949-8A0E-0954E9789898 build/sim/Build/Products/Debug-iphonesimulator/GrubIOS.app
-xcrun simctl launch 8AABF67E-2193-4949-8A0E-0954E9789898 com.jessedev.GrubIOS
+cd /Users/jessedev/Documents/Code/grub/GrubIOS
+git stash && git checkout 0d2da18          # the last commit before this work
+xcodebuild -project GrubIOS.xcodeproj -scheme GrubIOS -configuration Debug -destination 'id=8AABF67E-2193-4949-8A0E-0954E9789898' -derivedDataPath build/old build
+xcrun simctl install 8AABF67E-2193-4949-8A0E-0954E9789898 build/old/Build/Products/Debug-iphonesimulator/GrubIOS.app
+# play: name the egg, hatch, dig, feed — then
+git checkout the-deep && git stash pop
+# build the new one and install OVER it, without -burrowReset
 ```
 
-If the grub is gone, the migration is wrong — stop and fix it before shipping. This is the single highest-risk part of the change.
+**b. If that's awkward, write a v1 save into the container directly:**
+
+```bash
+C="$(xcrun simctl get_app_container 8AABF67E-2193-4949-8A0E-0954E9789898 com.jessedev.GrubIOS data)/Library/Application Support"
+# write the BurrowStoreTests v1 fixture to "$C/burrow.json", then launch without -burrowReset
+```
+
+Either way, confirm the grub's **name, bag, placed decor and specimen box** all survived, and that no `burrow.corrupt.json` appeared beside the save. If the grub is gone, the migration is wrong — stop and fix it before shipping. This is the single highest-risk part of the change.
 
 - [ ] **Step 4: Check the save on disk**
 
@@ -1895,12 +2289,21 @@ cat "$(xcrun simctl get_app_container 8AABF67E-2193-4949-8A0E-0954E9789898 com.j
 ```
 Confirm `version` is 2 and each buried find has 25 tiles.
 
-- [ ] **Step 5: Report to Jesse before uploading**
+- [ ] **Step 5: Final clean build and commit**
 
-Send the screenshots and the pacing numbers. **Do not upload to TestFlight without asking** — the earlier upload was explicitly requested; this one is not yet.
+```bash
+cd /Users/jessedev/Documents/Code/grub/GrubIOS && xcodegen generate
+rm -rf build/sim && <the test command from Orientation>
+git add -f GrubIOS.xcodeproj/project.pbxproj
+git add docs && git commit -m "chore: dig mini-game complete (<N> tests passing)"
+```
+
+- [ ] **Step 6: Report to Jesse before uploading**
+
+Send the screenshots and the pacing numbers. **Do not upload to TestFlight without asking** — the earlier upload was explicitly requested; this one is not yet. If he says yes, it goes up as 1.0.3 (6) alongside the rounded-grub fix, following the same archive-and-export steps as build 5.
 
 ---
 
-## Open question for Jesse (ask before Task 12 lands)
+## The one thing to ask Jesse mid-build
 
-The balance pass may show that rocky spots are too punishing at 6 rocks against 5 strikes. The plan tunes them automatically if any combination falls below a 70 % solve rate, but the choice between "rocky gives +1 strike" and "rocky adds 2 rocks instead of 3" changes how the condition feels. Worth a one-line check-in with the measured numbers in hand.
+Task 12 Step 3 stops and asks if any layer × condition combination solves below 70 %. The likely case is rocky clay (6 rocks against 5 strikes), and the two fixes — "+1 strike" versus "2 extra rocks instead of 3" — feel different to play, so it's his call rather than the implementer's. The checkbox step is in Task 12; this is just the pointer. Everything else in the plan runs without interrupting him.
