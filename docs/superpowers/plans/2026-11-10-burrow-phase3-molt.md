@@ -330,6 +330,9 @@ git commit -m "feat(burrow): six adult sprites, cocoon and molt glow" -m "Co-Aut
     @Published private(set) var moltAt: TimeInterval = -100
     /// The adult whose reveal card is showing.
     @Published private(set) var revealing: Species?
+    /// "MOLT NOW?" is showing. Reasoner review (board #287): a habitual pet-tap must never
+    /// trigger the irreversible molt by itself.
+    @Published private(set) var confirmingMolt = false
 ```
 
 and after `var canAct …`:
@@ -345,17 +348,26 @@ and after `var canAct …`:
 - [ ] **Step 2: Actions** — after `func clearSelection() …`:
 
 ```swift
-    /// Tap on the grub: start the molt when ready, otherwise pet. In `.adult`, re-open the card.
+    /// Tap on the grub: when molt-ready, ask "MOLT NOW?"; otherwise pet. In `.adult`, re-open the card.
     func tapGrub() {
         switch save.stage {
         case .larva:
-            if isMoltReady { apply(BurrowRules.startMolt(save, now: clock(), rng: &rng)) } else { pet() }
+            if isMoltReady { confirmingMolt = true } else { pet() }
         case .adult:
             revealing = save.adult
         case .egg:
             break   // phase 4
         }
     }
+
+    /// MOLT on the confirm: the only path to `startMolt`.
+    func confirmMolt() {
+        confirmingMolt = false
+        apply(BurrowRules.startMolt(save, now: clock(), rng: &rng))
+    }
+
+    /// NOT YET on the confirm: back to caring (the grub stays molt-ready).
+    func cancelMolt() { confirmingMolt = false }
 
     func dismissReveal() { revealing = nil }
 ```
@@ -408,11 +420,61 @@ and in `init`, inside the second `#if DEBUG` block after the `skipHours` line:
         if let sp = BurrowDebug.adult { loaded.stage = .adult; loaded.adult = sp }
 ```
 
-- [ ] **Step 5: BUILD**, expected success. **Commit**
+- [ ] **Step 5: Confirm-flow tests** — create `GrubIOSTests/BurrowHomeModelTests.swift` (the one model test file; it pins the reasoner's confirm requirement):
+
+```swift
+import XCTest
+@testable import GrubIOS
+
+@MainActor
+final class BurrowHomeModelTests: XCTestCase {
+    let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
+
+    /// A model over a temp-dir store holding a molt-ready larva.
+    func moltReadyModel() throws -> BurrowHomeModel {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-model-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+        let store = BurrowStore(directory: dir)
+        var s = BurrowSave.fresh(now: t0)
+        s.molt = BurrowRules.moltGoal
+        try store.save(s)
+        let t0 = self.t0
+        return BurrowHomeModel(store: store, clock: { t0 })
+    }
+
+    func test_tap_when_molt_ready_asks_first() throws {
+        let m = try moltReadyModel()
+        m.tapGrub()
+        XCTAssertTrue(m.confirmingMolt)
+        XCTAssertEqual(m.stage, .larva, "a tap alone never molts")
+    }
+
+    func test_not_yet_keeps_the_larva() throws {
+        let m = try moltReadyModel()
+        m.tapGrub(); m.cancelMolt()
+        XCTAssertFalse(m.confirmingMolt)
+        XCTAssertEqual(m.stage, .larva)
+        XCTAssertTrue(m.isMoltReady)
+    }
+
+    func test_confirm_molts() throws {
+        let m = try moltReadyModel()
+        m.tapGrub(); m.confirmMolt()
+        XCTAssertFalse(m.confirmingMolt)
+        XCTAssertEqual(m.stage, .adult)
+        XCTAssertNotNil(m.adult)
+    }
+}
+```
+
+Run: `xcodegen generate && ` + TEST `BurrowHomeModelTests`. Expected: 3 passed.
+
+- [ ] **Step 6: BUILD**, expected success. **Commit**
 
 ```bash
-git add GrubIOS/Burrow/BurrowHomeModel.swift
-git commit -m "feat(burrow): model molt flow and reveal timing" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+git add GrubIOS/Burrow/BurrowHomeModel.swift GrubIOSTests/BurrowHomeModelTests.swift
+git add -f GrubIOS.xcodeproj/project.pbxproj
+git commit -m "feat(burrow): model molt flow with a MOLT NOW? confirm" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ### Task 4: View
@@ -513,11 +575,57 @@ and disable FEED outside `.larva`: after the FEED `hudButton(...)` call add `.di
             }
         }
         .overlay {
+            if model.confirmingMolt {
+                MoltConfirmView(confirm: { model.confirmMolt() }, notYet: { model.cancelMolt() })
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
             if let sp = model.revealing {
                 RevealCardView(species: sp) { withAnimation(.easeOut(duration: 0.15)) { model.dismissReveal() } }
                     .transition(.opacity)
             }
         }
+```
+
+and add, next to `RevealCardView`:
+
+```swift
+/// "MOLT NOW?" — the only way into the irreversible molt (reasoner review, board #287).
+struct MoltConfirmView: View {
+    let confirm: () -> Void
+    let notYet: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture(perform: notYet)
+            VStack(spacing: 16) {
+                Text("MOLT NOW?").font(GrubFont.size(14)).foregroundColor(Color(ink: BurrowInk.amber))
+                Text("THIS PICKS THE ADULT.\nNO GOING BACK.")
+                    .font(GrubFont.size(8)).lineSpacing(6).multilineTextAlignment(.center)
+                    .foregroundColor(Color(ink: BurrowInk.cream))
+                HStack(spacing: 12) {
+                    Button(action: notYet) {
+                        Text("NOT YET").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 14).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.creamDim))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                    Button(action: confirm) {
+                        Text("MOLT").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 18).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.amber))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                }
+            }
+            .padding(24)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 4))
+            .padding(32)
+        }
+    }
+}
 ```
 
 and add these two views at the end of the file (before `#Preview`):
@@ -617,19 +725,20 @@ The panel's row sprite is drawn at `cell: 1` inside a 36×28 frame — a thumbna
 
 ```swift
     /// `-burrowMoltDemo` (use with `-burrowReset -burrowMoltReady`). Seconds after the view appears:
-    /// 2.0 open the molt panel (until 5.0) · 5.0 close; grub glows · 7.0 tap → cocoon (until 10.0)
-    /// 10.0 reveal card (until 13.0) · 13.0 dismiss; adult stands in the chamber.
+    /// 2.0 open the molt panel (until 5.0) · 5.0 close; grub glows · 7.0 tap → MOLT NOW? (until 9.5)
+    /// 9.5 confirm → cocoon (until 12.5) · 12.5 reveal card (until 15.5) · 15.5 dismiss; adult stands.
     private func runMoltDemoIfRequested() async {
         guard BurrowDebug.moltDemo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
         await wait(2.0); withAnimation { showMolt = true }
         await wait(3.0); withAnimation { showMolt = false }
         await wait(2.0); model.tapGrub()
+        await wait(2.5); model.confirmMolt()
         await wait(6.0); withAnimation { model.dismissReveal() }
     }
 ```
 
-- [ ] **Step 6: BUILD**, then run all burrow test classes (Rules, Store, Layout, Pacing). Expected: build succeeds; 38 + 6 + 3 + 3 = 50 tests pass.
+- [ ] **Step 6: BUILD**, then run all burrow test classes (Rules, Store, Layout, Pacing). Expected: build succeeds; 38 + 6 + 3 + 3 + 3 = 53 tests pass (add `-only-testing:GrubIOSTests/BurrowHomeModelTests`).
 
 - [ ] **Step 7: Commit**
 
@@ -654,7 +763,7 @@ import subprocess, sys, time
 d, b, out = sys.argv[1:]
 subprocess.run(["xcrun","simctl","launch",d,b,"-burrowReset","-burrowMoltReady","-burrowMoltDemo"], capture_output=True)
 t0 = time.time()
-for at, name in [(4.0,"p3_panel"),(6.3,"p3_glow_a"),(6.5,"p3_glow_b"),(6.7,"p3_glow_c"),(9.0,"p3_cocoon"),(12.0,"p3_reveal"),(15.0,"p3_adult")]:
+for at, name in [(4.0,"p3_panel"),(6.3,"p3_glow_a"),(6.5,"p3_glow_b"),(6.7,"p3_glow_c"),(8.8,"p3_confirm"),(11.5,"p3_cocoon"),(14.5,"p3_reveal"),(17.5,"p3_adult")]:
     time.sleep(max(0, t0 + at - time.time()))
     subprocess.run(["xcrun","simctl","io",d,"screenshot",f"{out}/{name}.png"], capture_output=True)
 EOF
@@ -663,6 +772,7 @@ EOF
 Expected:
 - `p3_panel`: MOLT 10/10; GRUB 33 %, CLAWS 33 %, HORN/FUZZ/SHELL/STALK 8 % each (weights 4/4/1/1/1/1 of 12); the MOLT stat shows READY.
 - `p3_glow_*`: at least one of the three shows the amber outline around the grub (it blinks every 0.4 s).
+- `p3_confirm`: "MOLT NOW?" with NOT YET / MOLT; the grub is still a larva behind it.
 - `p3_cocoon`: the cream cocoon in the chamber; HUD shows "MOLTED INTO …!".
 - `p3_reveal`: reveal card with the rolled adult, its name in its colour and its blurb.
 - `p3_adult`: card gone; the adult stands on the chamber floor; FEED dimmed.
@@ -693,5 +803,5 @@ Expected: each adult stands on the chamber floor, inside the chamber, eyes and f
 
 ## Done when
 
-- 50 burrow tests pass (rules 38, store 6, layout 3, pacing 3).
+- 53 burrow tests pass (rules 38, store 6, layout 3, pacing 3, model 3).
 - The molt demo and the six-adult sweep match the expected screenshots, and the save persists `stage: adult` with the rolled species.
