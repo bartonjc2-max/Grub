@@ -122,6 +122,28 @@ enum BurrowRules {
         return .berry
     }
 
+    // MARK: Digging
+
+    /// Dig up the find at `spot`. Works in every stage. A happy grub (Joy ≥ 7) has a
+    /// 35 % chance to turn up a bonus find.
+    static func dig(_ s0: BurrowSave, spot: Int, now: Date,
+                    rng: inout some RandomNumberGenerator) -> BurrowResult {
+        guard let i = s0.buried.firstIndex(where: { $0.spot == spot }) else { return refuse(s0, .nothingBuriedThere) }
+        guard s0.digs > 0 else { return refuse(s0, .noDigs) }
+        var s = s0
+        let f = s.buried.remove(at: i)
+        s.digs -= 1
+        s.holes.append(spot)
+        s.bag[f.kind, default: 0] += 1
+        var events: [BurrowEvent] = [.dugUp(spot: spot, kind: f.kind)]
+        if isHappy(s), Double.random(in: 0..<1, using: &rng) < bonusFindChance {
+            let extra = weightedKind(rng: &rng)
+            s.bag[extra, default: 0] += 1
+            events.append(.bonusFind(spot: spot, kind: extra))
+        }
+        return BurrowResult(save: s, events: events)
+    }
+
     static func refuse(_ s: BurrowSave, _ why: Refusal) -> BurrowResult {
         BurrowResult(save: s, events: [.refused(why)])
     }
