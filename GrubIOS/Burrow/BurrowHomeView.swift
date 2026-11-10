@@ -7,7 +7,8 @@ struct BurrowHomeView: View {
     @StateObject private var model = BurrowHomeModel()
     @Environment(\.displayScale) private var displayScale
     @State private var showBag = false
-    @State private var lastLayout: BurrowLayout?
+    @Environment(\.scenePhase) private var scenePhase
+    private let minuteTick = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     private static let bangHot = PixelBuffer(art: ["A", "A", "A", ".", "A"], palette: ["A": BurrowInk.white])
 
@@ -36,6 +37,14 @@ struct BurrowHomeView: View {
                     .transition(.opacity)
             }
         }
+        .onReceive(minuteTick) { _ in model.tick() }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active: model.tick()
+            case .background: model.persist()
+            default: break
+            }
+        }
         #if DEBUG
         .task { await runDemoIfRequested() }
         #endif
@@ -43,19 +52,17 @@ struct BurrowHomeView: View {
 
     private func place(_ L: BurrowLayout) {
         model.grubTop = (L.chamber.midX, L.chamber.maxY - GrubArt.height)
-        lastLayout = L
+        model.layout = L
     }
 
     #if DEBUG
-    /// `-burrowDemo` launch argument: scripts dig → dig → feed → pet → Finds so the
-    /// interactions can be screenshotted headlessly. Compiled out of release builds.
+    /// `-burrowDemo`: scripts dig → dig → feed → pet → Finds for headless screenshots.
     private func runDemoIfRequested() async {
-        guard ProcessInfo.processInfo.arguments.contains("-burrowDemo") else { return }
+        guard BurrowDebug.demo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
         await wait(1.5)
-        guard let L = lastLayout else { return }
-        model.dig(model.finds[0], in: L)
-        await wait(1.5); model.dig(model.finds[1], in: L)
+        if let f = model.buried.first { model.dig(spot: f.spot) }
+        await wait(1.5); if let f = model.buried.first { model.dig(spot: f.spot) }
         await wait(1.5); model.feed()
         await wait(1.5); model.pet()
         await wait(2.0); withAnimation { showBag = true }
@@ -89,16 +96,18 @@ struct BurrowHomeView: View {
     @ViewBuilder
     private func livingLayer(_ L: BurrowLayout, t: TimeInterval) -> some View {
         ZStack(alignment: .topLeading) {
-            ForEach(model.finds.filter { !$0.dug }) { f in marker(f, L, t) }
+            ForEach(model.buried, id: \.spot) { f in
+                if let a = BurrowSpots.anchor(f.spot) { marker(spot: f.spot, anchor: a, L, t) }
+            }
             grub(L, t)
             ForEach(model.fx) { e in effect(e, L, t) }
         }
     }
 
     @ViewBuilder
-    private func marker(_ f: HomeFind, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
-        let p = L.resolve(f.anchor)
-        let phase = Double((f.anchor.x * 7 + f.anchor.dy) % 10) / 10
+    private func marker(spot: Int, anchor: CellAnchor, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
+        let p = L.resolve(anchor)
+        let phase = Double((anchor.x * 7 + anchor.dy) % 10) / 10
         let bob = Int(t / 0.45 + phase * 2) % 2
         let hinted = t - model.digHintAt < 1.6
         let hot = hinted && Int(t / 0.14) % 2 == 0
@@ -115,7 +124,7 @@ struct BurrowHomeView: View {
             .frame(width: 48, height: 64)
             .contentShape(Rectangle())
             .position(x: cx, y: CGFloat(p.y - 3) * L.cell)
-            .onTapGesture { model.dig(f, in: L) }
+            .onTapGesture { model.dig(spot: spot) }
             .accessibilityElement()
             .accessibilityLabel("Buried find")
             .accessibilityHint("Dig it up")
@@ -125,13 +134,14 @@ struct BurrowHomeView: View {
     private func grub(_ L: BurrowLayout, _ t: TimeInterval) -> some View {
         let gx = L.chamber.midX - GrubArt.width / 2
         let gy = L.chamber.maxY - GrubArt.height
-        let bounce = Int(t / 0.4) % 3 == 1 ? 1 : 0
+        let sulking = model.isSulking
+        let bounce = !sulking && Int(t / 0.4) % 3 == 1 ? 1 : 0
         let hopP = (t - model.hopAt) / 0.42
         let hop = (hopP >= 0 && hopP < 1) ? Int((sin(hopP * .pi) * 5).rounded()) : 0
         let chomping = t - model.chompAt < 0.9
         let blinking = t.truncatingRemainder(dividingBy: 3.7) < 0.14 || hop > 0
         let sprite = chomping ? (Int(t / 0.15) % 2 == 0 ? GrubArt.chomp : GrubArt.idle)
-                              : (blinking ? GrubArt.blink : GrubArt.idle)
+                              : (blinking ? GrubArt.blink : (sulking ? GrubArt.sulk : GrubArt.idle))
         let origin = L.point(Double(gx), Double(gy - bounce - hop))
 
         return PixelImage(buffer: sprite, cell: L.cell)
@@ -139,7 +149,7 @@ struct BurrowHomeView: View {
             .onTapGesture { model.pet() }
             .position(x: origin.x + CGFloat(GrubArt.width) * L.cell / 2,
                       y: origin.y + CGFloat(GrubArt.height) * L.cell / 2)
-            .accessibilityLabel("Grub")
+            .accessibilityLabel(sulking ? "Grub, hungry and sulking" : "Grub")
             .accessibilityHint("Pet your grub")
             .accessibilityAddTraits(.isButton)
     }
@@ -208,13 +218,13 @@ struct BurrowHomeView: View {
             VStack(spacing: 14) {
                 HStack(spacing: 12) {
                     statBar("BELLY", model.belly, BurrowInk.berry)
-                    statBar("JOY", model.joy, BurrowInk.teal)
+                    statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
                     statBar("MOLT", model.molt, BurrowInk.amber)
                 }
                 HStack(spacing: 10) {
                     hudButton(icon: FindKind.berry.sprite, title: "FEED", count: model.foodCount) { model.feed() }
                     hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
-                              hot: model.digsLeft > 0 && model.finds.contains { !$0.dug }) { model.digHint() }
+                              hot: model.digsLeft > 0 && !model.buried.isEmpty) { model.digHint() }
                     hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
                         withAnimation(.easeOut(duration: 0.15)) { showBag = true }
                     }
@@ -229,18 +239,23 @@ struct BurrowHomeView: View {
         .animation(.easeOut(duration: 0.15), value: model.toast)
     }
 
-    private func statBar(_ label: String, _ value: Int, _ ink: UInt32) -> some View {
+    private func statBar(_ label: String, _ value: Int, _ ink: UInt32, tag: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text(label).font(GrubFont.size(7)).foregroundColor(Color(ink: BurrowInk.cream))
+            HStack(spacing: 6) {
+                Text(label).font(GrubFont.size(7)).foregroundColor(Color(ink: BurrowInk.cream))
+                if let tag {
+                    Text(tag).font(GrubFont.size(6)).foregroundColor(Color(ink: ink))
+                }
+            }
             HStack(spacing: 2) {
-                ForEach(0..<BurrowHomeModel.maxStat, id: \.self) { i in
+                ForEach(0..<BurrowRules.maxStat, id: \.self) { i in
                     Rectangle().fill(Color(ink: i < value ? ink : BurrowInk.soil1)).frame(height: 9)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label.capitalized) \(value) of \(BurrowHomeModel.maxStat)")
+        .accessibilityLabel("\(label.capitalized) \(value) of \(BurrowRules.maxStat)" + (tag.map { ", \($0.lowercased())" } ?? ""))
     }
 
     private func hudButton(icon: PixelBuffer, title: String, count: Int, hot: Bool = false,

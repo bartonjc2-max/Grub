@@ -174,7 +174,7 @@ enum GrubArt {
     static let width = 21
     static let height = 26
 
-    static func frame(blink: Bool = false, chomp: Bool = false,
+    static func frame(blink: Bool = false, chomp: Bool = false, sulk: Bool = false,
                       body: UInt32 = BurrowInk.teal, shade: UInt32 = 0x37a886) -> PixelBuffer {
         var b = PixelBuffer(width: width, height: height)
         func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) { b.fill(x, y, w, h, c) }
@@ -195,15 +195,24 @@ enum GrubArt {
         // eyes
         if blink {
             r(3, o + 9, 4, 1, I.hollow); r(14, o + 9, 4, 1, I.hollow)
+        } else if sulk {
+            r(3, o + 8, 4, 2, I.hollow); r(14, o + 8, 4, 2, I.hollow)      // heavy-lidded, no glint
         } else {
             r(3, o + 6, 4, 4, I.hollow); r(14, o + 6, 4, 4, I.hollow)
             r(3, o + 6, 2, 2, I.white); r(14, o + 6, 2, 2, I.white)
         }
         // mouth
-        if chomp { r(8, o + 12, 5, 3, I.hollow); r(9, o + 14, 3, 1, I.berry) } else { r(9, o + 13, 3, 1, I.hollow) }
+        if chomp {
+            r(8, o + 12, 5, 3, I.hollow); r(9, o + 14, 3, 1, I.berry)
+        } else if sulk {
+            r(9, o + 13, 3, 1, I.hollow); r(8, o + 14, 1, 1, I.hollow); r(12, o + 14, 1, 1, I.hollow)  // frown
+        } else {
+            r(9, o + 13, 3, 1, I.hollow)
+        }
         return b
     }
 
+    static let sulk = frame(sulk: true)
     static let idle = frame()
     static let blink = frame(blink: true)
     static let chomp = frame(chomp: true)

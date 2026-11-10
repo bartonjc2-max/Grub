@@ -1,14 +1,6 @@
 import SwiftUI
 import UIKit
 
-/// Something buried in the soil, shown with an amber "!" marker (gameplay-flow step 2: RETURN).
-struct HomeFind: Identifiable, Equatable {
-    let id = UUID()
-    let kind: FindKind
-    let anchor: CellAnchor
-    var dug = false
-}
-
 /// Short-lived visual effects, animated off the TimelineView clock.
 struct BurrowFX: Identifiable {
     enum Kind { case dirt, reveal(FindKind), text(String, UInt32), heart }
@@ -20,23 +12,11 @@ struct BurrowFX: Identifiable {
     let life: TimeInterval
 }
 
-/// Home-screen state for the pixel-burrow prototype: DIG → FEED → (MOLT) loop.
-/// Local and in-memory for now — not yet wired to GameState persistence.
+/// View model for the burrow home: owns the save, runs `BurrowRules`, turns events
+/// into effects/toasts/haptics, and persists after every change.
 @MainActor
 final class BurrowHomeModel: ObservableObject {
-    static let maxStat = 10
-
-    @Published var belly = 5
-    @Published var joy = 6
-    @Published var molt = 3
-    @Published var digsLeft = 3
-    @Published var bag: [FindKind: Int] = [.berry: 1]
-    @Published var finds: [HomeFind] = [
-        HomeFind(kind: .berry,   anchor: CellAnchor(ref: .chamberTop, x: 6, dy: 13)),
-        HomeFind(kind: .amber,   anchor: CellAnchor(ref: .surface, x: 39, dy: 9)),
-        HomeFind(kind: .crystal, anchor: CellAnchor(ref: .surface, x: 59, dy: 15)),
-        HomeFind(kind: .bone,    anchor: CellAnchor(ref: .chamberBottom, x: 34, dy: 11)),
-    ]
+    @Published private(set) var save: BurrowSave
     @Published private(set) var fx: [BurrowFX] = []
     @Published private(set) var toast: String?
     @Published private(set) var hopAt: TimeInterval = -10
@@ -45,62 +25,130 @@ final class BurrowHomeModel: ObservableObject {
 
     /// Top-centre of the grub sprite in design cells; set by the view from its layout.
     var grubTop: (x: Int, y: Int) = (32, 60)
+    /// Last layout the view drew, so events (e.g. a dig) can place their effects.
+    var layout: BurrowLayout?
 
-    var holes: [CellAnchor] { finds.filter(\.dug).map(\.anchor) }
-    var foodCount: Int { bag.filter { $0.key.isFood }.values.reduce(0, +) }
-    var findCount: Int { bag.values.reduce(0, +) }
+    private let store: BurrowStore
+    private let clock: () -> Date
+    private var rng = SystemRandomNumberGenerator()
+    private var loggedWriteFailure = false
 
-    private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }
+    init(store: BurrowStore = BurrowStore(), clock: @escaping () -> Date = Date.init) {
+        self.store = store
+        self.clock = clock
+        #if DEBUG
+        if BurrowDebug.reset { store.reset() }
+        #endif
+        var loaded = store.load(now: clock())
+        #if DEBUG
+        if let hrs = BurrowDebug.skipHours { loaded.lastTick.addTimeInterval(-hrs * 3600) }
+        #endif
+        save = loaded
+        tick()
+    }
+
+    // MARK: Read-outs for the view
+
+    var belly: Int { save.belly }
+    var joy: Int { save.joy }
+    var molt: Int { save.molt }
+    var digsLeft: Int { save.digs }
+    var bag: [FindKind: Int] { save.bag }
+    var buried: [BuriedFind] { save.buried }
+    var holes: [CellAnchor] { save.holes.compactMap(BurrowSpots.anchor) }
+    var foodCount: Int { save.bag.filter { $0.key.isFood }.values.reduce(0, +) }
+    var findCount: Int { save.bag.values.reduce(0, +) }
+    var isHappy: Bool { BurrowRules.isHappy(save) }
+    var isSulking: Bool { BurrowRules.isSulking(save) }
+
+    private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }   // animation clock
 
     // MARK: Actions
 
-    func dig(_ find: HomeFind, in layout: BurrowLayout) {
-        guard let i = finds.firstIndex(where: { $0.id == find.id }), !finds[i].dug else { return }
-        guard digsLeft > 0 else {
-            say("NO DIGS LEFT\nBACK TOMORROW")
-            Haptics.soft()
-            return
-        }
-        digsLeft -= 1
-        finds[i].dug = true
-        bag[find.kind, default: 0] += 1
-        let p = layout.resolve(find.anchor)
-        let t = now
-        add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y), born: t, life: 0.7))
-        add(.init(kind: .reveal(find.kind), x: Double(p.x), y: Double(p.y), born: t, life: 1.2))
-        add(.init(kind: .text("+" + find.kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: t + 0.15, life: 1.3))
-        Haptics.thud()
-        if digsLeft == 0 { say("THAT'S ALL\nFOR TODAY") }
-    }
-
-    func feed() {
-        guard let food = bag.keys.first(where: { $0.isFood && (bag[$0] ?? 0) > 0 }) else {
-            say("NO FOOD\nDIG FOR SOME")
-            Haptics.soft()
-            return
-        }
-        bag[food, default: 0] -= 1
-        if bag[food] == 0 { bag[food] = nil }
-        belly = min(Self.maxStat, belly + 3)
-        molt = min(Self.maxStat, molt + 2)
-        chompAt = now
-        add(.init(kind: .text("+BELLY", BurrowInk.berry), x: Double(grubTop.x), y: Double(grubTop.y - 2), born: now, life: 1.2))
-        Haptics.thud()
-        if molt >= Self.maxStat { say("READY TO MOLT!") }
-    }
-
-    func pet() {
-        hopAt = now
-        joy = min(Self.maxStat, joy + 1)
-        add(.init(kind: .heart, x: Double(grubTop.x), y: Double(grubTop.y), born: now, life: 1.0))
-        Haptics.soft()
-    }
+    func tick() { apply(BurrowRules.advance(save, to: clock(), rng: &rng)) }
+    func dig(spot: Int) { apply(BurrowRules.dig(save, spot: spot, now: clock(), rng: &rng)) }
+    func feed() { apply(BurrowRules.feed(save, kind: nil, now: clock())) }
+    func pet() { apply(BurrowRules.pet(save, now: clock())) }
 
     func digHint() {
-        if digsLeft == 0 { say("NO DIGS LEFT\nBACK TOMORROW"); return }
-        if finds.allSatisfy(\.dug) { say("NOTHING LEFT\nTO DIG UP"); return }
+        if save.digs == 0 { say(Self.message(.noDigs)); return }
+        if save.buried.isEmpty { say("NOTHING BURIED\nCHECK BACK SOON"); return }
         digHintAt = now
         say("TAP A ! TO DIG")
+    }
+
+    func persist() {
+        do {
+            try store.save(save)
+        } catch {
+            if !loggedWriteFailure { print("Burrow save failed: \(error)"); loggedWriteFailure = true }
+        }
+    }
+
+    // MARK: Events → effects
+
+    private func apply(_ r: BurrowResult) {
+        let changed = r.save != save
+        save = r.save
+        r.events.forEach(handle)
+        if changed { persist() }
+    }
+
+    private func handle(_ e: BurrowEvent) {
+        let t = now
+        switch e {
+        case .dugUp(let spot, let kind):
+            guard let L = layout, let a = BurrowSpots.anchor(spot) else { break }
+            let p = L.resolve(a)
+            add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y), born: t, life: 0.7))
+            add(.init(kind: .reveal(kind), x: Double(p.x), y: Double(p.y), born: t, life: 1.2))
+            add(.init(kind: .text("+" + kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: t + 0.15, life: 1.3))
+            Haptics.thud()
+            if save.digs == 0 { say("THAT'S ALL\nFOR NOW") }
+        case .bonusFind(let spot, let kind):
+            guard let L = layout, let a = BurrowSpots.anchor(spot) else { break }
+            let p = L.resolve(a)
+            add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: t + 0.45, life: 1.2))
+            add(.init(kind: .text("BONUS! +" + kind.label, BurrowInk.teal), x: Double(p.x), y: Double(p.y - 11), born: t + 0.5, life: 1.4))
+            Haptics.soft()
+        case .ate(_, let joyGained):
+            chompAt = t
+            add(.init(kind: .text("+BELLY", BurrowInk.berry), x: Double(grubTop.x), y: Double(grubTop.y - 2), born: t, life: 1.2))
+            if joyGained {
+                add(.init(kind: .text("+JOY", BurrowInk.teal), x: Double(grubTop.x), y: Double(grubTop.y - 6), born: t + 0.3, life: 1.2))
+            }
+            Haptics.thud()
+        case .petted(let joyGained):
+            hopAt = t
+            add(.init(kind: .heart, x: Double(grubTop.x), y: Double(grubTop.y), born: t, life: 1.0))
+            if joyGained {
+                add(.init(kind: .text("+JOY", BurrowInk.teal), x: Double(grubTop.x), y: Double(grubTop.y - 6), born: t + 0.2, life: 1.0))
+            }
+            Haptics.soft()
+        case .moltReady:
+            say("READY TO MOLT!")
+        case .refused(let why):
+            say(Self.message(why))
+            Haptics.soft()
+        case .buried:
+            break   // the new "!" marker appears from `save.buried`
+        default:
+            break   // later phases
+        }
+    }
+
+    static func message(_ r: Refusal) -> String {
+        switch r {
+        case .noDigs:             return "NO DIGS LEFT\nBACK SOON"
+        case .nothingBuriedThere: return "NOTHING THERE"
+        case .noFood:             return "NO FOOD\nDIG FOR SOME"
+        case .notFood:            return "THAT'S NOT FOOD"
+        case .tooFull:            return "TOO FULL!"
+        case .notInBag:           return "NONE LEFT"
+        case .wrongStage:         return "NOT NOW"
+        case .slotTaken, .notDecor, .emptySlot, .notMoltReady, .badName:
+            return "CAN'T DO THAT"
+        }
     }
 
     // MARK: Plumbing
@@ -127,3 +175,19 @@ enum Haptics {
     static func thud() { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
     static func soft() { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
 }
+
+#if DEBUG
+/// DEBUG-only launch arguments for headless simulator checks.
+enum BurrowDebug {
+    static let args = ProcessInfo.processInfo.arguments
+    /// `-burrowReset`: delete the save and start fresh.
+    static var reset: Bool { args.contains("-burrowReset") }
+    /// `-burrowSkipHours N`: pretend the player was away N hours.
+    static var skipHours: Double? {
+        guard let i = args.firstIndex(of: "-burrowSkipHours"), i + 1 < args.count else { return nil }
+        return Double(args[i + 1])
+    }
+    /// `-burrowDemo`: script a few taps (see BurrowHomeView).
+    static var demo: Bool { args.contains("-burrowDemo") }
+}
+#endif
