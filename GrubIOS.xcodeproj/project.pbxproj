@@ -25,6 +25,7 @@
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
 		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
+		5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */; };
 		5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */; };
 		65910566002ED2DBBD73FB8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5624CADC5A38E7D506E60526 /* Assets.xcassets */; };
 		674E84966D90C07CE4062CE0 /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F34F1663B37A9209A1EE393F /* GameState.swift */; };
@@ -55,6 +56,7 @@
 		AFDCDAE5EDDF9C13AB0AD4FF /* GrubPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */; };
 		B2963A1AEDAFDCBED32E5BD7 /* AdConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6EB451FA4162A64E6A81F42 /* AdConfig.swift */; };
 		B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */; };
+		B95F7348A29FA20802E2028D /* BurrowRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240CC8DBF8D35BF2033F78D /* BurrowRules.swift */; };
 		BA178D0D6A213A7525D63DC1 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D37C188B461CEADB0424CC /* GameState+Foraging.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
 		C5575F7C983DA8C71ACFB19D /* GameState+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */; };
@@ -124,6 +126,8 @@
 		A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 		AA3B4A94CB58047E85E15C04 /* GameState+Personality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Personality.swift"; sourceTree = "<group>"; };
 		AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelIcon.swift; sourceTree = "<group>"; };
+		B240CC8DBF8D35BF2033F78D /* BurrowRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowRules.swift; sourceTree = "<group>"; };
+		B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowRulesTests.swift; sourceTree = "<group>"; };
 		B6EB451FA4162A64E6A81F42 /* AdConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdConfig.swift; sourceTree = "<group>"; };
 		B70E0FC31C838D246B046BFA /* DescentTuning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentTuning.swift; sourceTree = "<group>"; };
 		BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVersionTests.swift; sourceTree = "<group>"; };
@@ -244,6 +248,7 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */,
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
@@ -294,6 +299,7 @@
 				975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */,
 				0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */,
 				CBA41D753C6F6643EF4A68E7 /* BurrowHomeView.swift */,
+				B240CC8DBF8D35BF2033F78D /* BurrowRules.swift */,
 				BD61054EC068F65E69CB0B2C /* BurrowSave.swift */,
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
@@ -409,6 +415,7 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */,
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
@@ -435,6 +442,7 @@
 				F2285A55AE14FD59515FACC9 /* BurrowHomeModel.swift in Sources */,
 				8E931426A3D6D871931E3DE8 /* BurrowHomeView.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
+				B95F7348A29FA20802E2028D /* BurrowRules.swift in Sources */,
 				1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */,
 				444B93FD99A385798C60CD45 /* BurrowTypes.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
