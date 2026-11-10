@@ -22,6 +22,10 @@ final class BurrowHomeModel: ObservableObject {
     @Published private(set) var hopAt: TimeInterval = -10
     @Published private(set) var chompAt: TimeInterval = -10
     @Published private(set) var digHintAt: TimeInterval = -10
+    /// The decor the player is placing (picked in the Finds panel); free slots glow.
+    @Published private(set) var placing: FindKind?
+    /// A placed decor the player tapped; the HUD offers REMOVE / KEEP.
+    @Published private(set) var selectedSlot: Int?
 
     /// Top-centre of the grub sprite in design cells; set by the view from its layout.
     var grubTop: (x: Int, y: Int) = (32, 60)
@@ -60,6 +64,9 @@ final class BurrowHomeModel: ObservableObject {
     var findCount: Int { save.bag.values.reduce(0, +) }
     var isHappy: Bool { BurrowRules.isHappy(save) }
     var isSulking: Bool { BurrowRules.isSulking(save) }
+    var placed: [Int: FindKind] { save.placed }
+    var freeSlots: [Int] { (0..<BurrowRules.decorSlots).filter { save.placed[$0] == nil } }
+    var canAct: Bool { save.stage == .larva }
 
     private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }   // animation clock
 
@@ -69,6 +76,33 @@ final class BurrowHomeModel: ObservableObject {
     func dig(spot: Int) { apply(BurrowRules.dig(save, spot: spot, now: clock(), rng: &rng)) }
     func feed() { apply(BurrowRules.feed(save, kind: nil, now: clock())) }
     func pet() { apply(BurrowRules.pet(save, now: clock())) }
+    func feed(kind: FindKind) { apply(BurrowRules.feed(save, kind: kind, now: clock())) }
+
+    func startPlacing(_ kind: FindKind) {
+        selectedSlot = nil
+        placing = kind
+    }
+
+    func cancelPlacing() { placing = nil }
+
+    /// A tap on decor slot `slot`: places while placing, otherwise selects a placed item.
+    func tapSlot(_ slot: Int) {
+        if let kind = placing {
+            guard save.placed[slot] == nil else { return }
+            placing = nil
+            apply(BurrowRules.place(save, kind: kind, slot: slot, now: clock()))
+        } else if save.placed[slot] != nil {
+            selectedSlot = selectedSlot == slot ? nil : slot
+        }
+    }
+
+    func removeSelected() {
+        guard let slot = selectedSlot else { return }
+        selectedSlot = nil
+        apply(BurrowRules.remove(save, slot: slot, now: clock()))
+    }
+
+    func clearSelection() { selectedSlot = nil }
 
     func digHint() {
         if save.digs == 0 { say(Self.message(.noDigs)); return }
@@ -125,6 +159,15 @@ final class BurrowHomeModel: ObservableObject {
                 add(.init(kind: .text("+JOY", BurrowInk.teal), x: Double(grubTop.x), y: Double(grubTop.y - 6), born: t + 0.2, life: 1.0))
             }
             Haptics.soft()
+        case .placed(let slot, let kind):
+            if let L = layout, let p = L.decorSlot(slot) {
+                add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y - 1), born: t, life: 0.6))
+                add(.init(kind: .text(kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 9), born: t + 0.1, life: 1.2))
+            }
+            Haptics.thud()
+        case .removed(_, let kind):
+            say("\(kind.label)\nBACK IN BAG")
+            Haptics.soft()
         case .moltReady:
             say("READY TO MOLT!")
         case .refused(let why):
@@ -146,7 +189,10 @@ final class BurrowHomeModel: ObservableObject {
         case .tooFull:            return "TOO FULL!"
         case .notInBag:           return "NONE LEFT"
         case .wrongStage:         return "NOT NOW"
-        case .slotTaken, .notDecor, .emptySlot, .notMoltReady, .badName:
+        case .slotTaken:          return "SPOT TAKEN"
+        case .notDecor:           return "THAT'S FOOD"
+        case .emptySlot:          return "NOTHING THERE"
+        case .notMoltReady, .badName:
             return "CAN'T DO THAT"
         }
     }
@@ -189,5 +235,7 @@ enum BurrowDebug {
     }
     /// `-burrowDemo`: script a few taps (see BurrowHomeView).
     static var demo: Bool { args.contains("-burrowDemo") }
+    /// `-burrowShowBag`: open the Finds panel on launch.
+    static var showBag: Bool { args.contains("-burrowShowBag") }
 }
 #endif
