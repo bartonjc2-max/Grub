@@ -27,6 +27,7 @@ enum BurrowRules {
     static let maxDigs = 3
     static let maxBuried = 4
     static let spotCount = 8
+    static let decorSlots = 4
     static let moltGoal = 10
     static let happyJoy = 7
     static let bonusFindChance = 0.35
@@ -163,8 +164,7 @@ enum BurrowRules {
         guard s0.belly < maxStat else { return refuse(s0, .tooFull) }
 
         var s = s0
-        s.bag[food, default: 0] -= 1
-        if s.bag[food] == 0 { s.bag[food] = nil }
+        take(&s, food)
         s.belly = min(maxStat, s.belly + 3)
         let wasReady = s.molt >= moltGoal
         s.molt = min(moltGoal, s.molt + 1)
@@ -188,6 +188,37 @@ enum BurrowRules {
             s.lastPetAt = now
         }
         return BurrowResult(save: s, events: [.petted(joyGained: gained)])
+    }
+
+    // MARK: Furnishing
+
+    /// Put a decor find from the bag into an empty slot (0 left room, 1 right room,
+    /// 2 chamber left corner, 3 chamber right corner). Out-of-range slots count as taken.
+    static func place(_ s0: BurrowSave, kind: FindKind, slot: Int, now: Date) -> BurrowResult {
+        guard s0.stage == .larva else { return refuse(s0, .wrongStage) }
+        guard kind.isDecor else { return refuse(s0, .notDecor) }
+        guard s0.bag[kind, default: 0] > 0 else { return refuse(s0, .notInBag) }
+        guard (0..<decorSlots).contains(slot), s0.placed[slot] == nil else { return refuse(s0, .slotTaken) }
+        var s = s0
+        take(&s, kind)
+        s.placed[slot] = kind
+        return BurrowResult(save: s, events: [.placed(slot: slot, kind: kind)])
+    }
+
+    /// Take a placed decor back into the bag.
+    static func remove(_ s0: BurrowSave, slot: Int, now: Date) -> BurrowResult {
+        guard s0.stage == .larva else { return refuse(s0, .wrongStage) }
+        guard let kind = s0.placed[slot] else { return refuse(s0, .emptySlot) }
+        var s = s0
+        s.placed[slot] = nil
+        s.bag[kind, default: 0] += 1
+        return BurrowResult(save: s, events: [.removed(slot: slot, kind: kind)])
+    }
+
+    /// Remove one `kind` from the bag, dropping empty entries.
+    static func take(_ s: inout BurrowSave, _ kind: FindKind) {
+        s.bag[kind, default: 0] -= 1
+        if s.bag[kind, default: 0] <= 0 { s.bag[kind] = nil }
     }
 
     static func refuse(_ s: BurrowSave, _ why: Refusal) -> BurrowResult {

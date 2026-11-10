@@ -262,4 +262,39 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(r.save.bag, [.berry: 1])
         XCTAssertEqual(r.save.eaten, [.honeydew: 1])
     }
+
+    // MARK: furnish
+
+    func test_place_moves_decor_from_bag_to_slot() {
+        let r = BurrowRules.place(save { $0.bag = [.crystal: 2] }, kind: .crystal, slot: 2, now: t0)
+        XCTAssertEqual(r.events, [.placed(slot: 2, kind: .crystal)])
+        XCTAssertEqual(r.save.placed, [2: .crystal])
+        XCTAssertEqual(r.save.bag, [.crystal: 1])
+    }
+
+    func test_place_refusals() {
+        let s = save { $0.bag = [.crystal: 1, .berry: 1]; $0.placed = [0: .bone] }
+        XCTAssertEqual(BurrowRules.place(s, kind: .berry, slot: 1, now: t0).events, [.refused(.notDecor)])
+        XCTAssertEqual(BurrowRules.place(s, kind: .shell, slot: 1, now: t0).events, [.refused(.notInBag)])
+        XCTAssertEqual(BurrowRules.place(s, kind: .crystal, slot: 0, now: t0).events, [.refused(.slotTaken)])
+        XCTAssertEqual(BurrowRules.place(s, kind: .crystal, slot: 4, now: t0).events, [.refused(.slotTaken)],
+                       "out-of-range slots are refused, never crash")
+        var egg = s
+        egg.stage = .egg
+        XCTAssertEqual(BurrowRules.place(egg, kind: .crystal, slot: 1, now: t0).events, [.refused(.wrongStage)])
+    }
+
+    func test_remove_returns_decor_to_bag() {
+        let r = BurrowRules.remove(save { $0.bag = [:]; $0.placed = [3: .shell] }, slot: 3, now: t0)
+        XCTAssertEqual(r.events, [.removed(slot: 3, kind: .shell)])
+        XCTAssertTrue(r.save.placed.isEmpty)
+        XCTAssertEqual(r.save.bag, [.shell: 1])
+        XCTAssertEqual(BurrowRules.remove(save(), slot: 3, now: t0).events, [.refused(.emptySlot)])
+    }
+
+    func test_placed_decor_slows_the_joy_drain() {
+        // 4 h base + 1 h per placed decor: with 4 placed, Joy drops once per 8 h.
+        let s = save { $0.belly = 10; $0.joy = 10; $0.placed = [0: .amber, 1: .bone, 2: .crystal, 3: .shell] }
+        XCTAssertEqual(advance(s, hours: 16).save.joy, 8)
+    }
 }
