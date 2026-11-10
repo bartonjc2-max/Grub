@@ -8,6 +8,9 @@ struct RootView: View {
     @State private var appPhase: AppPhase = .splash
     @Environment(\.scenePhase) private var scenePhase
 
+    /// Temporary: show the new pixel-burrow home (from the "Grub Hero Art" redesign) while we rebuild the game.
+    private let showNewDirection = true
+
     // Growth services (Phase 1). Constructed here, where GameState is owned.
     private let analytics: AnalyticsService
     private let retention: RetentionTracker
@@ -45,11 +48,18 @@ struct RootView: View {
                 .transition(.opacity)
 
             case .game:
-                ContentView(game: game)
-                    .transition(.opacity)
+                Group {
+                    if showNewDirection {
+                        BurrowHomeView()
+                    } else {
+                        ContentView(game: game)
+                    }
+                }
+                .transition(.opacity)
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear { if showNewDirection { appPhase = .game } }
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
