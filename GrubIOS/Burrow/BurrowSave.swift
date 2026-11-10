@@ -42,3 +42,47 @@ struct BurrowSave: Codable, Equatable {
                    lastPetAt: now.addingTimeInterval(-86_400))
     }
 }
+
+/// Reads and writes `burrow.json`. Unreadable or newer-version files are renamed
+/// `burrow.corrupt.json` (never deleted) and a fresh game starts.
+struct BurrowStore {
+    let directory: URL
+    var fileURL: URL { directory.appendingPathComponent("burrow.json") }
+    var corruptURL: URL { directory.appendingPathComponent("burrow.corrupt.json") }
+
+    static var defaultDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    }
+
+    init(directory: URL = BurrowStore.defaultDirectory) {
+        self.directory = directory
+    }
+
+    func load(now: Date = Date()) -> BurrowSave {
+        guard let data = try? Data(contentsOf: fileURL) else { return .fresh(now: now) }
+        struct VersionOnly: Decodable { let version: Int }
+        if let v = try? JSONDecoder().decode(VersionOnly.self, from: data),
+           v.version <= BurrowSave.currentVersion,
+           let save = try? JSONDecoder().decode(BurrowSave.self, from: data) {
+            return save
+        }
+        moveAside()
+        return .fresh(now: now)
+    }
+
+    func save(_ s: BurrowSave) throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(s).write(to: fileURL, options: .atomic)
+    }
+
+    /// Delete the save (DEBUG `-burrowReset`).
+    func reset() {
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+
+    private func moveAside() {
+        let fm = FileManager.default
+        try? fm.removeItem(at: corruptURL)
+        try? fm.moveItem(at: fileURL, to: corruptURL)
+    }
+}

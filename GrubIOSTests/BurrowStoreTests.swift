@@ -32,4 +32,42 @@ final class BurrowStoreTests: XCTestCase {
         let json = String(decoding: data, as: UTF8.self)
         XCTAssertTrue(json.contains("\"berry\":1"), json)
     }
+
+    private func tempDir() -> URL {
+        let d = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: d) }
+        return d
+    }
+
+    func test_store_missing_file_gives_fresh() {
+        let store = BurrowStore(directory: tempDir())
+        XCTAssertEqual(store.load(now: t0), .fresh(now: t0))
+    }
+
+    func test_store_round_trip() throws {
+        let store = BurrowStore(directory: tempDir())
+        var s = BurrowSave.fresh(now: t0)
+        s.digs = 1
+        try store.save(s)
+        XCTAssertEqual(store.load(now: t0.addingTimeInterval(99)), s)
+    }
+
+    func test_store_corrupt_file_is_moved_aside() throws {
+        let dir = tempDir()
+        let store = BurrowStore(directory: dir)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: store.fileURL)
+        XCTAssertEqual(store.load(now: t0), .fresh(now: t0))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: store.corruptURL.path))
+    }
+
+    func test_store_future_version_is_moved_aside() throws {
+        let dir = tempDir()
+        let store = BurrowStore(directory: dir)
+        var s = BurrowSave.fresh(now: t0)
+        s.version = BurrowSave.currentVersion + 1
+        try store.save(s)
+        XCTAssertEqual(store.load(now: t0), .fresh(now: t0))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: store.corruptURL.path))
+    }
 }
