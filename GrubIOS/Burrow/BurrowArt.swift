@@ -178,18 +178,21 @@ enum GrubArt {
         func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) { b.fill(x, y, w, h, c) }
         typealias I = BurrowInk
         let o = 6 // first body row; the antennae sit above it
-        // round body: four stepped rows top and bottom around a 12-row full-width band
-        for (i, span) in [(6, 14), (4, 16), (2, 18), (1, 19)].enumerated() {
-            r(span.0, o + i, span.1 - span.0 + 1, 1, body)
-            r(span.0, o + 19 - i, span.1 - span.0 + 1, 1, body)
+        // round body: a 20-row pixel oval. The straight edge is only the 6 middle rows, so
+        // the sides curve instead of reading as clipped.
+        for (y, span) in bodySpans.enumerated() {
+            r(span.0, o + y, span.1 - span.0 + 1, 1, body)
         }
-        r(0, o + 4, 21, 12, body)
         // antennae: stalk, one step outward, white tip
         r(7, o - 3, 1, 3, body); r(6, o - 4, 1, 1, body); r(6, o - 6, 1, 2, I.white)
         r(13, o - 3, 1, 3, body); r(14, o - 4, 1, 1, body); r(14, o - 6, 1, 2, I.white)
-        // cream highlight + side shade
+        // cream highlight + a crescent side shade that follows the curve (thick at the
+        // middle, thin toward top and bottom)
         r(4, o + 2, 3, 1, I.cream)
-        r(17, o + 4, 4, 12, shade)
+        for (y, span) in bodySpans.enumerated() {
+            let k = shadeDepth[y]
+            if k > 0 { r(span.1 - k + 1, o + y, k, 1, shade) }
+        }
         // eyes
         if blink {
             r(3, o + 9, 4, 1, I.hollow); r(14, o + 9, 4, 1, I.hollow)
@@ -209,6 +212,14 @@ enum GrubArt {
         }
         return b
     }
+
+    /// First and last body column for each of the 20 body rows.
+    static let bodySpans: [(Int, Int)] = [
+        (7, 13), (5, 15), (3, 17), (2, 18), (2, 18), (1, 19), (1, 19),
+        (0, 20), (0, 20), (0, 20), (0, 20), (0, 20), (0, 20),
+        (1, 19), (1, 19), (2, 18), (2, 18), (3, 17), (5, 15), (7, 13)]
+    /// Shade width per body row (right edge).
+    static let shadeDepth = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1]
 
     static let sulk = frame(sulk: true)
     static let idle = frame()
