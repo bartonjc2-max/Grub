@@ -38,7 +38,9 @@ spec says otherwise (the dig itself, the happy bonus roll, spot markers, the pac
     Sulking wins when both hold (belly 0 with joy still high). Both helpers require
     `.larva`, so **an egg always gets +0** — stats don't exist yet at that stage.
 - Mood is read once, when the trip starts, and is not recomputed if `advance` runs mid-trip.
-- The floor of 2 is reachable: deep (4) + rooty (−1) + sulking (−1) = 2.
+- The worst case is exactly 2 — deep (4) + rooty (−1) + sulking (−1) — so `max(2, …)` never
+  actually clamps today. It stays as a guard for future tuning; the test asserts the sum, not
+  the clamp.
 
 ### The grid
 
@@ -91,9 +93,17 @@ spot 3 is deep:
 | **clay** | 0, 5, 6 | 5 | 3 rocks | today's weights (30/15/15/10/8/8/7/7) |
 | **deep** | 3, 7 | 4 | 3 roots | honeydew 20 · crystal 20 · amber 20 · mushroom 15 · bone 15 · root 10 |
 
-The table lives in `BurrowSpots` beside the anchors. A test resolves every anchor at three
-screen sizes (SE, 15, 15 Pro Max) and asserts each spot's row falls in the band its layer
-claims, so art and rules can't drift apart silently.
+The table lives in `BurrowSpots` beside the anchors and is the rules' source of truth. A test
+resolves every anchor at **SE, 15, 15 Pro Max and iPad Pro 11″** and asserts each spot's row
+falls in the band its layer claims, so art and rules can't drift apart silently.
+
+**That test fails on iPad today, and fixing it is the plan's first task.** The app ships
+iPad-compatible (`TARGETED_DEVICE_FAMILY = "1,2"`), but the anchors use fixed `dy` offsets
+while an iPad's burrow is only ~92 rows tall with the same fixed 31-row chamber. Spots 3 and
+7 overflow into `soil4`, and on some iPad sizes spot 2 lands a band too deep. The anchors
+become proportional to the soil height instead of fixed, until all 8 spots resolve into their
+layer's band at every size above. This is a pre-existing iPad layout bug that the layer bands
+would otherwise make visible.
 
 ### Layers vs the backdrop's bands
 
@@ -112,7 +122,7 @@ Rolled when the find is buried: none 40 % · wet 15 % · rocky 15 % · rooty 15 
 | **wet** | +2 strikes; warm tiles show as cold |
 | **rocky** | +3 rocks (on top of the layer's). The cost is that the find may hide under one. |
 | **rooty** | +3 roots (on top of the layer's), and −1 strike. Roots can never hide the find, so without the strike penalty extra roots would *help* by shrinking the search. |
-| **glinting** | one tile at d = 2 starts broken (a free warm clue). If no eligible tile is at d = 2, use one at d = 1. |
+| **glinting** | one **eligible** tile at d = 2 starts broken (a free warm clue), where eligible means unbroken, not a root and not the find tile. If none is at d = 2, use one at d = 1. If it lands on a rock, the rock breaks fully rather than losing one hit point. |
 
 ### Grid generation
 
@@ -123,24 +133,32 @@ because both the seeded tests and the save migration depend on reproducing it ex
 1. Pick the find tile uniformly from all 25.
 2. Place the layer's obstacles, then the condition's extras, uniformly on the other tiles.
    Roots never land on the find tile; rocks may.
-3. Check the clue constraint: at least **4** tiles other than the find at d ≤ 2 must be
-   diggable (soil or rock — a rock shows heat once broken; roots don't count). On a **wet**
-   spot, additionally at least **2** diggable tiles at d = 1, since d = 2 reads as cold there.
-4. If the check fails, retry from step 2, up to **40 attempts**. After that, drop obstacles
+3. Apply glinting's free tile, if any.
+4. Check the clue constraint: at least **4** tiles other than the find at d ≤ 2 must be
+   still diggable (soil or rock — a rock shows heat once broken; roots and the already-broken
+   glinting tile don't count). On a **wet** spot, additionally at least **2** diggable tiles
+   at d = 1, since d = 2 reads as cold there.
+5. If the check fails, retry from step 2, up to **40 attempts**. After that, drop obstacles
    one at a time in reverse placement order until the check passes — a deterministic
-   fallback, so generation always terminates.
-5. Apply glinting's free tile.
+   fallback, so generation always terminates. (It always can: with no obstacles even a corner
+   find has 5 tiles at d ≤ 2 and 2 at d = 1.)
 
-The whole grid is stored in the save and never re-rolls.
+The function reports whether the fallback fired, so the generation tests can assert exact
+obstacle counts on the normal path and `≤ nominal` when it did. The whole grid is stored in
+the save and never re-rolls.
 
 ### Removed
 
 - `bonusFindChance` and the `.bonusFind` event. The happy bonus is now +2 strikes.
 - `BurrowRules.dig(_:spot:now:rng:)` in its one-tap form, replaced by `startTrip` / `strike`.
+- `BurrowRules.weightedKind` and `FindKind.buryWeight`. The per-layer tables above replace
+  them, and removing the bonus find removes their only other caller, so the global weights
+  would otherwise be dead code.
 
 ## 2. Getting there (the trip animation)
 
-Presentation only. None of it changes the rules or the save.
+Presentation, with two exceptions: `startTrip` sets `visited`, which is saved, and the spur
+set below is derived from the save so it survives a relaunch.
 
 1. **Crawl out** (~1–1.5 s by distance). The grub leaves the chamber and follows a waypoint
    path through the existing tunnels to the point nearest the spot, then burrows the last
@@ -158,18 +176,29 @@ Presentation only. None of it changes the rules or the save.
 - While a trip is running (crawl, zoom, grid, return) the HUD buttons, the other markers and
   the grub itself are inert. Only the skip tap, the grid's tiles and BACK respond.
 - Spurs stay drawn for visited spots, and clear when the spot is buried again — the same
-  lifecycle as `holes`. `BurrowBackdrop` takes the spur set as a second equatable input, so
-  it re-renders when a spot becomes visited. Spurs are capped in length and routed from the
-  nearest tunnel point, so spot 2 (upper right, ~14 rows out) can't scribble into the title.
+  lifecycle as `holes`. The spur set is derived from the save as
+  `holes ∪ buried.filter(\.visited)` and passed to `BurrowBackdrop` as a second equatable
+  input, so it re-renders when a spot becomes visited and is correct after a relaunch. Spurs
+  are capped in length and routed from the nearest tunnel point, so spot 2 (upper right,
+  ~14 rows out) can't scribble into the title.
 - Waypoints are a small fixed graph in layout cells (chamber exit, crawl tunnel, connectors,
   side rooms), so it scales with `BurrowLayout`.
 
 ### Stage gating
 
-A trip may start in `.egg` and `.larva`. It is refused in `.adult` and while the cocoon is
-showing. The tap also goes through the model's existing `canAct` guard, so no trip starts
-while placing decor, naming an egg, confirming a molt, revealing an adult, or with the
-specimen box or finds bag open — and never while another trip is running.
+`BurrowHomeModel.canAct` is only `save.stage == .larva` and guards nothing else, so this path
+cannot reuse it — doing so would refuse every egg dig. The marker tap gets its own predicate,
+`canStartTrip`, and the marker is drawn inert when it is false:
+
+```
+canStartTrip = (stage == .egg || stage == .larva)
+             && trip == nil && !inCocoon
+             && !placing && !namingEgg && !confirmingMolt && !revealing && !showBox
+             && !showingFindsBag
+```
+
+The rules refuse independently (`.wrongStage` for `.adult`, `.noDigs`, `.nothingBuriedThere`),
+so a stale tap can never start a trip the save disallows.
 
 ## 3. Spots on the map
 
@@ -219,7 +248,9 @@ file to `burrow.corrupt.json` and starts a fresh game. New non-optional fields o
   `save.version < 2`: every entry with empty `tiles` gets a grid generated from
   `BurrowRNG(seed: migrationSeed(spot))`, the condition is rolled from the same RNG, `kind`
   is kept exactly as it was (even where it falls outside its layer's table), `version` is set
-  to 2, and the migrated save is written back.
+  to 2, and the migrated save is written back. It also repairs any entry whose `tiles.count`
+  isn't 25 regardless of version, so a hand-edited or part-written v2 save can't reach the
+  grid with no grid to show.
 - **Store test:** a real v1 JSON fixture loads, comes back with grids and version 2, keeps
   its original kinds, and leaves no `burrow.corrupt.json` behind. Plus a test that migrating
   the same fixture twice gives identical grids.
@@ -261,9 +292,11 @@ A trip in progress (`DigTrip { spot, strikesLeft }`) lives in the model, never i
 - Grid generation is a pure function over an `inout` RNG, shared by `bury`, `fresh` and the
   migration.
 
-New `Refusal` cases need toast text, since `BurrowHomeModel.message` switches exhaustively:
-`.noStrikes` "OUT OF STRIKES" · `.rootTile` "A ROOT. DIG ELSEWHERE." · `.alreadyBroken`
-"ALREADY DUG" · `.badTile` "CAN'T DIG THERE" · `.wrongStage` "NOT YET".
+The four genuinely new `Refusal` cases need toast text, since `BurrowHomeModel.message`
+switches exhaustively: `.noStrikes` "OUT OF STRIKES" · `.rootTile` "A ROOT.\nDIG ELSEWHERE" ·
+`.alreadyBroken` "ALREADY DUG" · `.badTile` "CAN'T DIG THERE". `.wrongStage` already exists
+and keeps its "NOT NOW" — it is shared with `feed`, `pet`, `place`, `remove`, `startMolt`,
+`name` and `crackEgg`, so its copy must not change here.
 
 ## 6. Debug and testing
 
@@ -284,9 +317,21 @@ New `Refusal` cases need toast text, since `BurrowHomeModel.message` switches ex
 **Pacing**
 
 `BurrowPacingTests` currently calls `BurrowRules.dig` and assumes one find per charge plus
-the 35 % bonus — all three assumptions are gone. The sim gains a deterministic greedy solver
-(always strike the diggable tile with the best expected information, nearest-first on ties),
-shared with the tests, and a trip succeeds only when that solver succeeds. The parent spec's
+the 35 % bonus — all three assumptions are gone. The sim gains a deterministic greedy solver,
+shared with the tests, and a trip succeeds only when that solver succeeds. The solver is
+pinned, because the pacing numbers depend on it:
+
+- It keeps the **candidate set**: every tile that could still hold the find, given the heats
+  revealed so far and the rule that the find is never under a root. It starts as all
+  non-root tiles.
+- Each turn it scores every still-diggable tile by `eliminated / cost`, where `eliminated` is
+  the expected shrink in the candidate set if that tile is struck (averaged over the
+  candidates, each equally likely) and `cost` is 1 for soil, or the rock's remaining hit
+  points.
+- It strikes the highest score, breaking ties by the **lowest tile index**.
+- Striking a candidate tile that turns out to hold the find ends the trip as a success.
+
+The parent spec's
 2.3 / 2.4 / 4.5-day figures are re-measured and the expectations updated to the new numbers,
 which must still satisfy: 2–4 visits/day reaches molt in under 3 days, once-a-day in under
 5.5 days. If they don't, strike counts get tuned before the numbers are written down.
@@ -294,12 +339,34 @@ which must still satisfy: 2–4 visits/day reaches molt in under 3 days, once-a-
 Failed trips keep a spot occupied, so `buried` sits at its cap of 4 more often and the bury
 timer idles — the sim will show how much that costs.
 
+**Before the condition weights are locked**, the same sim runs each layer × condition
+combination and reports the solver's success rate. The case to watch is rocky clay: 6 rocks
+against 5 strikes means a d ≤ 2 neighbourhood that comes up mostly rock leaves room for only
+two clues. If any combination lands below ~70 % for the solver, its numbers are tuned before
+the spec's tables are treated as final.
+
 **Also to update or delete**
 
-`test_dig_*` and `test_bonus_find_*`; the `.bonusFind` case in `BurrowHomeModel.handle`;
-`-burrowDemo`'s `model.dig` call; the "TAP A ! TO DIG" toast, the `digHintAt` marker flash
-and the markers' accessibility text; and `BurrowSave`'s now-false comment that every field
-exists from version 1 so later phases need no migration.
+Four tests go: `test_dig_moves_find_to_bag_and_leaves_hole`, `test_dig_refusals`,
+`test_bonus_find_only_when_happy_at_about_35_percent` and `test_bonus_find_lands_in_bag`.
+**Keep** `test_digs_regrow_one_per_3h_and_cap_at_3`, `test_dig_timer_carries_partial_time_below_cap`
+and `test_dig_timer_does_not_bank_at_cap` — those cover `advance`, not the dig.
+
+`test_bury_weights` is rewritten against the three per-layer tables.
+`test_find_table_matches_spec` asserts `foodWeight == 70`, which is no longer any table's
+value: food is 80 % loose, 70 % clay, 45 % deep, averaging **67.5 %** over the 8 spots. It
+becomes a per-layer assertion plus that average, and the parent spec's "70 % of burials are
+food" line is amended to match.
+
+Also: the `.bonusFind` case in `BurrowHomeModel.handle`; `-burrowDemo`'s `model.dig` call;
+the "TAP A ! TO DIG" toast, the `digHintAt` marker flash and the markers' accessibility text
+("Buried find" / "Dig it up"); and `BurrowSave`'s now-false comment that every field exists
+from version 1 so later phases need no migration.
+
+The parent spec keeps its own description of the 35 % bonus in four places (its Stat roles
+table, its "happy" section, its constants block and its test list). The blanket supersession
+at the top of this spec covers them, but each gets a one-line "superseded by the dig spec"
+note so the next reader doesn't re-derive the old rule.
 
 **Accessibility**
 
@@ -310,7 +377,11 @@ a non-colour cue (a small glyph) so the clues are readable without colour.
 
 Hatches to a larva, crawls to a clay spot, strikes a scripted sequence (cold, warm, a rock
 twice, then the find) and returns — used for simulator screenshots of each step. It hatches
-first because `-burrowReset` leaves the stage at `.egg`.
+first because `-burrowReset` leaves the stage at `.egg`, and it uses spot 0, which `fresh`
+always buries and which is clay. That sequence spends clay's 5 strikes exactly, with no mood
+modifier at joy 6 / belly 6, and it assumes the fixed `fresh` seed puts a rock within d ≤ 2
+of the find. The demo asserts both preconditions and trips an assertion failure if the seed
+ever stops satisfying them, rather than silently screenshotting the wrong thing.
 
 **Simulator check:** crawl, zoom, clue colours, the found pop, the return, the new markers,
 and a condition badge appearing after a visit.
