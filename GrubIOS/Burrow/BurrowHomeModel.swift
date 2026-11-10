@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// Something buried in the soil, shown with an amber "!" marker (gameplay-flow step 2: RETURN).
-struct BuriedFind: Identifiable, Equatable {
+struct HomeFind: Identifiable, Equatable {
     let id = UUID()
     let kind: FindKind
     let anchor: CellAnchor
@@ -31,11 +31,11 @@ final class BurrowHomeModel: ObservableObject {
     @Published var molt = 3
     @Published var digsLeft = 3
     @Published var bag: [FindKind: Int] = [.berry: 1]
-    @Published var finds: [BuriedFind] = [
-        BuriedFind(kind: .berry,   anchor: CellAnchor(ref: .chamberTop, x: 6, dy: 13)),
-        BuriedFind(kind: .amber,   anchor: CellAnchor(ref: .surface, x: 39, dy: 9)),
-        BuriedFind(kind: .crystal, anchor: CellAnchor(ref: .surface, x: 59, dy: 15)),
-        BuriedFind(kind: .bone,    anchor: CellAnchor(ref: .chamberBottom, x: 34, dy: 11)),
+    @Published var finds: [HomeFind] = [
+        HomeFind(kind: .berry,   anchor: CellAnchor(ref: .chamberTop, x: 6, dy: 13)),
+        HomeFind(kind: .amber,   anchor: CellAnchor(ref: .surface, x: 39, dy: 9)),
+        HomeFind(kind: .crystal, anchor: CellAnchor(ref: .surface, x: 59, dy: 15)),
+        HomeFind(kind: .bone,    anchor: CellAnchor(ref: .chamberBottom, x: 34, dy: 11)),
     ]
     @Published private(set) var fx: [BurrowFX] = []
     @Published private(set) var toast: String?
@@ -47,14 +47,14 @@ final class BurrowHomeModel: ObservableObject {
     var grubTop: (x: Int, y: Int) = (32, 60)
 
     var holes: [CellAnchor] { finds.filter(\.dug).map(\.anchor) }
-    var foodCount: Int { bag.filter { $0.key.edible }.values.reduce(0, +) }
+    var foodCount: Int { bag.filter { $0.key.isFood }.values.reduce(0, +) }
     var findCount: Int { bag.values.reduce(0, +) }
 
     private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }
 
     // MARK: Actions
 
-    func dig(_ find: BuriedFind, in layout: BurrowLayout) {
+    func dig(_ find: HomeFind, in layout: BurrowLayout) {
         guard let i = finds.firstIndex(where: { $0.id == find.id }), !finds[i].dug else { return }
         guard digsLeft > 0 else {
             say("NO DIGS LEFT\nBACK TOMORROW")
@@ -74,7 +74,7 @@ final class BurrowHomeModel: ObservableObject {
     }
 
     func feed() {
-        guard let food = bag.keys.first(where: { $0.edible && (bag[$0] ?? 0) > 0 }) else {
+        guard let food = bag.keys.first(where: { $0.isFood && (bag[$0] ?? 0) > 0 }) else {
             say("NO FOOD\nDIG FOR SOME")
             Haptics.soft()
             return

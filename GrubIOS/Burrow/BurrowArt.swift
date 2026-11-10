@@ -211,12 +211,7 @@ enum GrubArt {
 
 // MARK: - Finds + UI icons
 
-enum FindKind: String, CaseIterable, Identifiable {
-    case berry, amber, bone, crystal
-    var id: String { rawValue }
-    var label: String { rawValue.uppercased() }
-    var edible: Bool { self == .berry }
-
+extension FindKind {
     var sprite: PixelBuffer {
         typealias I = BurrowInk
         switch self {

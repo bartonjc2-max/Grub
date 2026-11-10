@@ -19,6 +19,7 @@
 		40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F4544FE870E40E92958514 /* DescentControlsView.swift */; };
 		40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560F450949A013DE2033C78 /* RetentionTracker.swift */; };
 		43EED2590935E87C7BE594D8 /* GameSelectorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */; };
+		444B93FD99A385798C60CD45 /* BurrowTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */; };
 		45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */; };
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
@@ -83,6 +84,7 @@
 
 /* Begin PBXFileReference section */
 		02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStateHooksTests.swift; sourceTree = "<group>"; };
+		0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowTypes.swift; sourceTree = "<group>"; };
 		0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowHomeModel.swift; sourceTree = "<group>"; };
 		18F70E2BDA0D9DA2712224C1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Ads.swift"; sourceTree = "<group>"; };
@@ -287,6 +289,7 @@
 				975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */,
 				0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */,
 				CBA41D753C6F6643EF4A68E7 /* BurrowHomeView.swift */,
+				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
 			);
 			path = Burrow;
@@ -425,6 +428,7 @@
 				F2285A55AE14FD59515FACC9 /* BurrowHomeModel.swift in Sources */,
 				8E931426A3D6D871931E3DE8 /* BurrowHomeView.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
+				444B93FD99A385798C60CD45 /* BurrowTypes.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
 				40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */,
 				9586D5985F915C8EA44275F7 /* DescentEngine.swift in Sources */,

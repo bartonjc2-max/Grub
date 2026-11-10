@@ -96,7 +96,7 @@ struct BurrowHomeView: View {
     }
 
     @ViewBuilder
-    private func marker(_ f: BuriedFind, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
+    private func marker(_ f: HomeFind, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
         let p = L.resolve(f.anchor)
         let phase = Double((f.anchor.x * 7 + f.anchor.dy) % 10) / 10
         let bob = Int(t / 0.45 + phase * 2) % 2
