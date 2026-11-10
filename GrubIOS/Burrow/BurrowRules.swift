@@ -144,6 +144,52 @@ enum BurrowRules {
         return BurrowResult(save: s, events: events)
     }
 
+    // MARK: Care
+
+    /// Eat a food (`kind == nil`: first food in feed order, preferring one different from
+    /// the last meal). +3 Belly, +1 Molt, +1 Joy only for a change of food.
+    static func feed(_ s0: BurrowSave, kind: FindKind?, now: Date) -> BurrowResult {
+        guard s0.stage == .larva else { return refuse(s0, .wrongStage) }
+        let food: FindKind
+        if let k = kind {
+            guard k.isFood else { return refuse(s0, .notFood) }
+            guard s0.bag[k, default: 0] > 0 else { return refuse(s0, .notInBag) }
+            food = k
+        } else {
+            let have = FindKind.feedOrder.filter { s0.bag[$0, default: 0] > 0 }
+            guard let pick = have.first(where: { $0 != s0.lastMeal }) ?? have.first else { return refuse(s0, .noFood) }
+            food = pick
+        }
+        guard s0.belly < maxStat else { return refuse(s0, .tooFull) }
+
+        var s = s0
+        s.bag[food, default: 0] -= 1
+        if s.bag[food] == 0 { s.bag[food] = nil }
+        s.belly = min(maxStat, s.belly + 3)
+        let wasReady = s.molt >= moltGoal
+        s.molt = min(moltGoal, s.molt + 1)
+        s.eaten[food, default: 0] += 1
+        let joyGained = food != s.lastMeal
+        if joyGained { s.joy = min(maxStat, s.joy + 1) }
+        s.lastMeal = food
+
+        var events: [BurrowEvent] = [.ate(food, joyGained: joyGained)]
+        if !wasReady && s.molt >= moltGoal { events.append(.moltReady) }
+        return BurrowResult(save: s, events: events)
+    }
+
+    /// Hearts every time; +1 Joy at most once per 15 minutes.
+    static func pet(_ s0: BurrowSave, now: Date) -> BurrowResult {
+        guard s0.stage == .larva else { return refuse(s0, .wrongStage) }
+        var s = s0
+        let gained = now.timeIntervalSince(s.lastPetAt) >= petCooldown
+        if gained {
+            s.joy = min(maxStat, s.joy + 1)
+            s.lastPetAt = now
+        }
+        return BurrowResult(save: s, events: [.petted(joyGained: gained)])
+    }
+
     static func refuse(_ s: BurrowSave, _ why: Refusal) -> BurrowResult {
         BurrowResult(save: s, events: [.refused(why)])
     }

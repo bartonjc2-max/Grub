@@ -166,4 +166,60 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(r.save.bag.values.reduce(0, +), 2)
         XCTAssertGreaterThanOrEqual(r.save.bag[extra] ?? 0, 1)
     }
+
+    // MARK: feed
+
+    func test_feed_auto_eats_berry() {
+        let r = BurrowRules.feed(save(), kind: nil, now: t0)
+        XCTAssertEqual(r.events, [.ate(.berry, joyGained: true)])
+        XCTAssertEqual([r.save.belly, r.save.joy, r.save.molt], [9, 7, 1])
+        XCTAssertNil(r.save.bag[.berry], "empty bag entries are removed")
+        XCTAssertEqual(r.save.eaten, [.berry: 1])
+        XCTAssertEqual(r.save.lastMeal, .berry)
+    }
+
+    func test_repeat_meal_gives_no_joy() {
+        let s = save { $0.bag = [.berry: 2]; $0.lastMeal = .berry; $0.belly = 2 }
+        let r = BurrowRules.feed(s, kind: nil, now: t0)
+        XCTAssertEqual(r.events, [.ate(.berry, joyGained: false)])
+        XCTAssertEqual(r.save.joy, 6)
+    }
+
+    func test_feed_works_while_sulking() {
+        let r = BurrowRules.feed(save { $0.belly = 0 }, kind: .berry, now: t0)
+        XCTAssertEqual(r.save.molt, 1)
+        XCTAssertFalse(BurrowRules.isSulking(r.save))
+    }
+
+    func test_feed_refusals() {
+        XCTAssertEqual(BurrowRules.feed(save { $0.bag = [:] }, kind: nil, now: t0).events, [.refused(.noFood)])
+        XCTAssertEqual(BurrowRules.feed(save { $0.bag = [.crystal: 1] }, kind: .crystal, now: t0).events, [.refused(.notFood)])
+        XCTAssertEqual(BurrowRules.feed(save { $0.bag = [:] }, kind: .berry, now: t0).events, [.refused(.notInBag)])
+        let full = save { $0.belly = 10 }
+        let r = BurrowRules.feed(full, kind: nil, now: t0)
+        XCTAssertEqual(r.events, [.refused(.tooFull)])
+        XCTAssertEqual(r.save, full, "nothing is used when too full")
+        XCTAssertEqual(BurrowRules.feed(save { $0.stage = .egg }, kind: nil, now: t0).events, [.refused(.wrongStage)])
+    }
+
+    func test_molt_ready_fires_only_on_the_crossing() {
+        let r = BurrowRules.feed(save { $0.molt = 9; $0.bag = [.berry: 2] }, kind: nil, now: t0)
+        XCTAssertEqual(r.events.last, .moltReady)
+        XCTAssertEqual(r.save.molt, 10)
+        var again = r.save
+        again.belly = 0
+        XCTAssertFalse(BurrowRules.feed(again, kind: nil, now: t0).events.contains(.moltReady))
+    }
+
+    // MARK: pet
+
+    func test_pet_gives_joy_at_most_once_per_15_min() {
+        let a = BurrowRules.pet(save(), now: t0)
+        XCTAssertEqual(a.events, [.petted(joyGained: true)])
+        XCTAssertEqual(a.save.joy, 7)
+        let b = BurrowRules.pet(a.save, now: t0.addingTimeInterval(14 * 60))
+        XCTAssertEqual(b.events, [.petted(joyGained: false)])
+        XCTAssertEqual(b.save.joy, 7)
+        XCTAssertEqual(BurrowRules.pet(b.save, now: t0.addingTimeInterval(15 * 60)).save.joy, 8)
+    }
 }
