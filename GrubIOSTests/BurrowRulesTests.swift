@@ -222,4 +222,9 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(b.save.joy, 7)
         XCTAssertEqual(BurrowRules.pet(b.save, now: t0.addingTimeInterval(15 * 60)).save.joy, 8)
     }
+
+    func test_spot_table_matches_rules() {
+        XCTAssertEqual(BurrowSpots.anchors.count, BurrowRules.spotCount)
+        XCTAssertNil(BurrowSpots.anchor(BurrowRules.spotCount))
+    }
 }
