@@ -35,6 +35,9 @@ enum BurrowInk {
     static let copper: UInt32       = 0xc97b3a
     static let white: UInt32        = 0xffffff
     static let mutedText: UInt32    = 0xb9b0d0
+    static let pink: UInt32         = 0xed93b1   // STALK; mushroom caps
+    static let steel: UInt32        = 0x6f8fb0   // SHELL
+    static let steelHi: UInt32      = 0xa9c0d8
 }
 
 extension Color {

@@ -249,6 +249,35 @@ extension FindKind {
                                      "PPHPP",
                                      "PPPPP"],
                                palette: ["P": I.violet, "H": I.violetHi])
+        case .root:
+            return PixelBuffer(art: [".L.L.",
+                                     "..L..",
+                                     ".CCD.",
+                                     ".CCD.",
+                                     "..CD.",
+                                     "..C.."],
+                               palette: ["C": I.copper, "D": I.amberLo, "L": I.leaf])
+        case .mushroom:
+            return PixelBuffer(art: [".PPP.",
+                                     "PWPPP",
+                                     "PPPWP",
+                                     "..C..",
+                                     "..C.."],
+                               palette: ["P": I.pink, "W": I.white, "C": I.cream])
+        case .honeydew:
+            return PixelBuffer(art: ["..A..",
+                                     ".AYA.",
+                                     "AYWYA",
+                                     "AYYYA",
+                                     ".AAA."],
+                               palette: ["A": I.amber, "Y": I.amberHi, "W": I.white])
+        case .shell:
+            return PixelBuffer(art: [".SSSS.",
+                                     "SHHHSS",
+                                     "SHSSHS",
+                                     "SSHHSS",
+                                     ".SSSS."],
+                               palette: ["S": I.steel, "H": I.steelHi])
         }
     }
 }

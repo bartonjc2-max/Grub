@@ -4,7 +4,7 @@ import XCTest
 final class BurrowStoreTests: XCTestCase {
     let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
 
-    func test_fresh_save_matches_phase1_spec() {
+    func test_fresh_save_matches_spec() {
         let s = BurrowSave.fresh(now: t0)
         XCTAssertEqual(s.version, BurrowSave.currentVersion)
         XCTAssertEqual(s.stage, .larva)
@@ -12,7 +12,7 @@ final class BurrowStoreTests: XCTestCase {
         XCTAssertEqual([s.belly, s.joy, s.molt, s.digs], [6, 6, 0, 3])
         XCTAssertEqual(s.bag, [.berry: 1])
         XCTAssertEqual(s.buried, [BuriedFind(spot: 0, kind: .berry),
-                                  BuriedFind(spot: 1, kind: .amber),
+                                  BuriedFind(spot: 1, kind: .root),
                                   BuriedFind(spot: 2, kind: .crystal)])
         XCTAssertTrue(s.holes.isEmpty && s.placed.isEmpty && s.eaten.isEmpty && s.specimens.isEmpty)
         XCTAssertEqual(s.lastTick, t0)

@@ -128,9 +128,9 @@ final class BurrowRulesTests: XCTestCase {
 
     func test_dig_moves_find_to_bag_and_leaves_hole() {
         let r = BurrowRules.dig(save { $0.joy = 0 }, spot: 1, now: t0, rng: &rng)
-        XCTAssertEqual(r.events, [.dugUp(spot: 1, kind: .amber)])
+        XCTAssertEqual(r.events, [.dugUp(spot: 1, kind: .root)])
         XCTAssertEqual(r.save.digs, 2)
-        XCTAssertEqual(r.save.bag, [.berry: 1, .amber: 1])
+        XCTAssertEqual(r.save.bag, [.berry: 1, .root: 1])
         XCTAssertEqual(r.save.holes, [1])
         XCTAssertFalse(r.save.buried.contains { $0.spot == 1 })
     }
@@ -226,5 +226,40 @@ final class BurrowRulesTests: XCTestCase {
     func test_spot_table_matches_rules() {
         XCTAssertEqual(BurrowSpots.anchors.count, BurrowRules.spotCount)
         XCTAssertNil(BurrowSpots.anchor(BurrowRules.spotCount))
+    }
+
+    // MARK: finds (phase 2)
+
+    func test_find_table_matches_spec() {
+        XCTAssertEqual(FindKind.allCases.count, 8)
+        XCTAssertEqual(FindKind.feedOrder, [.berry, .root, .mushroom, .honeydew])
+        XCTAssertEqual(Set(FindKind.allCases.filter(\.isDecor)), [.crystal, .shell, .amber, .bone])
+        XCTAssertEqual(FindKind.allCases.reduce(0) { $0 + $1.buryWeight }, 100)
+        let foodWeight = FindKind.allCases.filter(\.isFood).reduce(0) { $0 + $1.buryWeight }
+        XCTAssertEqual(foodWeight, 70, "70 % of burials are food (Stat roles pacing)")
+        XCTAssertEqual(FindKind.root.leansTo, .claws)
+        XCTAssertEqual(FindKind.mushroom.leansTo, .stalk)
+        XCTAssertEqual(FindKind.honeydew.leansTo, .fuzz)
+        XCTAssertEqual(FindKind.shell.leansTo, .shell)
+    }
+
+    func test_auto_feed_prefers_a_different_food() {
+        let s = save { $0.bag = [.berry: 1, .root: 1]; $0.lastMeal = .berry }
+        let r = BurrowRules.feed(s, kind: nil, now: t0)
+        XCTAssertEqual(r.events, [.ate(.root, joyGained: true)])
+        XCTAssertEqual(r.save.joy, 7)
+    }
+
+    func test_auto_feed_falls_back_to_a_repeat() {
+        let s = save { $0.bag = [.root: 1]; $0.lastMeal = .root }
+        XCTAssertEqual(BurrowRules.feed(s, kind: nil, now: t0).events, [.ate(.root, joyGained: false)])
+    }
+
+    func test_feed_specific_food() {
+        let s = save { $0.bag = [.berry: 1, .honeydew: 1] }
+        let r = BurrowRules.feed(s, kind: .honeydew, now: t0)
+        XCTAssertEqual(r.events, [.ate(.honeydew, joyGained: true)])
+        XCTAssertEqual(r.save.bag, [.berry: 1])
+        XCTAssertEqual(r.save.eaten, [.honeydew: 1])
     }
 }

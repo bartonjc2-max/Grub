@@ -32,37 +32,46 @@ enum Species: String, Codable, CaseIterable, CodingKeyRepresentable {
 
 enum GrubStage: String, Codable { case egg, larva, adult }
 
-/// Something you can dig up. Phase 1 has the four finds that already have sprites;
-/// phase 2 adds root, mushroom, honeydew and shell.
+/// Something you can dig up (spec §2). Foods are eaten; decor is placed in the burrow.
 enum FindKind: String, Codable, CaseIterable, Identifiable, CodingKeyRepresentable {
-    case berry, amber, bone, crystal
+    case berry, amber, bone, crystal          // phase 1
+    case root, mushroom, honeydew, shell      // phase 2 (append new cases, never reorder)
 
     var id: String { rawValue }
     var label: String { rawValue.uppercased() }
-    var isFood: Bool { self == .berry }
+    var isFood: Bool { Self.feedOrder.contains(self) }
+    var isDecor: Bool { !isFood }
 
     /// The species this find nudges the molt odds toward.
     var leansTo: Species {
         switch self {
-        case .berry:   return .grub
-        case .amber:   return .fuzz
-        case .bone:    return .claws
-        case .crystal: return .horn
+        case .berry:    return .grub
+        case .root:     return .claws
+        case .mushroom: return .stalk
+        case .honeydew: return .fuzz
+        case .crystal:  return .horn
+        case .shell:    return .shell
+        case .amber:    return .fuzz
+        case .bone:     return .claws
         }
     }
 
-    /// Relative chance of being buried (spec "Finds and digging").
+    /// Relative chance of being buried (spec §2). Sums to 100; foods are 70.
     var buryWeight: Int {
         switch self {
-        case .berry:   return 30
-        case .amber:   return 7
-        case .bone:    return 7
-        case .crystal: return 8
+        case .berry:    return 30
+        case .root:     return 15
+        case .mushroom: return 15
+        case .honeydew: return 10
+        case .crystal:  return 8
+        case .shell:    return 8
+        case .amber:    return 7
+        case .bone:     return 7
         }
     }
 
-    /// Auto-feed tries foods in this order.
-    static let feedOrder: [FindKind] = allCases.filter(\.isFood)
+    /// Foods, in the order auto-feed tries them.
+    static let feedOrder: [FindKind] = [.berry, .root, .mushroom, .honeydew]
 }
 
 struct BuriedFind: Codable, Equatable {
