@@ -29,4 +29,17 @@ final class BurrowLayoutTests: XCTestCase {
             }
         }
     }
+
+    func test_every_adult_fits_the_chamber() {
+        for L in layouts {
+            for sp in Species.allCases {
+                let spr = SpeciesArt.adult(sp)
+                XCTAssertLessThanOrEqual(spr.width, L.chamber.w, "\(sp) width")
+                XCTAssertLessThanOrEqual(spr.height, L.chamber.h, "\(sp) height")
+            }
+        }
+        XCTAssertEqual(SpeciesArt.adult(.grub).width, GrubArt.width, "GRUB's adult is the larva sprite")
+        XCTAssertEqual(SpeciesArt.adult(.claws).width, 36)
+        XCTAssertEqual(SpeciesArt.adult(.horn).height, 28)
+    }
 }

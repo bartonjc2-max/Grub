@@ -14,6 +14,7 @@
 		1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD61054EC068F65E69CB0B2C /* BurrowSave.swift */; };
 		2C9F3DD96C2B7B99E2D63DEA /* DescentTuning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B70E0FC31C838D246B046BFA /* DescentTuning.swift */; };
 		3248504C2A940CF171147141 /* PressStart2P-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */; };
+		3405C9092C20592A5BA23EF7 /* SpeciesArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB962D590FD15802C31114E4 /* SpeciesArt.swift */; };
 		3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */; };
 		3569DE5FADC5471CE5277831 /* PixelIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */; };
 		357AB0697EA29F96F0C05F9B /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */; };
@@ -148,6 +149,7 @@
 		D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentSceneView.swift; sourceTree = "<group>"; };
 		D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
 		D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Journal.swift"; sourceTree = "<group>"; };
+		DB962D590FD15802C31114E4 /* SpeciesArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeciesArt.swift; sourceTree = "<group>"; };
 		E72253F310EB1C1D9D78835D /* GrubIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GrubIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 		EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PressStart2P-Regular.ttf"; sourceTree = "<group>"; };
@@ -312,6 +314,7 @@
 				4A012B7067909685AAA6CF93 /* BurrowSpots.swift */,
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
+				DB962D590FD15802C31114E4 /* SpeciesArt.swift */,
 			);
 			path = Burrow;
 			sourceTree = "<group>";
@@ -492,6 +495,7 @@
 				40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */,
 				ED49DEB62AE1E28428327095 /* RootView.swift in Sources */,
 				B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */,
+				3405C9092C20592A5BA23EF7 /* SpeciesArt.swift in Sources */,
 				0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */,
 				73BB1B57B3C1D26BE2F48F00 /* SpriteRenderer+Grub.swift in Sources */,
 				D8F74F2D63E7FC0835541ACB /* SpriteRenderer+GrubPNG.swift in Sources */,
