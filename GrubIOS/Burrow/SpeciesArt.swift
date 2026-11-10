@@ -106,4 +106,38 @@ enum SpeciesArt {
 
     /// The larva's outline colour for the molt-ready glow (drawn at ±1 cell behind the grub).
     static let glow = GrubArt.idle.silhouette(BurrowInk.amberHi)
+
+    /// The egg (15×18): cream shell with spots in the parent's colour (teal for a first egg),
+    /// plus 0–3 cracks drawn in hollow.
+    static func egg(cracks: Int, tint: Species?) -> PixelBuffer {
+        var b = PixelBuffer(art: [
+            ".....CCCCC.....",
+            "...CCCCCCCCC...",
+            "..CCCCCCCCCCC..",
+            ".CCCSSCCCCCCCC.",
+            ".CCSSSCCCCCSCC.",
+            "CCCCSCCCCCSSSCC",
+            "CCCCCCCCCCCSCCC",
+            "CCCCCCCCCCCCCCC",
+            "CCSCCCCCCCCCCCC",
+            "CSSSCCCCCSSCCCC",
+            "CCSCCCCCSSSSCCC",
+            "CCCCCCCCCSSCCCC",
+            "CCCCCCCCCCCCCCC",
+            ".CCCCCCCCCCCCD.",
+            ".CCCCCCCCCCCDD.",
+            "..CCCCCCCCCDD..",
+            "...DDCCCCDDD...",
+            ".....DDDDD....."],
+            palette: ["C": BurrowInk.cream, "D": BurrowInk.creamDim, "S": tint?.color ?? BurrowInk.teal])
+        let stages: [[(Int, Int)]] = [
+            [(7, 1), (8, 2), (7, 3)],
+            [(6, 4), (7, 5), (8, 6), (9, 5)],
+            [(5, 6), (4, 7), (10, 6), (11, 7), (8, 7), (9, 8)],
+        ]
+        for stage in stages.prefix(max(0, min(3, cracks))) {
+            for (x, y) in stage { b.fill(x, y, 1, 1, BurrowInk.hollow) }
+        }
+        return b
+    }
 }

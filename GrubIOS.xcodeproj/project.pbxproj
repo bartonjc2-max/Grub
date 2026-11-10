@@ -54,6 +54,7 @@
 		A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECFC767EBDB0D567F0B7422 /* ForageOverlay.swift */; };
 		A13AC48ACFABE45F4DBFCAAB /* NotificationCenterProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */; };
 		A7BE2EFEB82CA7F8937C2048 /* GrubDeepHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61A20FF48FFF925B1CD5722 /* GrubDeepHomeView.swift */; };
+		AE22C7EFE6EE5F0BF6F5461F /* BurrowArtTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B41213D1E3F352FB708FFE /* BurrowArtTests.swift */; };
 		AE89B8A7E4B0FF9098E2F41C /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB704B2A5767D6A4C637DBB0 /* AudioEngine.swift */; };
 		AF7FF5430971FB0234FAA817 /* SaveVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */; };
 		AFDCDAE5EDDF9C13AB0AD4FF /* GrubPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */; };
@@ -123,6 +124,7 @@
 		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
 		7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuView.swift; sourceTree = "<group>"; };
 		7BCBE326714FB960EC58256D /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
+		82B41213D1E3F352FB708FFE /* BurrowArtTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowArtTests.swift; sourceTree = "<group>"; };
 		8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		8BEFF8AB22606442D65D1965 /* GrubFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubFont.swift; sourceTree = "<group>"; };
 		8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowOverlay.swift; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				82B41213D1E3F352FB708FFE /* BurrowArtTests.swift */,
 				4828EF7C3AE93783A7D6775E /* BurrowHomeModelTests.swift */,
 				0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */,
 				6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */,
@@ -430,6 +433,7 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				AE22C7EFE6EE5F0BF6F5461F /* BurrowArtTests.swift in Sources */,
 				7F552070BF6B08D042E9EE79 /* BurrowHomeModelTests.swift in Sources */,
 				59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */,
 				BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */,

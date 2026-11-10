@@ -216,6 +216,43 @@ enum GrubArt {
     static let chomp = frame(chomp: true)
 }
 
+extension GrubArt {
+    struct Frames { let idle, blink, chomp, sulk: PixelBuffer }
+
+    /// Per-channel blend of two 0xRRGGBB colours (`f` = share of `b`), rounded.
+    static func mix(_ a: UInt32, _ b: UInt32, _ f: Double) -> UInt32 {
+        func ch(_ c: UInt32, _ s: UInt32) -> Double { Double((c >> s) & 0xFF) }
+        func out(_ s: UInt32) -> UInt32 { UInt32((ch(a, s) + (ch(b, s) - ch(a, s)) * f).rounded()) << s }
+        return out(16) | out(8) | out(0)
+    }
+
+    /// Per-channel multiply, rounded.
+    static func scale(_ c: UInt32, _ k: Double) -> UInt32 { mix(0x000000, c, k) }
+
+    /// Spec §5: larva body = teal mixed 25 % toward the parent species' colour.
+    static func bodyColor(tint: Species?) -> UInt32 {
+        guard let t = tint, t != .grub else { return BurrowInk.teal }
+        return mix(BurrowInk.teal, t.color, 0.25)
+    }
+
+    /// Larva frames for a tint. Untinted (or GRUB) is the original art; otherwise the body
+    /// is `bodyColor` and the side shade is the body × 0.82.
+    static func frames(tint: Species?) -> Frames { frameCache[tint?.rawValue ?? ""]! }
+
+    private static let frameCache: [String: Frames] = {
+        var out: [String: Frames] = ["": Frames(idle: idle, blink: blink, chomp: chomp, sulk: sulk)]
+        for sp in Species.allCases {
+            if sp == .grub { out[sp.rawValue] = out[""]; continue }
+            let body = bodyColor(tint: sp), shade = scale(body, 0.82)
+            out[sp.rawValue] = Frames(idle: frame(body: body, shade: shade),
+                                      blink: frame(blink: true, body: body, shade: shade),
+                                      chomp: frame(chomp: true, body: body, shade: shade),
+                                      sulk: frame(sulk: true, body: body, shade: shade))
+        }
+        return out
+    }()
+}
+
 // MARK: - Finds + UI icons
 
 extension FindKind {
@@ -312,4 +349,12 @@ enum IconArt {
     }
     static let pedestalDim = pedestal(lit: false)
     static let pedestalLit = pedestal(lit: true)
+
+    static let box = PixelBuffer(art: ["CCCCCCC",
+                                       "C.....C",
+                                       "C.TTT.C",
+                                       "C..T..C",
+                                       "C.....C",
+                                       "CCCCCCC"],
+                                 palette: ["C": BurrowInk.copper, "T": BurrowInk.teal])
 }
