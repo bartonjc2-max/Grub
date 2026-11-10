@@ -297,4 +297,63 @@ final class BurrowRulesTests: XCTestCase {
         let s = save { $0.belly = 10; $0.joy = 10; $0.placed = [0: .amber, 1: .bone, 2: .crystal, 3: .shell] }
         XCTAssertEqual(advance(s, hours: 16).save.joy, 8)
     }
+
+    // MARK: molt (phase 3)
+
+    func test_base_odds_favour_grub() {
+        let o = BurrowRules.odds(save())
+        XCTAssertEqual(o[.grub]!, 2.0 / 7, accuracy: 1e-9)
+        for sp in Species.allCases where sp != .grub { XCTAssertEqual(o[sp]!, 1.0 / 7, accuracy: 1e-9) }
+        XCTAssertEqual(o.values.reduce(0, +), 1, accuracy: 1e-9)
+    }
+
+    func test_diet_shifts_odds() {
+        let o = BurrowRules.odds(save { $0.eaten = [.root: 3] })       // claws 1+3 of 10
+        XCTAssertEqual(o[.claws]!, 0.4, accuracy: 1e-9)
+    }
+
+    func test_placed_decor_counts_double_only_while_placed() {
+        let placed = save { $0.placed = [0: .crystal] }                // horn 1+2 of 9
+        XCTAssertEqual(BurrowRules.odds(placed)[.horn]!, 3.0 / 9, accuracy: 1e-9)
+        let r = BurrowRules.remove(placed, slot: 0, now: t0).save
+        XCTAssertEqual(BurrowRules.odds(r)[.horn]!, 1.0 / 7, accuracy: 1e-9)
+    }
+
+    func test_lineage_adds_two() {
+        XCTAssertEqual(BurrowRules.odds(save { $0.lineage = .stalk })[.stalk]!, 3.0 / 9, accuracy: 1e-9)
+    }
+
+    func test_roll_matches_odds() {
+        let o = BurrowRules.odds(save { $0.eaten = [.root: 3] })
+        var counts: [Species: Int] = [:]
+        for _ in 0..<20_000 { counts[BurrowRules.roll(o, rng: &rng), default: 0] += 1 }
+        for sp in Species.allCases {
+            XCTAssertEqual(Double(counts[sp] ?? 0) / 20_000, o[sp]!, accuracy: 0.015, "\(sp)")
+        }
+    }
+
+    func test_start_molt_needs_a_full_molt_bar() {
+        XCTAssertFalse(BurrowRules.isMoltReady(save { $0.molt = 9 }))
+        XCTAssertEqual(BurrowRules.startMolt(save { $0.molt = 9 }, now: t0, rng: &rng).events, [.refused(.notMoltReady)])
+        XCTAssertEqual(BurrowRules.startMolt(save { $0.molt = 10; $0.stage = .egg }, now: t0, rng: &rng).events,
+                       [.refused(.wrongStage)])
+    }
+
+    func test_start_molt_rolls_and_becomes_adult_in_one_step() {
+        let s = save { $0.molt = 10 }
+        XCTAssertTrue(BurrowRules.isMoltReady(s))
+        let r = BurrowRules.startMolt(s, now: t0, rng: &rng)
+        guard case .molted(let sp) = r.events.first else { return XCTFail("\(r.events)") }
+        XCTAssertEqual(r.events.count, 1)
+        XCTAssertEqual(r.save.stage, .adult)
+        XCTAssertEqual(r.save.adult, sp)
+        XCTAssertFalse(BurrowRules.isMoltReady(r.save))
+    }
+
+    func test_adult_stage_freezes_care() {
+        let adult = BurrowRules.startMolt(save { $0.molt = 10; $0.belly = 5 }, now: t0, rng: &rng).save
+        XCTAssertEqual(BurrowRules.feed(adult, kind: nil, now: t0).events, [.refused(.wrongStage)])
+        XCTAssertEqual(BurrowRules.pet(adult, now: t0).events, [.refused(.wrongStage)])
+        XCTAssertEqual(advance(adult, hours: 10).save.belly, 5, "belly/joy only drain for a larva")
+    }
 }

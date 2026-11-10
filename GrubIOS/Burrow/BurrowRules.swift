@@ -190,6 +190,46 @@ enum BurrowRules {
         return BurrowResult(save: s, events: [.petted(joyGained: gained)])
     }
 
+    // MARK: Molt
+
+    static func isMoltReady(_ s: BurrowSave) -> Bool { s.stage == .larva && s.molt >= moltGoal }
+
+    /// Spec §4: every species weighs 1 (GRUB 2); +1 per food eaten that leans to it,
+    /// +2 per placed decor that leans to it (only while placed), +2 for the lineage species.
+    static func odds(_ s: BurrowSave) -> [Species: Double] {
+        var w: [Species: Double] = [:]
+        for sp in Species.allCases { w[sp] = sp == .grub ? 2 : 1 }
+        for (kind, n) in s.eaten where kind.isFood { w[kind.leansTo, default: 0] += Double(n) }
+        for kind in s.placed.values { w[kind.leansTo, default: 0] += 2 }
+        if let l = s.lineage { w[l, default: 0] += 2 }
+        let total = w.values.reduce(0, +)
+        return w.mapValues { $0 / total }
+    }
+
+    /// Weighted pick in `Species.allCases` order (deterministic for a seeded RNG).
+    static func roll(_ odds: [Species: Double], rng: inout some RandomNumberGenerator) -> Species {
+        var r = Double.random(in: 0..<1, using: &rng)
+        for sp in Species.allCases {
+            let p = odds[sp] ?? 0
+            if r < p { return sp }
+            r -= p
+        }
+        return .grub   // floating-point leftovers
+    }
+
+    /// Roll the adult and become it in one step, so a save never holds a half-finished molt.
+    /// The cocoon and reveal are view-only animations played on `.molted`.
+    static func startMolt(_ s0: BurrowSave, now: Date,
+                          rng: inout some RandomNumberGenerator) -> BurrowResult {
+        guard s0.stage == .larva else { return refuse(s0, .wrongStage) }
+        guard s0.molt >= moltGoal else { return refuse(s0, .notMoltReady) }
+        var s = s0
+        let sp = roll(odds(s0), rng: &rng)
+        s.adult = sp
+        s.stage = .adult
+        return BurrowResult(save: s, events: [.molted(sp)])
+    }
+
     // MARK: Furnishing
 
     /// Put a decor find from the bag into an empty slot (0 left room, 1 right room,
