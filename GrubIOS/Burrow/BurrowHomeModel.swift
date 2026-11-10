@@ -33,6 +33,12 @@ final class BurrowHomeModel: ObservableObject {
     /// "MOLT NOW?" is showing. Reasoner review (board #287): a habitual pet-tap must never
     /// trigger the irreversible molt by itself.
     @Published private(set) var confirmingMolt = false
+    /// The name prompt for a fresh egg is showing.
+    @Published private(set) var namingEgg = false
+    /// The specimen box is open.
+    @Published var showBox = false
+    /// Animation-clock time of the last egg crack (the egg shakes for 0.3 s).
+    @Published private(set) var crackAt: TimeInterval = -10
 
     /// Top-centre of the grub sprite in design cells; set by the view from its layout.
     var grubTop: (x: Int, y: Int) = (32, 60)
@@ -57,7 +63,10 @@ final class BurrowHomeModel: ObservableObject {
             loaded.molt = BurrowRules.moltGoal
             loaded.eaten = [.root: 3, .berry: 2]     // odds: GRUB 4/12, CLAWS 4/12, others 1/12
         }
-        if let sp = BurrowDebug.adult { loaded.stage = .adult; loaded.adult = sp }
+        if let sp = BurrowDebug.adult {
+            loaded.stage = .adult; loaded.adult = sp
+            if loaded.name.isEmpty { loaded.name = "GRUB" }
+        }
         #endif
         save = loaded
         tick()
@@ -84,6 +93,11 @@ final class BurrowHomeModel: ObservableObject {
     var isMoltReady: Bool { BurrowRules.isMoltReady(save) }
     var odds: [Species: Double] { BurrowRules.odds(save) }
     static let cocoonSeconds: TimeInterval = 3
+    var name: String { save.name }
+    var eggCracks: Int { save.eggCracks }
+    var tint: Species? { save.tint }
+    var specimens: [Specimen] { save.specimens }
+    func randomEggName() -> String { BurrowRules.eggNames.randomElement() ?? "PIP" }
 
     private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }   // animation clock
 
@@ -130,7 +144,7 @@ final class BurrowHomeModel: ObservableObject {
         case .adult:
             revealing = save.adult
         case .egg:
-            break   // phase 4
+            if save.name.isEmpty { namingEgg = true } else { apply(BurrowRules.crackEgg(save, now: clock())) }
         }
     }
 
@@ -144,6 +158,24 @@ final class BurrowHomeModel: ObservableObject {
     func cancelMolt() { confirmingMolt = false }
 
     func dismissReveal() { revealing = nil }
+
+    /// OK on the name prompt. Returns false (and keeps the prompt) for an invalid name.
+    @discardableResult
+    func nameEgg(_ raw: String) -> Bool {
+        let r = BurrowRules.name(save, raw, now: clock())
+        if r.events.first == .refused(.badName) { say(Self.message(.badName)); return false }
+        namingEgg = false
+        apply(r)
+        return true
+    }
+
+    func cancelNaming() { namingEgg = false }
+
+    /// PIN IT on the reveal card.
+    func pin() {
+        revealing = nil
+        apply(BurrowRules.pin(save, now: clock()))
+    }
 
     func digHint() {
         if save.digs == 0 { say(Self.message(.noDigs)); return }
@@ -219,6 +251,19 @@ final class BurrowHomeModel: ObservableObject {
                 self?.revealing = sp
                 Haptics.thud()
             }
+        case .named(let n):
+            say("HELLO, \(n)!")
+            Haptics.soft()
+        case .eggCracked:
+            crackAt = t
+            Haptics.thud()
+        case .hatched:
+            hopAt = t
+            say("\(save.name) HATCHED!")
+            Haptics.thud()
+        case .pinned:
+            showBox = true
+            Haptics.thud()
         case .moltReady:
             say("READY TO MOLT!")
         case .refused(let why):
@@ -244,7 +289,7 @@ final class BurrowHomeModel: ObservableObject {
         case .notDecor:           return "THAT'S FOOD"
         case .emptySlot:          return "NOTHING THERE"
         case .notMoltReady:       return "NOT READY\nTO MOLT YET"
-        case .badName:            return "CAN'T DO THAT"
+        case .badName:            return "USE 1-10 LETTERS"
         }
     }
 
@@ -297,5 +342,7 @@ enum BurrowDebug {
     }
     /// `-burrowMoltDemo`: script the molt (see BurrowHomeView).
     static var moltDemo: Bool { args.contains("-burrowMoltDemo") }
+    /// `-burrowLoopDemo` (use with `-burrowReset -burrowAdult horn`): pin → box → name → hatch.
+    static var loopDemo: Bool { args.contains("-burrowLoopDemo") }
 }
 #endif
