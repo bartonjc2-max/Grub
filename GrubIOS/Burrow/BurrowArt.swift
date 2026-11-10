@@ -64,6 +64,20 @@ struct BurrowLayout: Equatable {
     }
 }
 
+extension BurrowLayout {
+    /// Bottom-centre cell of decor slot `i`: the 6×2 pedestal spans x-3…x+2, rows y…y+1,
+    /// and the decor sprite stands on it (its bottom row at y-1).
+    func decorSlot(_ i: Int) -> (x: Int, y: Int)? {
+        switch i {
+        case 0: return (sideL.midX, sideL.maxY - 2)
+        case 1: return (sideR.midX, sideR.maxY - 2)
+        case 2: return (chamber.x + 5, chamber.maxY - 2)
+        case 3: return (chamber.maxX - 4, chamber.maxY - 2)
+        default: return nil
+        }
+    }
+}
+
 // MARK: - Backdrop (sky, surface, soil, tunnels, decor)
 
 enum BurrowArt {
@@ -138,23 +152,7 @@ enum BurrowArt {
         r(L.sideL.maxX - 1, L.sideL.y + 3, 26 - (L.sideL.maxX - 1), 4, I.hollow)
         chamber(L.sideL, bevel: 1)
 
-        // Pebbles on the main chamber floor (grounds the grub).
-        r(C.x + 2, C.maxY - 2, 3, 2, I.speck); r(C.maxX - 6, C.maxY - 3, 4, 3, I.speck); r(C.maxX - 8, C.maxY - 1, 2, 1, I.speck)
-
-        // Right side-chamber: glowing amber on a pedestal.
-        let R = L.sideR, gy = R.maxY - 9
-        r(R.x + 4, R.maxY - 3, 6, 3, I.root)
-        r(R.x + 6, gy, 2, 1, I.amber); r(R.x + 5, gy + 1, 4, 1, I.amber); r(R.x + 4, gy + 2, 6, 2, I.amber)
-        r(R.x + 5, gy + 4, 4, 1, I.amber); r(R.x + 6, gy + 5, 2, 1, I.amber); r(R.x + 5, gy + 2, 1, 1, I.amberHi)
-        r(R.x + 2, gy, 1, 1, I.amberHi); r(R.x + 11, gy + 1, 1, 1, I.amberHi); r(R.x + 12, gy + 5, 1, 1, I.amberHi)
-
-        // Left side-chamber: mushroom lamp + little stool.
-        let Lc = L.sideL
-        r(Lc.x + 3, Lc.maxY - 6, 2, 6, I.cream)
-        r(Lc.x + 1, Lc.maxY - 8, 6, 2, I.mushroomHi); r(Lc.x + 2, Lc.maxY - 9, 4, 1, I.mushroomHi)
-        r(Lc.x + 2, Lc.maxY - 8, 1, 1, I.mushroomGlint); r(Lc.x + 5, Lc.maxY - 9, 1, 1, I.mushroomGlint)
-        r(Lc.x, Lc.maxY - 11, 1, 1, I.mushroomHi); r(Lc.x + 9, Lc.maxY - 10, 1, 1, I.mushroomHi)
-        r(Lc.x + 7, Lc.maxY - 4, 4, 1, I.cream); r(Lc.x + 7, Lc.maxY - 3, 1, 3, I.cream); r(Lc.x + 10, Lc.maxY - 3, 1, 3, I.cream)
+        // Rooms start empty: decor is placed by the player (BurrowLayout.decorSlot).
 
         // Pockets left by digging.
         for a in holes {
@@ -304,4 +302,14 @@ enum IconArt {
                                          "..R.."],
                                    palette: ["R": BurrowInk.berry])
     static let sparkle = PixelBuffer(art: ["A"], palette: ["A": BurrowInk.amberHi])
+
+    /// Decor-slot pedestal (6×2). `lit` is the glowing version shown while placing.
+    static func pedestal(lit: Bool) -> PixelBuffer {
+        PixelBuffer(art: ["TTTTTT",
+                          ".BBBB."],
+                    palette: ["T": lit ? BurrowInk.amber : BurrowInk.root,
+                              "B": lit ? BurrowInk.amberLo : BurrowInk.soil1])
+    }
+    static let pedestalDim = pedestal(lit: false)
+    static let pedestalLit = pedestal(lit: true)
 }

@@ -25,6 +25,7 @@
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
 		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
+		59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */; };
 		5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */; };
 		5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */; };
 		65910566002ED2DBBD73FB8A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5624CADC5A38E7D506E60526 /* Assets.xcassets */; };
@@ -92,6 +93,7 @@
 		02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStateHooksTests.swift; sourceTree = "<group>"; };
 		0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowTypes.swift; sourceTree = "<group>"; };
 		0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowHomeModel.swift; sourceTree = "<group>"; };
+		0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowLayoutTests.swift; sourceTree = "<group>"; };
 		18F70E2BDA0D9DA2712224C1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1EAEBF4C330AB2D183192474 /* GameState+Ads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Ads.swift"; sourceTree = "<group>"; };
 		1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpriteRenderer+GrubPNG.swift"; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */,
 				6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */,
 				B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */,
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
@@ -421,6 +424,7 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */,
 				BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */,
 				5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */,
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
