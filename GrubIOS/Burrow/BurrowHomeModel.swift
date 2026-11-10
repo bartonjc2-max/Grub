@@ -26,6 +26,13 @@ final class BurrowHomeModel: ObservableObject {
     @Published private(set) var placing: FindKind?
     /// A placed decor the player tapped; the HUD offers REMOVE / KEEP.
     @Published private(set) var selectedSlot: Int?
+    /// Animation-clock time the cocoon started (`.molted`); the view plays ~3 s of cocoon.
+    @Published private(set) var moltAt: TimeInterval = -100
+    /// The adult whose reveal card is showing.
+    @Published private(set) var revealing: Species?
+    /// "MOLT NOW?" is showing. Reasoner review (board #287): a habitual pet-tap must never
+    /// trigger the irreversible molt by itself.
+    @Published private(set) var confirmingMolt = false
 
     /// Top-centre of the grub sprite in design cells; set by the view from its layout.
     var grubTop: (x: Int, y: Int) = (32, 60)
@@ -46,6 +53,11 @@ final class BurrowHomeModel: ObservableObject {
         var loaded = store.load(now: clock())
         #if DEBUG
         if let hrs = BurrowDebug.skipHours { loaded.lastTick.addTimeInterval(-hrs * 3600) }
+        if BurrowDebug.moltReady {
+            loaded.molt = BurrowRules.moltGoal
+            loaded.eaten = [.root: 3, .berry: 2]     // odds: GRUB 4/12, CLAWS 4/12, others 1/12
+        }
+        if let sp = BurrowDebug.adult { loaded.stage = .adult; loaded.adult = sp }
         #endif
         save = loaded
         tick()
@@ -67,6 +79,11 @@ final class BurrowHomeModel: ObservableObject {
     var placed: [Int: FindKind] { save.placed }
     var freeSlots: [Int] { (0..<BurrowRules.decorSlots).filter { save.placed[$0] == nil } }
     var canAct: Bool { save.stage == .larva }
+    var stage: GrubStage { save.stage }
+    var adult: Species? { save.adult }
+    var isMoltReady: Bool { BurrowRules.isMoltReady(save) }
+    var odds: [Species: Double] { BurrowRules.odds(save) }
+    static let cocoonSeconds: TimeInterval = 3
 
     private var now: TimeInterval { Date().timeIntervalSinceReferenceDate }   // animation clock
 
@@ -87,6 +104,7 @@ final class BurrowHomeModel: ObservableObject {
 
     /// A tap on decor slot `slot`: places while placing, otherwise selects a placed item.
     func tapSlot(_ slot: Int) {
+        guard canAct else { return }
         if let kind = placing {
             guard save.placed[slot] == nil else { return }
             placing = nil
@@ -103,6 +121,29 @@ final class BurrowHomeModel: ObservableObject {
     }
 
     func clearSelection() { selectedSlot = nil }
+
+    /// Tap on the grub: when molt-ready, ask "MOLT NOW?"; otherwise pet. In `.adult`, re-open the card.
+    func tapGrub() {
+        switch save.stage {
+        case .larva:
+            if isMoltReady { confirmingMolt = true } else { pet() }
+        case .adult:
+            revealing = save.adult
+        case .egg:
+            break   // phase 4
+        }
+    }
+
+    /// MOLT on the confirm: the only path to `startMolt`.
+    func confirmMolt() {
+        confirmingMolt = false
+        apply(BurrowRules.startMolt(save, now: clock(), rng: &rng))
+    }
+
+    /// NOT YET on the confirm: back to caring (the grub stays molt-ready).
+    func cancelMolt() { confirmingMolt = false }
+
+    func dismissReveal() { revealing = nil }
 
     func digHint() {
         if save.digs == 0 { say(Self.message(.noDigs)); return }
@@ -168,6 +209,16 @@ final class BurrowHomeModel: ObservableObject {
         case .removed(_, let kind):
             say("\(kind.label)\nBACK IN BAG")
             Haptics.soft()
+        case .molted(let sp):
+            moltAt = t
+            placing = nil
+            selectedSlot = nil
+            Haptics.thud()
+            Task { [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(Self.cocoonSeconds * 1_000_000_000))
+                self?.revealing = sp
+                Haptics.thud()
+            }
         case .moltReady:
             say("READY TO MOLT!")
         case .refused(let why):
@@ -192,8 +243,8 @@ final class BurrowHomeModel: ObservableObject {
         case .slotTaken:          return "SPOT TAKEN"
         case .notDecor:           return "THAT'S FOOD"
         case .emptySlot:          return "NOTHING THERE"
-        case .notMoltReady, .badName:
-            return "CAN'T DO THAT"
+        case .notMoltReady:       return "NOT READY\nTO MOLT YET"
+        case .badName:            return "CAN'T DO THAT"
         }
     }
 
@@ -237,5 +288,14 @@ enum BurrowDebug {
     static var demo: Bool { args.contains("-burrowDemo") }
     /// `-burrowShowBag`: open the Finds panel on launch.
     static var showBag: Bool { args.contains("-burrowShowBag") }
+    /// `-burrowMoltReady`: start with a full MOLT bar and a root-heavy diet (odds visibly shifted).
+    static var moltReady: Bool { args.contains("-burrowMoltReady") }
+    /// `-burrowAdult <species>`: start as that revealed adult (e.g. `-burrowAdult horn`).
+    static var adult: Species? {
+        guard let i = args.firstIndex(of: "-burrowAdult"), i + 1 < args.count else { return nil }
+        return Species(rawValue: args[i + 1])
+    }
+    /// `-burrowMoltDemo`: script the molt (see BurrowHomeView).
+    static var moltDemo: Bool { args.contains("-burrowMoltDemo") }
 }
 #endif
