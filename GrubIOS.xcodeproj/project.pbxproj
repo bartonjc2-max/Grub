@@ -11,6 +11,7 @@
 		0D5A1E3C5C8030D7868F3FDA /* DescentSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */; };
 		0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3878A3E074253723060C33C3 /* SplashView.swift */; };
 		0E46907CF823E0F4A3C29314 /* BurrowArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */; };
+		1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD61054EC068F65E69CB0B2C /* BurrowSave.swift */; };
 		2C9F3DD96C2B7B99E2D63DEA /* DescentTuning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B70E0FC31C838D246B046BFA /* DescentTuning.swift */; };
 		3248504C2A940CF171147141 /* PressStart2P-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE4B2C577461A3AA4173AC6D /* PressStart2P-Regular.ttf */; };
 		3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */; };
@@ -59,6 +60,7 @@
 		C5575F7C983DA8C71ACFB19D /* GameState+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */; };
 		CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */; };
 		CF026214B933457A384F2771 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */; };
+		D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */; };
 		D075D96977834C393C873636 /* RatingPromptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */; };
 		D408AD0BEC14A5D5CCAE7EF0 /* DescentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D69D02BE6B49AFFCA45A20C /* DescentView.swift */; };
 		D5215A9D7BC816489ECF60D2 /* JournalOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EE433BAB5A6B6489537C97 /* JournalOverlay.swift */; };
@@ -127,6 +129,7 @@
 		BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVersionTests.swift; sourceTree = "<group>"; };
 		BB530A92485B49730BC1516A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTrackerTests.swift; sourceTree = "<group>"; };
+		BD61054EC068F65E69CB0B2C /* BurrowSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowSave.swift; sourceTree = "<group>"; };
 		C560F450949A013DE2033C78 /* RetentionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTracker.swift; sourceTree = "<group>"; };
 		C8B5111B13882012C1497812 /* GameState+Expeditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Expeditions.swift"; sourceTree = "<group>"; };
 		CBA41D753C6F6643EF4A68E7 /* BurrowHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowHomeView.swift; sourceTree = "<group>"; };
@@ -145,6 +148,7 @@
 		F61A20FF48FFF925B1CD5722 /* GrubDeepHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubDeepHomeView.swift; sourceTree = "<group>"; };
 		F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulerTests.swift; sourceTree = "<group>"; };
 		F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereSplitTests.swift; sourceTree = "<group>"; };
+		FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowStoreTests.swift; sourceTree = "<group>"; };
 		FD2BB931FB1067A1020561C0 /* RatingPromptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPromptTests.swift; sourceTree = "<group>"; };
 		FDA3AF8C394AE1A6C43C0BFE /* ExpeditionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpeditionOverlay.swift; sourceTree = "<group>"; };
 		FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEventTests.swift; sourceTree = "<group>"; };
@@ -240,6 +244,7 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
 				02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */,
@@ -289,6 +294,7 @@
 				975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */,
 				0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */,
 				CBA41D753C6F6643EF4A68E7 /* BurrowHomeView.swift */,
+				BD61054EC068F65E69CB0B2C /* BurrowSave.swift */,
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
 			);
@@ -403,6 +409,7 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
 				86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */,
@@ -428,6 +435,7 @@
 				F2285A55AE14FD59515FACC9 /* BurrowHomeModel.swift in Sources */,
 				8E931426A3D6D871931E3DE8 /* BurrowHomeView.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
+				1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */,
 				444B93FD99A385798C60CD45 /* BurrowTypes.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
 				40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */,
