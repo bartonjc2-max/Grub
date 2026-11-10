@@ -32,6 +32,7 @@ struct BurrowHomeView: View {
         .ignoresSafeArea()
         .background(Color(ink: BurrowInk.sky).ignoresSafeArea())
         .overlay(alignment: .bottom) { bottomHUD }
+        .overlay(alignment: .topLeading) { boxButton }
         .overlay(alignment: .top) { modeBar }
         .overlay {
             if showBag {
@@ -55,8 +56,25 @@ struct BurrowHomeView: View {
             }
         }
         .overlay {
+            if model.namingEgg {
+                NamePromptView(initial: model.randomEggName(),
+                               random: { model.randomEggName() },
+                               submit: { model.nameEgg($0) },
+                               cancel: { model.cancelNaming() })
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
             if let sp = model.revealing {
-                RevealCardView(species: sp) { withAnimation(.easeOut(duration: 0.15)) { model.dismissReveal() } }
+                RevealCardView(species: sp,
+                               pin: { withAnimation(.easeOut(duration: 0.15)) { model.pin() } },
+                               later: { withAnimation(.easeOut(duration: 0.15)) { model.dismissReveal() } })
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
+            if model.showBox {
+                SpecimenBoxView(specimens: model.specimens) { withAnimation(.easeOut(duration: 0.15)) { model.showBox = false } }
                     .transition(.opacity)
             }
         }
@@ -73,6 +91,7 @@ struct BurrowHomeView: View {
             if BurrowDebug.showBag { showBag = true }
             await runDemoIfRequested()
             await runMoltDemoIfRequested()
+            await runLoopDemoIfRequested()
         }
         #endif
     }
@@ -110,6 +129,23 @@ struct BurrowHomeView: View {
     /// `-burrowMoltDemo` (use with `-burrowReset -burrowMoltReady`). Seconds after the view appears:
     /// 2.0 open the molt panel (until 5.0) · 5.0 close; grub glows · 7.0 tap → MOLT NOW? (until 9.5)
     /// 9.5 confirm → cocoon (until 12.5) · 12.5 reveal card (until 15.5) · 15.5 dismiss; adult stands.
+    /// `-burrowLoopDemo` (use with `-burrowReset -burrowAdult horn`). Seconds after the view appears:
+    /// 2.0 tap the adult → reveal with PIN IT (until 4.5) · 4.5 pin → box opens (until 7.5)
+    /// 7.5 close → horn-spotted egg · 9.5 tap → name prompt (until 12.0) · 12.0 name PIP
+    /// 13.0 / 14.5 crack, crack (2/3 until 16.0) · 16.0 crack → violet-tinted larva hatches.
+    private func runLoopDemoIfRequested() async {
+        guard BurrowDebug.loopDemo else { return }
+        func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
+        await wait(2.0); model.tapGrub()
+        await wait(2.5); withAnimation { model.pin() }
+        await wait(3.0); withAnimation { model.showBox = false }
+        await wait(2.0); model.tapGrub()
+        await wait(2.5); _ = model.nameEgg("PIP")
+        await wait(1.0); model.tapGrub()
+        await wait(1.5); model.tapGrub()
+        await wait(1.5); model.tapGrub()
+    }
+
     private func runMoltDemoIfRequested() async {
         guard BurrowDebug.moltDemo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
@@ -221,6 +257,7 @@ struct BurrowHomeView: View {
     }
 
     private func grub(_ L: BurrowLayout, _ t: TimeInterval) -> some View {
+        let F = GrubArt.frames(tint: model.tint)
         let sulking = model.isSulking
         let bounce = !sulking && Int(t / 0.4) % 3 == 1 ? 1 : 0
         let hopP = (t - model.hopAt) / 0.42
@@ -229,18 +266,21 @@ struct BurrowHomeView: View {
         let sprite: PixelBuffer
         if inCocoon {
             sprite = SpeciesArt.cocoon
+        } else if model.stage == .egg {
+            sprite = SpeciesArt.egg(cracks: model.eggCracks, tint: model.tint)
         } else if model.stage == .adult, let sp = model.adult {
             sprite = SpeciesArt.adult(sp)
         } else {
             let chomping = t - model.chompAt < 0.9
             let blinking = t.truncatingRemainder(dividingBy: 3.7) < 0.14 || hop > 0
-            sprite = chomping ? (Int(t / 0.15) % 2 == 0 ? GrubArt.chomp : GrubArt.idle)
-                              : (blinking ? GrubArt.blink : (sulking ? GrubArt.sulk : GrubArt.idle))
+            sprite = chomping ? (Int(t / 0.15) % 2 == 0 ? F.chomp : F.idle)
+                              : (blinking ? F.blink : (sulking ? F.sulk : F.idle))
         }
-        // Cocoon wobbles ±1 cell; everything else bounces/hops.
-        let wobble = inCocoon ? Int((sin(t * 9) * 1.4).rounded()) : 0
+        // Cocoon wobbles ±1 cell; a just-cracked egg shakes; the larva/adult bounce and hop.
+        let shaking = model.stage == .egg && t - model.crackAt < 0.3
+        let wobble = inCocoon ? Int((sin(t * 9) * 1.4).rounded()) : (shaking ? (Int(t / 0.05) % 2 == 0 ? 1 : -1) : 0)
         let gx = L.chamber.midX - sprite.width / 2 + wobble
-        let gy = L.chamber.maxY - sprite.height - (inCocoon ? 0 : bounce + hop)
+        let gy = L.chamber.maxY - sprite.height - ((inCocoon || model.stage == .egg) ? 0 : bounce + hop)
         let origin = L.point(Double(gx), Double(gy))
         let glowing = model.isMoltReady && !inCocoon && Int(t / 0.4) % 2 == 0
 
@@ -259,11 +299,13 @@ struct BurrowHomeView: View {
         .position(x: origin.x + CGFloat(sprite.width) * L.cell / 2,
                   y: origin.y + CGFloat(sprite.height) * L.cell / 2)
         .accessibilityLabel(grubLabel(sulking: sulking, inCocoon: inCocoon))
-        .accessibilityHint(model.isMoltReady ? "Start the molt" : (model.stage == .adult ? "See your adult" : "Pet your grub"))
+        .accessibilityHint(model.stage == .egg ? (model.name.isEmpty ? "Name your egg" : "Tap to hatch")
+                           : (model.isMoltReady ? "Start the molt" : (model.stage == .adult ? "See your adult" : "Pet your grub")))
         .accessibilityAddTraits(.isButton)
     }
 
     private func grubLabel(sulking: Bool, inCocoon: Bool) -> String {
+        if model.stage == .egg { return model.name.isEmpty ? "Egg" : "Egg named \(model.name)" }
         if inCocoon { return "Cocoon" }
         if model.stage == .adult, let sp = model.adult { return "Adult \(sp.label.capitalized)" }
         if model.isMoltReady { return "Grub, ready to molt" }
@@ -318,6 +360,28 @@ struct BurrowHomeView: View {
         .fixedSize()
     }
 
+    // MARK: - Specimen box button
+
+    private var boxButton: some View {
+        Button { model.showBox = true } label: {
+            PixelImage(buffer: IconArt.box, cell: 4)
+                .padding(8)
+                .background(Color(ink: BurrowInk.hollow))
+                .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
+                .overlay(alignment: .topTrailing) {
+                    if !model.specimens.isEmpty {
+                        Text("\(model.specimens.count)").font(GrubFont.size(7))
+                            .foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(3).background(Color(ink: BurrowInk.amber))
+                            .offset(x: 5, y: -5)
+                    }
+                }
+        }
+        .buttonStyle(PixelPressStyle())
+        .padding(.leading, 14).padding(.top, 54)
+        .accessibilityLabel("Specimen box, \(model.specimens.count)")
+    }
+
     // MARK: - Mode bar (placing / removing decor)
 
     /// Shown over the sky, not above the HUD, so it never covers a decor slot
@@ -354,13 +418,11 @@ struct BurrowHomeView: View {
             }
             VStack(spacing: 14) {
                 if model.stage == .adult, let sp = model.adult {
-                    VStack(spacing: 6) {
-                        Text("MOLTED INTO \(sp.label)!").font(GrubFont.size(9))
-                            .foregroundColor(Color(ink: sp.color))
-                        Text(sp.blurb).font(GrubFont.size(7))
-                            .foregroundColor(Color(ink: BurrowInk.mutedText))
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 34)
+                    stageBanner("MOLTED INTO \(sp.label)!", "TAP IT TO PIN IT", ink: sp.color)
+                } else if model.stage == .egg {
+                    stageBanner("A NEW EGG!",
+                                model.name.isEmpty ? "TAP IT TO NAME IT" : "TAP TO HATCH \(model.eggCracks)/\(BurrowRules.crackTaps)",
+                                ink: GrubArt.bodyColor(tint: model.tint))
                 } else {
                     HStack(spacing: 12) {
                         statBar("BELLY", model.belly, BurrowInk.berry)
@@ -433,6 +495,14 @@ struct BurrowHomeView: View {
         }
         .buttonStyle(PixelPressStyle())
         .accessibilityLabel("\(title.capitalized), \(count)")
+    }
+
+    private func stageBanner(_ title: String, _ sub: String, ink: UInt32) -> some View {
+        VStack(spacing: 6) {
+            Text(title).font(GrubFont.size(9)).foregroundColor(Color(ink: ink))
+            Text(sub).font(GrubFont.size(7)).foregroundColor(Color(ink: BurrowInk.mutedText))
+        }
+        .frame(maxWidth: .infinity, minHeight: 34)
     }
 
     private func hudBar(_ text: String, button: String, secondary: String? = nil,
@@ -660,7 +730,8 @@ struct MoltPanelView: View {
 /// Shown after the cocoon: the adult, its name and blurb. Phase 4 adds PIN IT.
 struct RevealCardView: View {
     let species: Species
-    let close: () -> Void
+    let pin: () -> Void
+    let later: () -> Void
 
     var body: some View {
         ZStack {
@@ -673,18 +744,135 @@ struct RevealCardView: View {
                     .overlay(Rectangle().strokeBorder(Color(ink: species.color), lineWidth: 3))
                 Text(species.label).font(GrubFont.size(16)).foregroundColor(Color(ink: species.color))
                 Text(species.blurb).font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.mutedText))
-                Button(action: close) {
-                    Text("NICE!").font(GrubFont.size(10)).foregroundColor(Color(ink: BurrowInk.hollow))
-                        .padding(.horizontal, 22).padding(.vertical, 12)
-                        .background(Color(ink: BurrowInk.amber))
+                HStack(spacing: 12) {
+                    Button(action: later) {
+                        Text("LATER").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 14).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.creamDim))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                    Button(action: pin) {
+                        Text("PIN IT").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 18).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.amber))
+                    }
+                    .buttonStyle(PixelPressStyle())
                 }
-                .buttonStyle(PixelPressStyle())
             }
             .padding(24)
             .background(Color(ink: BurrowInk.hollow))
             .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 4))
             .padding(20)
-            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
+/// Every pinned adult (spec §5). Adults use their plain species colours.
+struct SpecimenBoxView: View {
+    let specimens: [Specimen]
+    let close: () -> Void
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 2)
+    private static let date: DateFormatter = { let f = DateFormatter(); f.dateFormat = "MMM d"; return f }()
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.7).ignoresSafeArea().onTapGesture(perform: close)
+            VStack(spacing: 14) {
+                Text("SPECIMENS").font(GrubFont.size(14)).foregroundColor(Color(ink: BurrowInk.cream))
+                if specimens.isEmpty {
+                    Text("NO SPECIMENS YET.\nMOLT A GRUB AND PIN IT.")
+                        .font(GrubFont.size(8)).lineSpacing(6).multilineTextAlignment(.center)
+                        .foregroundColor(Color(ink: BurrowInk.mutedText))
+                        .padding(.vertical, 30)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(Array(specimens.enumerated()), id: \.offset) { _, s in cell(s) }
+                        }
+                    }
+                    .frame(maxHeight: 420)
+                }
+                Button(action: close) {
+                    Text("CLOSE").font(GrubFont.size(10)).foregroundColor(Color(ink: BurrowInk.hollow))
+                        .padding(.horizontal, 22).padding(.vertical, 12)
+                        .background(Color(ink: BurrowInk.amber))
+                }
+                .buttonStyle(PixelPressStyle())
+            }
+            .padding(20)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 4))
+            .padding(20)
+        }
+    }
+
+    private func cell(_ s: Specimen) -> some View {
+        VStack(spacing: 6) {
+            PixelImage(buffer: SpeciesArt.adult(s.species), cell: 3)
+                .frame(width: 120, height: 92)
+                .background(Color(ink: BurrowInk.soil2))
+                .overlay(Rectangle().strokeBorder(Color(ink: s.species.color), lineWidth: 3))
+            Text(s.name).font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.cream))
+            Text(s.species.label).font(GrubFont.size(7)).foregroundColor(Color(ink: s.species.color))
+            Text(Self.date.string(from: s.pinnedAt).uppercased()).font(GrubFont.size(6))
+                .foregroundColor(Color(ink: BurrowInk.mutedText))
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Name a new egg: A–Z and spaces, 1–10 letters (spec §5).
+struct NamePromptView: View {
+    let random: () -> String
+    let submit: (String) -> Bool
+    let cancel: () -> Void
+    @State private var text: String
+    @State private var invalid = false
+
+    init(initial: String, random: @escaping () -> String,
+         submit: @escaping (String) -> Bool, cancel: @escaping () -> Void) {
+        self.random = random; self.submit = submit; self.cancel = cancel
+        _text = State(initialValue: initial)
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture(perform: cancel)
+            VStack(spacing: 16) {
+                Text("NAME YOUR EGG").font(GrubFont.size(12)).foregroundColor(Color(ink: BurrowInk.cream))
+                TextField("", text: $text)
+                    .font(GrubFont.size(14)).multilineTextAlignment(.center)
+                    .foregroundColor(Color(ink: BurrowInk.amber))
+                    .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                    .padding(12)
+                    .background(Color(ink: BurrowInk.soil4))
+                    .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
+                    .onChange(of: text) { _, new in
+                        invalid = false
+                        if new.count > BurrowRules.maxNameLength { text = String(new.prefix(BurrowRules.maxNameLength)) }
+                    }
+                    .onSubmit { invalid = !submit(text) }
+                Text(invalid ? "USE 1-10 LETTERS" : "A-Z, UP TO 10").font(GrubFont.size(6))
+                    .foregroundColor(Color(ink: invalid ? BurrowInk.berry : BurrowInk.mutedText))
+                HStack(spacing: 12) {
+                    Button { text = random() } label: {
+                        Text("RANDOM").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 14).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.creamDim))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                    Button { invalid = !submit(text) } label: {
+                        Text("OK").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 22).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.amber))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                }
+            }
+            .padding(24)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 4))
+            .padding(32)
         }
     }
 }
