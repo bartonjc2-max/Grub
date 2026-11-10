@@ -19,9 +19,11 @@ final class BurrowRulesTests: XCTestCase {
     let h: TimeInterval = 3600
     var rng = SeededRNG(42)
 
-    /// A fresh larva at t0, customised by `edit`.
+    /// A fresh *hatched* larva named GRUB at t0, customised by `edit`.
     func save(_ edit: (inout BurrowSave) -> Void = { _ in }) -> BurrowSave {
         var s = BurrowSave.fresh(now: t0)
+        s.stage = .larva
+        s.name = "GRUB"
         edit(&s)
         return s
     }
@@ -355,5 +357,103 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(BurrowRules.feed(adult, kind: nil, now: t0).events, [.refused(.wrongStage)])
         XCTAssertEqual(BurrowRules.pet(adult, now: t0).events, [.refused(.wrongStage)])
         XCTAssertEqual(advance(adult, hours: 10).save.belly, 5, "belly/joy only drain for a larva")
+    }
+
+    // MARK: collect + hatch (phase 4)
+
+    func egg(_ edit: (inout BurrowSave) -> Void = { _ in }) -> BurrowSave {
+        var s = BurrowSave.fresh(now: t0)
+        edit(&s)
+        return s
+    }
+
+    func test_valid_names() {
+        XCTAssertEqual(BurrowRules.validName("pip"), "PIP")
+        XCTAssertEqual(BurrowRules.validName("  MR BEAN "), "MR BEAN")
+        XCTAssertEqual(BurrowRules.validName("ABCDEFGHIJ"), "ABCDEFGHIJ")
+        for bad in ["", "   ", "ABCDEFGHIJK", "R2D2", "ÉCLAIR", "HI!"] {
+            XCTAssertNil(BurrowRules.validName(bad), bad)
+        }
+        XCTAssertTrue(BurrowRules.eggNames.allSatisfy { BurrowRules.validName($0) == $0 })
+    }
+
+    func test_name_the_egg() {
+        let r = BurrowRules.name(egg(), "bean", now: t0)
+        XCTAssertEqual(r.events, [.named("BEAN")])
+        XCTAssertEqual(r.save.name, "BEAN")
+        XCTAssertEqual(BurrowRules.name(egg(), "R2", now: t0).events, [.refused(.badName)])
+        XCTAssertEqual(BurrowRules.name(save(), "BEAN", now: t0).events, [.refused(.wrongStage)])
+    }
+
+    func test_three_cracks_hatch_a_named_egg() {
+        XCTAssertEqual(BurrowRules.crackEgg(egg(), now: t0).events, [.refused(.badName)], "name it first")
+        var s = egg { $0.name = "PIP" }
+        var r = BurrowRules.crackEgg(s, now: t0)
+        XCTAssertEqual(r.events, [.eggCracked(stage: 1)]); s = r.save
+        r = BurrowRules.crackEgg(s, now: t0)
+        XCTAssertEqual(r.events, [.eggCracked(stage: 2)]); s = r.save
+        r = BurrowRules.crackEgg(s, now: t0)
+        XCTAssertEqual(r.events, [.eggCracked(stage: 3), .hatched])
+        XCTAssertEqual(r.save.stage, .larva)
+        XCTAssertEqual(r.save.eggCracks, 0)
+        XCTAssertEqual(BurrowRules.crackEgg(r.save, now: t0).events, [.refused(.wrongStage)])
+    }
+
+    func test_pin_files_the_adult_and_starts_an_inheriting_egg() {
+        let adult = save {
+            $0.stage = .adult; $0.adult = .horn; $0.name = "PIP"
+            $0.belly = 2; $0.joy = 9; $0.molt = 10; $0.eaten = [.root: 4]; $0.lastMeal = .root
+            $0.bag = [.amber: 2]; $0.placed = [1: .shell]; $0.digs = 1; $0.holes = [3]
+            $0.bellyTimer = 99; $0.joyTimer = 99
+        }
+        let r = BurrowRules.pin(adult, now: t0)
+        XCTAssertEqual(r.events, [.pinned(Specimen(name: "PIP", species: .horn, pinnedAt: t0))])
+        let s = r.save
+        XCTAssertEqual(s.specimens, [Specimen(name: "PIP", species: .horn, pinnedAt: t0)])
+        XCTAssertEqual(s.stage, .egg)
+        XCTAssertEqual(s.lineage, .horn)
+        XCTAssertEqual(s.tint, .horn)
+        XCTAssertNil(s.adult)
+        XCTAssertEqual(s.name, "")
+        XCTAssertEqual([s.belly, s.joy, s.molt, s.eggCracks], [6, 6, 0, 0])
+        XCTAssertTrue(s.eaten.isEmpty)
+        XCTAssertNil(s.lastMeal)
+        XCTAssertEqual([s.bellyTimer, s.joyTimer], [0, 0])
+        // The burrow is the player's: bag, decor, digs and holes carry over.
+        XCTAssertEqual(s.bag, [.amber: 2]); XCTAssertEqual(s.placed, [1: .shell])
+        XCTAssertEqual(s.digs, 1); XCTAssertEqual(s.holes, [3])
+        XCTAssertEqual(BurrowRules.pin(save(), now: t0).events, [.refused(.wrongStage)])
+    }
+
+    func test_pinned_name_falls_back_to_grub() {
+        let r = BurrowRules.pin(save { $0.stage = .adult; $0.adult = .fuzz; $0.name = "" }, now: t0)
+        XCTAssertEqual(r.save.specimens.first?.name, "GRUB")
+    }
+
+    func test_lineage_carries_into_the_next_molt_odds() {
+        let next = BurrowRules.pin(save { $0.stage = .adult; $0.adult = .stalk }, now: t0).save
+        XCTAssertEqual(BurrowRules.odds(next)[.stalk]!, 3.0 / 9, accuracy: 1e-9)
+    }
+
+    /// The whole loop on the rules: hatch → feed to molt → molt → pin → next egg.
+    func test_full_loop() {
+        var s = egg()
+        s = BurrowRules.name(s, "PIP", now: t0).save
+        for _ in 0..<3 { s = BurrowRules.crackEgg(s, now: t0).save }
+        XCTAssertEqual(s.stage, .larva)
+        s.bag = [.berry: 20]
+        var clock = t0
+        while !BurrowRules.isMoltReady(s) {
+            clock = clock.addingTimeInterval(6 * 3600)            // let belly drop
+            s = BurrowRules.advance(s, to: clock, rng: &rng).save
+            s = BurrowRules.feed(s, kind: nil, now: clock).save
+        }
+        let molted = BurrowRules.startMolt(s, now: clock, rng: &rng)
+        guard case .molted(let sp) = molted.events.first else { return XCTFail() }
+        let pinned = BurrowRules.pin(molted.save, now: clock).save
+        XCTAssertEqual(pinned.stage, .egg)
+        XCTAssertEqual(pinned.specimens.map(\.species), [sp])
+        XCTAssertEqual(pinned.specimens.map(\.name), ["PIP"])
+        XCTAssertEqual(pinned.lineage, sp)
     }
 }

@@ -230,6 +230,67 @@ enum BurrowRules {
         return BurrowResult(save: s, events: [.molted(sp)])
     }
 
+    // MARK: Collect + hatch
+
+    static let maxNameLength = 10
+    static let crackTaps = 3
+    /// Prefills for the name prompt (all valid names, ≤ 10 letters).
+    static let eggNames = ["BEAN", "PIP", "MOSS", "TOFU", "BUTTON", "NUB", "PEBBLE", "SPROUT", "MOCHI", "DOT",
+                           "WIGGLE", "CRUMB", "NOODLE", "PUDDLE", "TATER", "BISCUIT", "GUMDROP", "PICKLE",
+                           "DUMPLING", "SOOT"]
+
+    /// Upper-cased, trimmed name if it is 1–10 characters of A–Z and inner spaces; otherwise nil.
+    static func validName(_ raw: String) -> String? {
+        let n = raw.uppercased().trimmingCharacters(in: .whitespaces)
+        guard (1...maxNameLength).contains(n.count),
+              n.allSatisfy({ ("A"..."Z").contains($0) || $0 == " " }) else { return nil }
+        return n
+    }
+
+    static func name(_ s0: BurrowSave, _ raw: String, now: Date) -> BurrowResult {
+        guard s0.stage == .egg else { return refuse(s0, .wrongStage) }
+        guard let n = validName(raw) else { return refuse(s0, .badName) }
+        var s = s0
+        s.name = n
+        return BurrowResult(save: s, events: [.named(n)])
+    }
+
+    /// One tap on a named egg; the third hatches it.
+    static func crackEgg(_ s0: BurrowSave, now: Date) -> BurrowResult {
+        guard s0.stage == .egg else { return refuse(s0, .wrongStage) }
+        guard !s0.name.isEmpty else { return refuse(s0, .badName) }
+        var s = s0
+        s.eggCracks += 1
+        var events: [BurrowEvent] = [.eggCracked(stage: s.eggCracks)]
+        if s.eggCracks >= crackTaps {
+            s.stage = .larva
+            s.eggCracks = 0
+            events.append(.hatched)
+        }
+        return BurrowResult(save: s, events: events)
+    }
+
+    /// File the revealed adult in the specimen box and start the next egg, which inherits
+    /// its colour (tint) and a +2 odds lean (lineage). The burrow (bag, decor, digs, holes,
+    /// buried finds) carries over.
+    static func pin(_ s0: BurrowSave, now: Date) -> BurrowResult {
+        guard s0.stage == .adult, let sp = s0.adult else { return refuse(s0, .wrongStage) }
+        let specimen = Specimen(name: s0.name.isEmpty ? "GRUB" : s0.name, species: sp, pinnedAt: now)
+        var s = s0
+        s.specimens.append(specimen)
+        s.stage = .egg
+        s.lineage = sp
+        s.tint = sp
+        s.adult = nil
+        s.name = ""
+        s.eggCracks = 0
+        s.belly = 6; s.joy = 6; s.molt = 0
+        s.eaten = [:]
+        s.lastMeal = nil
+        s.bellyTimer = 0; s.joyTimer = 0
+        return BurrowResult(save: s, events: [.pinned(specimen)])
+    }
+
     // MARK: Furnishing
 
     /// Put a decor find from the bag into an empty slot (0 left room, 1 right room,

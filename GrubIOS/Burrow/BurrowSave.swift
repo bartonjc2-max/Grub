@@ -30,9 +30,9 @@ struct BurrowSave: Codable, Equatable {
     var joyTimer: TimeInterval = 0
     var lastPetAt: Date
 
-    /// A brand-new game. Phases 1–3 start at `.larva` named GRUB (phase 4 switches to `.egg`).
+    /// A brand-new game: an unnamed egg (spec §5 "First launch").
     static func fresh(now: Date) -> BurrowSave {
-        BurrowSave(stage: .larva, name: "GRUB",
+        BurrowSave(stage: .egg, name: "",
                    belly: 6, joy: 6, molt: 0, digs: 3,
                    buried: [BuriedFind(spot: 0, kind: .berry),
                             BuriedFind(spot: 1, kind: .root),

@@ -11,6 +11,7 @@ final class BurrowHomeModelTests: XCTestCase {
         addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
         let store = BurrowStore(directory: dir)
         var s = BurrowSave.fresh(now: t0)
+        s.stage = .larva; s.name = "GRUB"
         s.molt = BurrowRules.moltGoal
         try store.save(s)
         let t0 = self.t0

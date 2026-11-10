@@ -10,6 +10,9 @@ final class BurrowPacingTests: XCTestCase {
     func daysToMolt(visitMinutes: [Int], seed: UInt64, maxDays: Int = 12) -> Double? {
         var rng = SeededRNG(seed)
         var s = BurrowSave.fresh(now: t0)
+        s = BurrowRules.name(s, "PIP", now: t0).save
+        for _ in 0..<BurrowRules.crackTaps { s = BurrowRules.crackEgg(s, now: t0).save }
+        precondition(s.stage == .larva)
         for day in 0..<maxDays {
             for m in visitMinutes {
                 let now = t0.addingTimeInterval(TimeInterval(day * 86_400 + m * 60))

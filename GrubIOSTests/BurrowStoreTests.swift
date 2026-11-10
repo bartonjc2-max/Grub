@@ -7,8 +7,9 @@ final class BurrowStoreTests: XCTestCase {
     func test_fresh_save_matches_spec() {
         let s = BurrowSave.fresh(now: t0)
         XCTAssertEqual(s.version, BurrowSave.currentVersion)
-        XCTAssertEqual(s.stage, .larva)
-        XCTAssertEqual(s.name, "GRUB")
+        XCTAssertEqual(s.stage, .egg)
+        XCTAssertEqual(s.name, "")
+        XCTAssertEqual(s.eggCracks, 0)
         XCTAssertEqual([s.belly, s.joy, s.molt, s.digs], [6, 6, 0, 3])
         XCTAssertEqual(s.bag, [.berry: 1])
         XCTAssertEqual(s.buried, [BuriedFind(spot: 0, kind: .berry),
