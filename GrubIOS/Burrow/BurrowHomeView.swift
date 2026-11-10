@@ -7,6 +7,7 @@ struct BurrowHomeView: View {
     @StateObject private var model = BurrowHomeModel()
     @Environment(\.displayScale) private var displayScale
     @State private var showBag = false
+    @State private var showMolt = false
     @Environment(\.scenePhase) private var scenePhase
     private let minuteTick = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
@@ -41,6 +42,24 @@ struct BurrowHomeView: View {
                     .transition(.opacity)
             }
         }
+        .overlay {
+            if showMolt {
+                MoltPanelView(molt: model.molt, odds: model.odds) { withAnimation(.easeOut(duration: 0.15)) { showMolt = false } }
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
+            if model.confirmingMolt {
+                MoltConfirmView(confirm: { model.confirmMolt() }, notYet: { model.cancelMolt() })
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
+            if let sp = model.revealing {
+                RevealCardView(species: sp) { withAnimation(.easeOut(duration: 0.15)) { model.dismissReveal() } }
+                    .transition(.opacity)
+            }
+        }
         .onReceive(minuteTick) { _ in model.tick() }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -53,6 +72,7 @@ struct BurrowHomeView: View {
         .task {
             if BurrowDebug.showBag { showBag = true }
             await runDemoIfRequested()
+            await runMoltDemoIfRequested()
         }
         #endif
     }
@@ -85,6 +105,19 @@ struct BurrowHomeView: View {
         model.tapSlot(2); await wait(3.0)               // 16.0
         model.removeSelected(); await wait(2.5)         // 19.0
         withAnimation { showBag = true }                // 21.5
+    }
+
+    /// `-burrowMoltDemo` (use with `-burrowReset -burrowMoltReady`). Seconds after the view appears:
+    /// 2.0 open the molt panel (until 5.0) · 5.0 close; grub glows · 7.0 tap → MOLT NOW? (until 9.5)
+    /// 9.5 confirm → cocoon (until 12.5) · 12.5 reveal card (until 15.5) · 15.5 dismiss; adult stands.
+    private func runMoltDemoIfRequested() async {
+        guard BurrowDebug.moltDemo else { return }
+        func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
+        await wait(2.0); withAnimation { showMolt = true }
+        await wait(3.0); withAnimation { showMolt = false }
+        await wait(2.0); model.tapGrub()
+        await wait(2.5); model.confirmMolt()
+        await wait(6.0); withAnimation { model.dismissReveal() }
     }
     #endif
 
@@ -188,26 +221,53 @@ struct BurrowHomeView: View {
     }
 
     private func grub(_ L: BurrowLayout, _ t: TimeInterval) -> some View {
-        let gx = L.chamber.midX - GrubArt.width / 2
-        let gy = L.chamber.maxY - GrubArt.height
         let sulking = model.isSulking
         let bounce = !sulking && Int(t / 0.4) % 3 == 1 ? 1 : 0
         let hopP = (t - model.hopAt) / 0.42
         let hop = (hopP >= 0 && hopP < 1) ? Int((sin(hopP * .pi) * 5).rounded()) : 0
-        let chomping = t - model.chompAt < 0.9
-        let blinking = t.truncatingRemainder(dividingBy: 3.7) < 0.14 || hop > 0
-        let sprite = chomping ? (Int(t / 0.15) % 2 == 0 ? GrubArt.chomp : GrubArt.idle)
+        let inCocoon = t - model.moltAt < BurrowHomeModel.cocoonSeconds
+        let sprite: PixelBuffer
+        if inCocoon {
+            sprite = SpeciesArt.cocoon
+        } else if model.stage == .adult, let sp = model.adult {
+            sprite = SpeciesArt.adult(sp)
+        } else {
+            let chomping = t - model.chompAt < 0.9
+            let blinking = t.truncatingRemainder(dividingBy: 3.7) < 0.14 || hop > 0
+            sprite = chomping ? (Int(t / 0.15) % 2 == 0 ? GrubArt.chomp : GrubArt.idle)
                               : (blinking ? GrubArt.blink : (sulking ? GrubArt.sulk : GrubArt.idle))
-        let origin = L.point(Double(gx), Double(gy - bounce - hop))
+        }
+        // Cocoon wobbles ±1 cell; everything else bounces/hops.
+        let wobble = inCocoon ? Int((sin(t * 9) * 1.4).rounded()) : 0
+        let gx = L.chamber.midX - sprite.width / 2 + wobble
+        let gy = L.chamber.maxY - sprite.height - (inCocoon ? 0 : bounce + hop)
+        let origin = L.point(Double(gx), Double(gy))
+        let glowing = model.isMoltReady && !inCocoon && Int(t / 0.4) % 2 == 0
 
-        return PixelImage(buffer: sprite, cell: L.cell)
-            .contentShape(Rectangle())
-            .onTapGesture { model.pet() }
-            .position(x: origin.x + CGFloat(GrubArt.width) * L.cell / 2,
-                      y: origin.y + CGFloat(GrubArt.height) * L.cell / 2)
-            .accessibilityLabel(sulking ? "Grub, hungry and sulking" : "Grub")
-            .accessibilityHint("Pet your grub")
-            .accessibilityAddTraits(.isButton)
+        return ZStack(alignment: .topLeading) {
+            if glowing {
+                ForEach(0..<4, id: \.self) { k in
+                    let d = [(-1, 0), (1, 0), (0, -1), (0, 1)][k]
+                    PixelImage(buffer: SpeciesArt.glow, cell: L.cell)
+                        .offset(x: CGFloat(d.0) * L.cell, y: CGFloat(d.1) * L.cell)
+                }
+            }
+            PixelImage(buffer: sprite, cell: L.cell)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { if !inCocoon { model.tapGrub() } }
+        .position(x: origin.x + CGFloat(sprite.width) * L.cell / 2,
+                  y: origin.y + CGFloat(sprite.height) * L.cell / 2)
+        .accessibilityLabel(grubLabel(sulking: sulking, inCocoon: inCocoon))
+        .accessibilityHint(model.isMoltReady ? "Start the molt" : (model.stage == .adult ? "See your adult" : "Pet your grub"))
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private func grubLabel(sulking: Bool, inCocoon: Bool) -> String {
+        if inCocoon { return "Cocoon" }
+        if model.stage == .adult, let sp = model.adult { return "Adult \(sp.label.capitalized)" }
+        if model.isMoltReady { return "Grub, ready to molt" }
+        return sulking ? "Grub, hungry and sulking" : "Grub"
     }
 
     @ViewBuilder
@@ -293,13 +353,28 @@ struct BurrowHomeView: View {
                     .transition(.opacity)
             }
             VStack(spacing: 14) {
-                HStack(spacing: 12) {
-                    statBar("BELLY", model.belly, BurrowInk.berry)
-                    statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
-                    statBar("MOLT", model.molt, BurrowInk.amber)
+                if model.stage == .adult, let sp = model.adult {
+                    VStack(spacing: 6) {
+                        Text("MOLTED INTO \(sp.label)!").font(GrubFont.size(9))
+                            .foregroundColor(Color(ink: sp.color))
+                        Text(sp.blurb).font(GrubFont.size(7))
+                            .foregroundColor(Color(ink: BurrowInk.mutedText))
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 34)
+                } else {
+                    HStack(spacing: 12) {
+                        statBar("BELLY", model.belly, BurrowInk.berry)
+                        statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
+                        Button { showMolt = true } label: {
+                            statBar("MOLT", model.molt, BurrowInk.amber, tag: model.isMoltReady ? "READY" : nil)
+                        }
+                        .buttonStyle(PixelPressStyle())
+                        .accessibilityHint("Show molt odds")
+                    }
                 }
                 HStack(spacing: 10) {
                     hudButton(icon: FindKind.berry.sprite, title: "FEED", count: model.foodCount) { model.feed() }
+                        .disabled(!model.canAct).opacity(model.canAct ? 1 : 0.4)
                     hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
                               hot: model.digsLeft > 0 && !model.buried.isEmpty) { model.digHint() }
                     hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
@@ -487,6 +562,129 @@ struct FindsBagView: View {
             Text(canAct ? "TAP A FIND" : " ")
                 .font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.mutedText))
                 .frame(height: 34)
+        }
+    }
+}
+
+/// "MOLT NOW?" — the only way into the irreversible molt (reasoner review, board #287).
+struct MoltConfirmView: View {
+    let confirm: () -> Void
+    let notYet: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture(perform: notYet)
+            VStack(spacing: 16) {
+                Text("MOLT NOW?").font(GrubFont.size(14)).foregroundColor(Color(ink: BurrowInk.amber))
+                Text("THIS PICKS THE ADULT.\nNO GOING BACK.")
+                    .font(GrubFont.size(8)).lineSpacing(6).multilineTextAlignment(.center)
+                    .foregroundColor(Color(ink: BurrowInk.cream))
+                HStack(spacing: 12) {
+                    Button(action: notYet) {
+                        Text("NOT YET").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 14).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.creamDim))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                    Button(action: confirm) {
+                        Text("MOLT").font(GrubFont.size(9)).foregroundColor(Color(ink: BurrowInk.hollow))
+                            .padding(.horizontal, 18).padding(.vertical, 11)
+                            .background(Color(ink: BurrowInk.amber))
+                    }
+                    .buttonStyle(PixelPressStyle())
+                }
+            }
+            .padding(24)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 4))
+            .padding(32)
+        }
+    }
+}
+
+/// Live molt odds (spec §4): six bars, one per species.
+struct MoltPanelView: View {
+    let molt: Int
+    let odds: [Species: Double]
+    let close: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture(perform: close)
+            VStack(spacing: 14) {
+                Text("MOLT").font(GrubFont.size(14)).foregroundColor(Color(ink: BurrowInk.cream))
+                Text("\(molt)/\(BurrowRules.moltGoal)").font(GrubFont.size(9))
+                    .foregroundColor(Color(ink: BurrowInk.amber))
+                VStack(spacing: 10) {
+                    ForEach(Species.allCases, id: \.self) { sp in row(sp) }
+                }
+                Text("FOOD AND DECOR SHIFT THE ODDS.\nEVERY MEAL IS +1 MOLT.")
+                    .font(GrubFont.size(7)).lineSpacing(6).multilineTextAlignment(.center)
+                    .foregroundColor(Color(ink: BurrowInk.mutedText))
+                Button(action: close) {
+                    Text("CLOSE").font(GrubFont.size(10)).foregroundColor(Color(ink: BurrowInk.hollow))
+                        .padding(.horizontal, 22).padding(.vertical, 12)
+                        .background(Color(ink: BurrowInk.amber))
+                }
+                .buttonStyle(PixelPressStyle())
+            }
+            .padding(20)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 4))
+            .padding(20)
+        }
+    }
+
+    private func row(_ sp: Species) -> some View {
+        let p = odds[sp] ?? 0
+        let filled = Int((p * 20).rounded())
+        return HStack(spacing: 8) {
+            PixelImage(buffer: SpeciesArt.adult(sp), cell: 1)
+                .frame(width: 36, height: 28)
+            Text(sp.label).font(GrubFont.size(7)).foregroundColor(Color(ink: BurrowInk.cream))
+                .frame(width: 52, alignment: .leading)
+            HStack(spacing: 1) {
+                ForEach(0..<20, id: \.self) { i in
+                    Rectangle().fill(Color(ink: i < filled ? sp.color : BurrowInk.soil1)).frame(width: 5, height: 9)
+                }
+            }
+            Text("\(Int((p * 100).rounded()))%").font(GrubFont.size(7))
+                .foregroundColor(Color(ink: BurrowInk.cream))
+                .frame(width: 36, alignment: .trailing)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(sp.label.capitalized) \(Int((p * 100).rounded())) percent")
+    }
+}
+
+/// Shown after the cocoon: the adult, its name and blurb. Phase 4 adds PIN IT.
+struct RevealCardView: View {
+    let species: Species
+    let close: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.7).ignoresSafeArea()
+            VStack(spacing: 16) {
+                Text("IT MOLTED!").font(GrubFont.size(12)).foregroundColor(Color(ink: BurrowInk.cream))
+                PixelImage(buffer: SpeciesArt.adult(species), cell: 6)
+                    .padding(14)
+                    .background(Color(ink: BurrowInk.soil2))
+                    .overlay(Rectangle().strokeBorder(Color(ink: species.color), lineWidth: 3))
+                Text(species.label).font(GrubFont.size(16)).foregroundColor(Color(ink: species.color))
+                Text(species.blurb).font(GrubFont.size(8)).foregroundColor(Color(ink: BurrowInk.mutedText))
+                Button(action: close) {
+                    Text("NICE!").font(GrubFont.size(10)).foregroundColor(Color(ink: BurrowInk.hollow))
+                        .padding(.horizontal, 22).padding(.vertical, 12)
+                        .background(Color(ink: BurrowInk.amber))
+                }
+                .buttonStyle(PixelPressStyle())
+            }
+            .padding(24)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 4))
+            .padding(20)
+            .accessibilityElement(children: .combine)
         }
     }
 }
