@@ -58,6 +58,7 @@
 		B59F527CF787B1526D5A735C /* SettingsMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */; };
 		B95F7348A29FA20802E2028D /* BurrowRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240CC8DBF8D35BF2033F78D /* BurrowRules.swift */; };
 		BA178D0D6A213A7525D63DC1 /* GameState+Foraging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D37C188B461CEADB0424CC /* GameState+Foraging.swift */; };
+		BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
 		C5575F7C983DA8C71ACFB19D /* GameState+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */; };
 		CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */; };
@@ -112,6 +113,7 @@
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
 		5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngineTests.swift; sourceTree = "<group>"; };
 		62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPrompt.swift; sourceTree = "<group>"; };
+		6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowPacingTests.swift; sourceTree = "<group>"; };
 		7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
 		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
 		7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuView.swift; sourceTree = "<group>"; };
@@ -250,6 +252,7 @@
 			children = (
 				FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */,
 				F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */,
+				6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */,
 				B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */,
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
@@ -418,6 +421,7 @@
 			files = (
 				F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */,
 				92055AAB08B109590A2FF3BF /* AtmosphereSplitTests.swift in Sources */,
+				BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */,
 				5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */,
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
