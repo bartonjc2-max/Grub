@@ -31,6 +31,7 @@ struct BurrowHomeView: View {
         .ignoresSafeArea()
         .background(Color(ink: BurrowInk.sky).ignoresSafeArea())
         .overlay(alignment: .bottom) { bottomHUD }
+        .overlay(alignment: .top) { modeBar }
         .overlay {
             if showBag {
                 FindsBagView(bag: model.bag, canAct: model.canAct, freeSlots: model.freeSlots.count,
@@ -257,6 +258,27 @@ struct BurrowHomeView: View {
         .fixedSize()
     }
 
+    // MARK: - Mode bar (placing / removing decor)
+
+    /// Shown over the sky, not above the HUD, so it never covers a decor slot
+    /// (the left side-room sits just above the HUD).
+    @ViewBuilder
+    private var modeBar: some View {
+        Group {
+            if let kind = model.placing {
+                hudBar("PLACE \(kind.label):\nTAP A GLOWING SPOT", button: "CANCEL",
+                       action: { model.cancelPlacing() })
+            } else if let slot = model.selectedSlot, let kind = model.placed[slot] {
+                hudBar("REMOVE \(kind.label)?", button: "REMOVE", secondary: "KEEP",
+                       action: { model.removeSelected() }, secondaryAction: { model.clearSelection() })
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .animation(.easeOut(duration: 0.15), value: model.placing)
+        .animation(.easeOut(duration: 0.15), value: model.selectedSlot)
+    }
+
     // MARK: - Bottom HUD (stats + actions)
 
     private var bottomHUD: some View {
@@ -269,13 +291,6 @@ struct BurrowHomeView: View {
                     .background(Color(ink: BurrowInk.hollow))
                     .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 3))
                     .transition(.opacity)
-            }
-            if let kind = model.placing {
-                hudBar("PLACE \(kind.label):\nTAP A GLOWING SPOT", button: "CANCEL",
-                       action: { model.cancelPlacing() })
-            } else if let slot = model.selectedSlot, let kind = model.placed[slot] {
-                hudBar("REMOVE \(kind.label)?", button: "REMOVE", secondary: "KEEP",
-                       action: { model.removeSelected() }, secondaryAction: { model.clearSelection() })
             }
             VStack(spacing: 14) {
                 HStack(spacing: 12) {
@@ -301,8 +316,6 @@ struct BurrowHomeView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
         .animation(.easeOut(duration: 0.15), value: model.toast)
-        .animation(.easeOut(duration: 0.15), value: model.placing)
-        .animation(.easeOut(duration: 0.15), value: model.selectedSlot)
     }
 
     private func statBar(_ label: String, _ value: Int, _ ink: UInt32, tag: String? = nil) -> some View {
@@ -442,7 +455,8 @@ struct FindsBagView: View {
             VStack(spacing: 6) {
                 PixelImage(buffer: n > 0 ? k.sprite : k.sprite.silhouette(BurrowInk.root), cell: 6)
                     .frame(width: 60, height: 60)
-                    .background(Color(ink: n > 0 ? BurrowInk.cream : BurrowInk.soil4))
+                    // Dark soil behind found items so every sprite reads (the bone is cream).
+                    .background(Color(ink: n > 0 ? BurrowInk.soil2 : BurrowInk.soil4))
                     .overlay(Rectangle().strokeBorder(
                         Color(ink: isPicked ? BurrowInk.teal : (n > 0 ? BurrowInk.amberLo : BurrowInk.soil1)),
                         lineWidth: 3))
