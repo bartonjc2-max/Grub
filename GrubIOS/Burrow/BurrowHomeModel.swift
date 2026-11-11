@@ -290,6 +290,10 @@ final class BurrowHomeModel: ObservableObject {
         case .emptySlot:          return "NOTHING THERE"
         case .notMoltReady:       return "NOT READY\nTO MOLT YET"
         case .badName:            return "USE 1-10 LETTERS"
+        case .noStrikes:          return "OUT OF STRIKES"
+        case .rootTile:           return "A ROOT.\nDIG ELSEWHERE"
+        case .alreadyBroken:      return "ALREADY DUG"
+        case .badTile:            return "CAN'T DIG THERE"
         }
     }
 

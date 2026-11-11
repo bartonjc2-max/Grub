@@ -2,7 +2,8 @@ import Foundation
 
 enum Refusal: Equatable {
     case noDigs, nothingBuriedThere, noFood, notFood, tooFull, slotTaken,
-         notDecor, notInBag, emptySlot, notMoltReady, wrongStage, badName
+         notDecor, notInBag, emptySlot, notMoltReady, wrongStage, badName,
+         noStrikes, rootTile, alreadyBroken, badTile
 }
 
 enum BurrowEvent: Equatable {
@@ -12,6 +13,9 @@ enum BurrowEvent: Equatable {
     case placed(slot: Int, kind: FindKind), removed(slot: Int, kind: FindKind)
     case moltReady
     case molted(Species), pinned(Specimen), named(String), eggCracked(stage: Int), hatched
+    case tripStarted(spot: Int, strikes: Int)
+    case tileBroken(tile: Int, heat: Heat)
+    case rockChipped(tile: Int)
     case refused(Refusal)
 }
 
