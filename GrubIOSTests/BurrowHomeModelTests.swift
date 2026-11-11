@@ -101,7 +101,7 @@ final class BurrowHomeModelTests: XCTestCase {
 
     func test_starting_a_trip_opens_the_grid_with_strikes() throws {
         let (m, _) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         XCTAssertEqual(m.trip?.spot, 0)
         XCTAssertEqual(m.trip?.strikesLeft, 6, "clay")
         XCTAssertEqual(m.digsLeft, 2)
@@ -109,7 +109,7 @@ final class BurrowHomeModelTests: XCTestCase {
 
     func test_a_strike_is_written_to_disk_before_the_trip_ends() throws {
         let (m, store) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         m.strike(tile: 11)
         XCTAssertEqual(m.trip?.strikesLeft, 5)
         // The whole point of persisting per strike: a kill mid-trip keeps the progress.
@@ -118,7 +118,7 @@ final class BurrowHomeModelTests: XCTestCase {
 
     func test_a_refused_strike_costs_nothing() throws {
         let (m, _) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         m.strike(tile: 11)          // soil, breaks
         m.strike(tile: 11)          // already broken → refused
         m.strike(tile: 0)           // root → refused
@@ -127,16 +127,16 @@ final class BurrowHomeModelTests: XCTestCase {
 
     func test_running_out_ends_the_trip_and_keeps_progress() throws {
         let (m, _) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         for t in [1, 2, 3, 4, 5, 6] { m.strike(tile: t) }   // 6 soil tiles, none is the find
-        XCTAssertNil(m.trip, "out of strikes")
+        XCTAssertEqual(m.trip?.phase, .zoomingOut, "it walks home rather than vanishing")
         XCTAssertEqual(m.save.buried.first?.tiles.filter { $0 == .broken }.count, 6,
                        "the holes stay dug")
     }
 
     func test_leaving_keeps_progress_too() throws {
         let (m, _) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         m.strike(tile: 11)
         m.leaveTrip()
         XCTAssertNil(m.trip)
@@ -159,10 +159,63 @@ final class BurrowHomeModelTests: XCTestCase {
 
     func test_finding_the_item_ends_the_trip() throws {
         let (m, _) = try larvaModel()
-        m.startTrip(spot: 0)
+        m.startTrip(spot: 0); m.advanceTo(.digging)
         m.strike(tile: 12)
-        XCTAssertNil(m.trip)
+        XCTAssertEqual(m.trip?.phase, .zoomingOut)
         XCTAssertEqual(m.bag[.berry], 2)
         XCTAssertTrue(m.save.buried.isEmpty)
+    }
+
+
+    // MARK: trip phases
+
+    /// A fresh egg over the same rigged spot-0 grid, to check the egg skips the crawl.
+    func eggModelWithRiggedSpot() throws -> BurrowHomeModel {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-egg-\(UUID().uuidString)")
+        addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
+        let store = BurrowStore(directory: dir)
+        var s = BurrowSave.fresh(now: t0)
+        var tiles = [DigTile](repeating: .soil, count: 25)
+        tiles[0] = .root
+        s.buried = [BuriedFind(spot: 0, kind: .berry, condition: nil, findTile: 12, tiles: tiles)]
+        try store.save(s)
+        let t0 = self.t0
+        return BurrowHomeModel(store: store, clock: { t0 })
+    }
+
+    func test_a_larva_crawls_out_first() throws {
+        let (m, _) = try larvaModel()
+        m.startTrip(spot: 0)
+        XCTAssertEqual(m.trip?.phase, .crawlingOut)
+    }
+
+    func test_an_egg_skips_the_crawl() throws {
+        let m = try eggModelWithRiggedSpot()
+        m.startTrip(spot: 0)
+        XCTAssertEqual(m.trip?.phase, .zoomingIn, "an egg can't travel")
+    }
+
+    func test_phases_run_in_order_and_skip_jumps_one_at_a_time() throws {
+        let (m, _) = try larvaModel()
+        m.startTrip(spot: 0)
+        m.skip(); XCTAssertEqual(m.trip?.phase, .zoomingIn)
+        m.skip(); XCTAssertEqual(m.trip?.phase, .digging)
+        m.skip(); XCTAssertEqual(m.trip?.phase, .digging, "skip does nothing while digging")
+    }
+
+    func test_finding_the_item_returns_home_rather_than_vanishing() throws {
+        let (m, _) = try larvaModel()
+        m.startTrip(spot: 0); m.advanceTo(.digging)
+        m.strike(tile: 12)                      // the find
+        XCTAssertEqual(m.trip?.phase, .zoomingOut, "the trip plays out backwards")
+        m.skip(); XCTAssertEqual(m.trip?.phase, .crawlingHome)
+        m.skip(); XCTAssertNil(m.trip, "home again")
+    }
+
+    func test_no_striking_before_the_grid_is_up() throws {
+        let (m, _) = try larvaModel()
+        m.startTrip(spot: 0)                    // still crawling out
+        m.strike(tile: 11)
+        XCTAssertEqual(m.save.buried.first?.tiles[11], .soil, "the shovel waits for the grid")
     }
 }

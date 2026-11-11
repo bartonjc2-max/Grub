@@ -95,7 +95,7 @@ extension BurrowLayout {
 // MARK: - Backdrop (sky, surface, soil, tunnels, decor)
 
 enum BurrowArt {
-    static func backdrop(_ L: BurrowLayout, holes: [Int]) -> PixelBuffer {
+    static func backdrop(_ L: BurrowLayout, holes: [Int], spurs: [Int] = []) -> PixelBuffer {
         var b = PixelBuffer(width: L.cols, height: L.rows)
         let X = L.x0, S = L.surface
         func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) { b.fill(X + x, y, w, h, c) }
@@ -166,6 +166,24 @@ enum BurrowArt {
         chamber(L.sideL, bevel: 1)
 
         // Rooms start empty: decor is placed by the player (BurrowLayout.decorSlot).
+
+        // The channel the grub dug on its way to a spot it has visited. Capped at 8 cells:
+        // some spots sit 14 rows from their nearest tunnel, and an uncapped spur would run
+        // all the way up into the title.
+        for spot in Set(spurs) where BurrowSpots.spots.indices.contains(spot) {
+            let route = BurrowWaypoints.path(to: spot, L)
+            guard route.count >= 2 else { continue }
+            let end = route[route.count - 1], from = route[route.count - 2]
+            let dx = end.x - from.x, dy = end.y - from.y
+            let length = min(8, abs(dx) + abs(dy))
+            guard length > 0 else { continue }
+            for step in 0...length {
+                let t = Double(step) / Double(length)
+                let x = end.x - Int((Double(dx) * (1 - t)).rounded())
+                let y = end.y - Int((Double(dy) * (1 - t)).rounded())
+                r(x - 1, y - 1, 2, 2, I.hollow)
+            }
+        }
 
         // Pockets left by digging.
         for spot in holes where BurrowSpots.spots.indices.contains(spot) {
@@ -422,16 +440,19 @@ enum DigArt {
                                              "kkkkkkkkk"],
                                        palette: ["k": BurrowInk.hollow, "W": BurrowInk.amberLo,
                                                  "A": BurrowInk.amber])
-        case .cold: return PixelBuffer(art: ["kkkkkkkkk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kCCCCCCCk",
-                                             "kkkkkkkkk"],
-                                       palette: ["k": BurrowInk.hollow, "C": BurrowInk.soil4])
+        // An empty pit. The field is the darkest ink in the palette with a lip around it:
+        // filled with `soil4` it was within a shade of untouched soil, and a dug tile that
+        // reads as undug is the one thing this grid cannot afford.
+        case .cold: return PixelBuffer(art: ["RRRRRRRRR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RkkkkkkkR",
+                                             "RRRRRRRRR"],
+                                       palette: ["k": BurrowInk.hollow, "R": BurrowInk.soil4])
         }
     }
     static let brokenHot = broken(.hot)

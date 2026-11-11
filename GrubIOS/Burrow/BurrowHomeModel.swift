@@ -12,10 +12,15 @@ struct BurrowFX: Identifiable {
     let life: TimeInterval
 }
 
-/// A dig in progress: which spot, and how many strikes are left in it.
+/// Where a trip has got to. The two zoom phases and the two crawls exist so the view can
+/// animate between the burrow and the grid; `digging` is the only one the player drives.
+enum TripPhase: Equatable { case crawlingOut, zoomingIn, digging, zoomingOut, crawlingHome }
+
+/// A dig in progress: which spot, how many strikes are left, and where it has got to.
 struct DigTrip: Equatable {
     let spot: Int
     var strikesLeft: Int
+    var phase: TripPhase
 }
 
 /// View model for the burrow home: owns the save, runs `BurrowRules`, turns events
@@ -94,6 +99,11 @@ final class BurrowHomeModel: ObservableObject {
     var bag: [FindKind: Int] { save.bag }
     var buried: [BuriedFind] { save.buried }
     var holes: [Int] { save.holes }
+    /// Spots the burrow shows a dug channel to: everything already emptied, plus anything the
+    /// grub has started on.
+    var spurs: [Int] { save.holes + save.buried.filter(\.visited).map(\.spot) }
+    /// True while the grub is out of its chamber, so the burrow doesn't draw it in two places.
+    var isAwayDigging: Bool { trip != nil }
     var foodCount: Int { save.bag.filter { $0.key.isFood }.values.reduce(0, +) }
     var findCount: Int { save.bag.values.reduce(0, +) }
     var isHappy: Bool { BurrowRules.isHappy(save) }
@@ -221,25 +231,52 @@ final class BurrowHomeModel: ObservableObject {
         guard canStartTrip else { return }
         let r = BurrowRules.startTrip(save, spot: spot)
         apply(r)
-        for case .tripStarted(let s, let n) in r.events { trip = DigTrip(spot: s, strikesLeft: n) }
+        // An egg can't travel, so it skips straight to the zoom.
+        let first: TripPhase = save.stage == .egg ? .zoomingIn : .crawlingOut
+        for case .tripStarted(let s, let n) in r.events {
+            trip = DigTrip(spot: s, strikesLeft: n, phase: first)
+        }
+    }
+
+    /// Step to the next phase. A no-op during `.digging`, which only ends with a strike or
+    /// BACK, and during `.crawlingHome`, which ends the trip.
+    func skip() {
+        guard let t = trip else { return }
+        switch t.phase {
+        case .crawlingOut:  advanceTo(.zoomingIn)
+        case .zoomingIn:    advanceTo(.digging)
+        case .digging:      break
+        case .zoomingOut:   advanceTo(.crawlingHome)
+        case .crawlingHome: trip = nil
+        }
+    }
+
+    /// Used by the view's timers and by the tests, so neither has to reach into `trip`.
+    func advanceTo(_ phase: TripPhase) {
+        guard trip != nil else { return }
+        if phase == .crawlingHome, trip?.phase == .crawlingHome { trip = nil; return }
+        trip?.phase = phase
     }
 
     func strike(tile: Int) {
-        guard var t = trip else { return }
+        guard var t = trip, t.phase == .digging else { return }
         let r = BurrowRules.strike(save, spot: t.spot, tile: tile, strikesLeft: t.strikesLeft)
         apply(r)                 // `apply` already persists when the save changed
         if r.events.contains(where: { if case .refused = $0 { return true }; return false }) { return }
         t.strikesLeft -= 1
         trip = t
+        // Either way the trip plays out backwards — zoom out, then crawl home. Teleporting
+        // the grub back into its chamber was the thing this phase machine exists to prevent.
         if r.events.contains(where: { if case .dugUp = $0 { return true }; return false }) {
-            trip = nil
+            advanceTo(.zoomingOut)
         } else if t.strikesLeft == 0 {
             say(Self.message(.noStrikes))
-            trip = nil
+            advanceTo(.zoomingOut)
         }
     }
 
-    /// Leaving early is the same as running out: the save already holds every broken tile.
+    /// BACK, and going to the background, end the trip at once — nobody should be made to
+    /// watch the walk home. The save already holds every broken tile.
     func leaveTrip() { trip = nil }
 
     // MARK: Events → effects

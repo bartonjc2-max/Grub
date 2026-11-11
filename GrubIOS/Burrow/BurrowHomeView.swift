@@ -15,7 +15,7 @@ struct BurrowHomeView: View {
         GeometryReader { geo in
             let L = BurrowLayout(size: geo.size, displayScale: displayScale)
             ZStack(alignment: .topLeading) {
-                BurrowBackdrop(layout: L, holes: model.holes).equatable()
+                BurrowBackdrop(layout: L, holes: model.holes, spurs: model.spurs).equatable()
                 titleBlock(L, width: geo.size.width)
                 TimelineView(.animation(minimumInterval: 1.0 / 24)) { tl in
                     livingLayer(L, t: tl.date.timeIntervalSinceReferenceDate)
@@ -75,15 +75,13 @@ struct BurrowHomeView: View {
             // to swallow taps: the HUD's DIG and FINDS buttons and the grub's own tap gesture
             // are not gated on `canStartTrip`, so without it they stay live under the grid.
             if let trip = model.trip, let find = model.buried.first(where: { $0.spot == trip.spot }) {
-                ZStack {
-                    Color(ink: BurrowInk.hollow).opacity(0.95).ignoresSafeArea().onTapGesture {}
-                    GeometryReader { geo in
-                        DigGridView(model: model, trip: trip, find: find,
-                                    layout: BurrowLayout(size: geo.size, displayScale: displayScale),
-                                    width: geo.size.width)
-                            .frame(width: geo.size.width, height: geo.size.height)
-                    }
+                GeometryReader { geo in
+                    DigTripView(model: model, trip: trip, find: find,
+                                layout: BurrowLayout(size: geo.size, displayScale: displayScale),
+                                size: geo.size)
+                        .frame(width: geo.size.width, height: geo.size.height)
                 }
+                .ignoresSafeArea()
                 .transition(.opacity)
             }
         }
@@ -241,7 +239,7 @@ struct BurrowHomeView: View {
             ForEach(model.buried, id: \.spot) { f in
                 marker(spot: f.spot, L, t)
             }
-            grub(L, t)
+            if !model.isAwayDigging { grub(L, t) }
             ForEach(model.fx) { e in effect(e, L, t) }
         }
     }
@@ -591,9 +589,13 @@ struct BurrowHomeView: View {
 struct BurrowBackdrop: View, Equatable {
     let layout: BurrowLayout
     let holes: [Int]
+    /// Spots the grub has visited. A stored property, not a computed one: the view is
+    /// `.equatable()` over what it stores, so a backdrop input kept anywhere else would not
+    /// redraw until the layout happened to change.
+    let spurs: [Int]
 
     var body: some View {
-        PixelImage(buffer: BurrowArt.backdrop(layout, holes: holes), cell: layout.cell)
+        PixelImage(buffer: BurrowArt.backdrop(layout, holes: holes, spurs: spurs), cell: layout.cell)
             .offset(x: layout.originX)
             .accessibilityHidden(true)
     }

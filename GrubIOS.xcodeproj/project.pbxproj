@@ -45,6 +45,7 @@
 		71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F70E2BDA0D9DA2712224C1 /* ContentView.swift */; };
 		72785046F4FBC1B28A6BD372 /* AnalyticsEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */; };
 		73BB1B57B3C1D26BE2F48F00 /* SpriteRenderer+Grub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D7E3E1041A4085AF82D47E7 /* SpriteRenderer+Grub.swift */; };
+		743EDDC080C9D462DDBC40BC /* DigTripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5125CE9C9E70AF44692F763 /* DigTripView.swift */; };
 		74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */; };
 		76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */; };
 		78330876D62DF49C7C35CF0C /* GameState+Crafting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCBE326714FB960EC58256D /* GameState+Crafting.swift */; };
@@ -189,6 +190,7 @@
 		EF92F399DDCDE5AA902B3856 /* GrubPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubPalette.swift; sourceTree = "<group>"; };
 		F27A794EA05BAF01994C624E /* GrubIOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GrubIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F34F1663B37A9209A1EE393F /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
+		F5125CE9C9E70AF44692F763 /* DigTripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigTripView.swift; sourceTree = "<group>"; };
 		F61A20FF48FFF925B1CD5722 /* GrubDeepHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubDeepHomeView.swift; sourceTree = "<group>"; };
 		F6D70C20A07ADDEB9A2DF707 /* NotificationSchedulerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulerTests.swift; sourceTree = "<group>"; };
 		F9B31F620193B4824A249F4E /* AtmosphereSplitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtmosphereSplitTests.swift; sourceTree = "<group>"; };
@@ -360,6 +362,7 @@
 				8ABAB4CD94FDF5235A9638A9 /* DigGridView.swift */,
 				3A21567E7CFE6D0586E6809A /* DigRules.swift */,
 				5EDC48EFD68280D254DF25CF /* DigSolver.swift */,
+				F5125CE9C9E70AF44692F763 /* DigTripView.swift */,
 				3BD133BAC810EAB917422709 /* DigTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
 				DB962D590FD15802C31114E4 /* SpeciesArt.swift */,
@@ -529,6 +532,7 @@
 				597483B7089AEDCF149AD340 /* DigGridView.swift in Sources */,
 				1AB1E9A1F48170855A0D9ECD /* DigRules.swift in Sources */,
 				FC46E0629DD6C9795403FDCB /* DigSolver.swift in Sources */,
+				743EDDC080C9D462DDBC40BC /* DigTripView.swift in Sources */,
 				E51AFE2B06B1C887902F1DC0 /* DigTypes.swift in Sources */,
 				04265678D21CA3F2009AE95B /* ExpeditionOverlay.swift in Sources */,
 				A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */,
