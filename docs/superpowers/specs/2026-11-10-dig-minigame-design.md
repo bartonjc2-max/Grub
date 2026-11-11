@@ -33,14 +33,13 @@ spec says otherwise (the dig itself, the happy bonus roll, spot markers, the pac
   `strikes = max(2, soilStrikes + conditionStrikes + moodStrikes)`
 
   - soilStrikes: loose 6 · clay 5 · deep 4
-  - conditionStrikes: wet +2 · rooty −1 · otherwise 0
+  - conditionStrikes: wet +2 · otherwise 0
   - moodStrikes: `isSulking(s) ? −1 : isHappy(s) ? +2 : 0`, using the existing helpers.
     Sulking wins when both hold (belly 0 with joy still high). Both helpers require
     `.larva`, so **an egg always gets +0** — stats don't exist yet at that stage.
 - Mood is read once, when the trip starts, and is not recomputed if `advance` runs mid-trip.
-- The worst case is exactly 2 — deep (4) + rooty (−1) + sulking (−1) — so `max(2, …)` never
-  actually clamps today. It stays as a guard for future tuning; the test asserts the sum, not
-  the clamp.
+- The worst case is 3 — deep (4) + sulking (−1) — so `max(2, …)` never actually clamps
+  today. It stays as a guard for future tuning; the test asserts the sum, not the clamp.
 
 ### The grid
 
@@ -121,7 +120,19 @@ Rolled when the find is buried: none 40 % · wet 15 % · rocky 15 % · rooty 15 
 |---|---|
 | **wet** | +2 strikes; warm tiles show as cold |
 | **rocky** | +3 rocks (on top of the layer's). The cost is that the find may hide under one. |
-| **rooty** | +3 roots (on top of the layer's), and −1 strike. Roots can never hide the find, so without the strike penalty extra roots would *help* by shrinking the search. |
+| **rooty** | +3 roots (on top of the layer's). Roots can never hide the find, so the extra roots shrink the search — rooty is the gentle condition, and that is the point: not every twist should hurt. |
+
+> **Balance note, 2026-11-10.** Rooty originally also cost a strike, on the theory that extra
+> roots would otherwise *help*. Measured over 400 seeded grids per combination
+> (`DigBalanceTests`), that made deep + rooty a 3-strike search of 25 tiles — winnable about
+> **50 %** of the time, against 82–100 % everywhere else. Cutting the extra roots from 3 to 2
+> changed nothing (still 50 %): the binding constraint was the strike count, not the clutter.
+> Dropping the penalty takes deep + rooty to **95 %** and clay + rooty from 82 % to 96 %,
+> without touching the depth gradient. Jesse chose this over giving deep soil a 5th strike.
+>
+> The same pass showed wet at 68–74 %, but that is the measuring instrument, not the game:
+> `DigSolver` deliberately ignores wetness when scoring its next move (simplification 1), so it
+> plays wet spots badly. A wet-aware greedy player scores **86–100 %**. Wet is left alone.
 | **glinting** | one **eligible** tile at d = 2 starts broken (a free warm clue), where eligible means unbroken, not a root and not the find tile. If none is at d = 2, use one at d = 1. If it lands on a rock, the rock breaks fully rather than losing one hit point. |
 
 ### Grid generation

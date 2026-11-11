@@ -8,12 +8,10 @@ extension BurrowRules {
     static func tripStrikes(_ s: BurrowSave, spot: Int) -> Int {
         let layer = BurrowSpots.layer(spot)
         let condition = s.buried.first { $0.spot == spot }?.condition
-        let fromCondition: Int
-        switch condition {
-        case .wet:   fromCondition = 2
-        case .rooty: fromCondition = -1
-        default:     fromCondition = 0
-        }
+        // Rooty costs tiles, not strikes. It used to also take a strike, which made deep
+        // rooty spots a 3-strike search of 25 tiles — winnable about half the time. Measured
+        // 2026-11-10 (DigBalanceTests); Jesse chose dropping the penalty over loosening deep.
+        let fromCondition = condition == .wet ? 2 : 0
         // `isHappy` / `isSulking` are both larva-only, so an egg gets 0. Sulking wins when
         // both hold — a starving grub digs badly however cheerful it is.
         let fromMood = isSulking(s) ? -1 : isHappy(s) ? 2 : 0

@@ -26,9 +26,9 @@ final class DigRulesTests: XCTestCase {
         XCTAssertEqual(strikes(save(spot: 3), spot: 3), 4, "deep")
     }
 
-    func test_wet_adds_two_and_rooty_takes_one() {
+    func test_only_wet_changes_the_strike_count() {
         XCTAssertEqual(strikes(save(spot: 0, condition: .wet)), 7)
-        XCTAssertEqual(strikes(save(spot: 0, condition: .rooty)), 4)
+        XCTAssertEqual(strikes(save(spot: 0, condition: .rooty)), 5, "rooty costs tiles, not strikes")
         XCTAssertEqual(strikes(save(spot: 0, condition: .rocky)), 5, "rocky costs tiles, not strikes")
     }
 
@@ -48,9 +48,9 @@ final class DigRulesTests: XCTestCase {
         XCTAssertEqual(strikes(s), 5, "stats are larva-only")
     }
 
-    func test_the_worst_case_is_two_strikes() {
-        XCTAssertEqual(strikes(save(spot: 3, belly: 0, condition: .rooty), spot: 3), 2,
-                       "deep 4, rooty -1, sulking -1")
+    func test_the_worst_case_is_three_strikes() {
+        XCTAssertEqual(strikes(save(spot: 3, belly: 0, condition: .rooty), spot: 3), 3,
+                       "deep 4, sulking -1; rooty no longer costs a strike")
     }
 
     func test_a_trip_spends_a_charge_and_marks_the_spot_visited() {

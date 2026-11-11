@@ -84,6 +84,7 @@
 		D8F74F2D63E7FC0835541ACB /* SpriteRenderer+GrubPNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB9228BA384667745120EAD /* SpriteRenderer+GrubPNG.swift */; };
 		E14039E8EE217AFB2BD12D61 /* InventoryOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */; };
 		E51AFE2B06B1C887902F1DC0 /* DigTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD133BAC810EAB917422709 /* DigTypes.swift */; };
+		EB652A10979879DDF1B52D0D /* DigBalanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99CDF973F525CC3FA590AC55 /* DigBalanceTests.swift */; };
 		ED49DEB62AE1E28428327095 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB530A92485B49730BC1516A /* RootView.swift */; };
 		F2285A55AE14FD59515FACC9 /* BurrowHomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */; };
 		F36E502CC2963502AED8F155 /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */; };
@@ -148,6 +149,7 @@
 		8D7E3E1041A4085AF82D47E7 /* SpriteRenderer+Grub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpriteRenderer+Grub.swift"; sourceTree = "<group>"; };
 		972A0B0A4CAAB650F0FF64C1 /* InventoryOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryOverlay.swift; sourceTree = "<group>"; };
 		975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowArt.swift; sourceTree = "<group>"; };
+		99CDF973F525CC3FA590AC55 /* DigBalanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigBalanceTests.swift; sourceTree = "<group>"; };
 		9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		9B37E2889C5A5BD957560E8A /* NotificationCenterProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCenterProtocol.swift; sourceTree = "<group>"; };
 		9CAB23882DE94A37931A500A /* GameState+Burrow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Burrow.swift"; sourceTree = "<group>"; };
@@ -289,6 +291,7 @@
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
+				99CDF973F525CC3FA590AC55 /* DigBalanceTests.swift */,
 				E46E0D0B69781DC107850A50 /* DigGenTests.swift */,
 				8D2E7AA5019C84529F209495 /* DigRulesTests.swift */,
 				DB2F35A1C1AEE528BEE16D90 /* DigSolverTests.swift */,
@@ -472,6 +475,7 @@
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
+				EB652A10979879DDF1B52D0D /* DigBalanceTests.swift in Sources */,
 				443ED31D45100314E7A84782 /* DigGenTests.swift in Sources */,
 				5237721EAE2660F520E34C0A /* DigRulesTests.swift in Sources */,
 				C7AACC45FC80E078E141DD1C /* DigSolverTests.swift in Sources */,
