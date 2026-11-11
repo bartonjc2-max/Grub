@@ -18,6 +18,7 @@
 		3560DDEA5030D25394C51D3C /* RatingPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */; };
 		3569DE5FADC5471CE5277831 /* PixelIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86780CCC317ED4F2D00CA9 /* PixelIcon.swift */; };
 		357AB0697EA29F96F0C05F9B /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B23E728B8A451AF8CC5BE6A /* AnalyticsService.swift */; };
+		3E39E10C5CA8FA9F92D8EC4B /* BurrowRNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8962ABAC9B78E853C86DD70F /* BurrowRNG.swift */; };
 		40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F4544FE870E40E92958514 /* DescentControlsView.swift */; };
 		40EBA09AD775B8CBA71B19B0 /* RetentionTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C560F450949A013DE2033C78 /* RetentionTracker.swift */; };
 		43EED2590935E87C7BE594D8 /* GameSelectorOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */; };
@@ -125,6 +126,7 @@
 		7B344F0C758CA7A6CCA5BCB4 /* SettingsMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMenuView.swift; sourceTree = "<group>"; };
 		7BCBE326714FB960EC58256D /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
 		82B41213D1E3F352FB708FFE /* BurrowArtTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowArtTests.swift; sourceTree = "<group>"; };
+		8962ABAC9B78E853C86DD70F /* BurrowRNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowRNG.swift; sourceTree = "<group>"; };
 		8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		8BEFF8AB22606442D65D1965 /* GrubFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubFont.swift; sourceTree = "<group>"; };
 		8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowOverlay.swift; sourceTree = "<group>"; };
@@ -315,6 +317,7 @@
 				975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */,
 				0DCB65076D97AAD5AE166981 /* BurrowHomeModel.swift */,
 				CBA41D753C6F6643EF4A68E7 /* BurrowHomeView.swift */,
+				8962ABAC9B78E853C86DD70F /* BurrowRNG.swift */,
 				B240CC8DBF8D35BF2033F78D /* BurrowRules.swift */,
 				BD61054EC068F65E69CB0B2C /* BurrowSave.swift */,
 				4A012B7067909685AAA6CF93 /* BurrowSpots.swift */,
@@ -464,6 +467,7 @@
 				F2285A55AE14FD59515FACC9 /* BurrowHomeModel.swift in Sources */,
 				8E931426A3D6D871931E3DE8 /* BurrowHomeView.swift in Sources */,
 				74DCC574D08DB230C8963E6E /* BurrowOverlay.swift in Sources */,
+				3E39E10C5CA8FA9F92D8EC4B /* BurrowRNG.swift in Sources */,
 				B95F7348A29FA20802E2028D /* BurrowRules.swift in Sources */,
 				1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */,
 				CE73E48FCBAFD9A7CCB22067 /* BurrowSpots.swift in Sources */,

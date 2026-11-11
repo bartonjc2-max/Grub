@@ -8,7 +8,7 @@ final class BurrowPacingTests: XCTestCase {
     let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
 
     func daysToMolt(visitMinutes: [Int], seed: UInt64, maxDays: Int = 12) -> Double? {
-        var rng = SeededRNG(seed)
+        var rng = BurrowRNG(seed: seed)
         var s = BurrowSave.fresh(now: t0)
         s = BurrowRules.name(s, "PIP", now: t0).save
         for _ in 0..<BurrowRules.crackTaps { s = BurrowRules.crackEgg(s, now: t0).save }

@@ -1,23 +1,10 @@
 import XCTest
 @testable import GrubIOS
 
-/// Deterministic RNG for tests (SplitMix64).
-struct SeededRNG: RandomNumberGenerator {
-    var state: UInt64
-    init(_ seed: UInt64) { state = seed }
-    mutating func next() -> UInt64 {
-        state &+= 0x9E37_79B9_7F4A_7C15
-        var z = state
-        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
-        return z ^ (z >> 31)
-    }
-}
-
 final class BurrowRulesTests: XCTestCase {
     let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
     let h: TimeInterval = 3600
-    var rng = SeededRNG(42)
+    var rng = BurrowRNG(seed: 42)
 
     /// A fresh *hatched* larva named GRUB at t0, customised by `edit`.
     func save(_ edit: (inout BurrowSave) -> Void = { _ in }) -> BurrowSave {
@@ -112,7 +99,7 @@ final class BurrowRulesTests: XCTestCase {
     func test_catch_up_is_capped_at_72h() {
         let long = save { $0.digs = 0; $0.lastTick = self.t0.addingTimeInterval(-30 * 86_400) }
         let capped = save { $0.digs = 0; $0.lastTick = self.t0.addingTimeInterval(-72 * self.h) }
-        var r1 = SeededRNG(7), r2 = SeededRNG(7)
+        var r1 = BurrowRNG(seed: 7), r2 = BurrowRNG(seed: 7)
         XCTAssertEqual(BurrowRules.advance(long, to: t0, rng: &r1).save,
                        BurrowRules.advance(capped, to: t0, rng: &r2).save)
     }
