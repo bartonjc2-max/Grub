@@ -443,6 +443,7 @@ and a condition badge appearing after a visit.
 
 ## Out of scope (for now)
 
-- Bonus items hidden in other tiles, and rewards for strikes left over.
+- Bonus items hidden in other tiles. (Rewards for strikes left over moved *in* scope on
+  2026-11-11 and shipped — see "The clean dig" above.)
 - More than 8 spots, or spots that move.
 - Sound effects. The audio MCPs aren't connected.
