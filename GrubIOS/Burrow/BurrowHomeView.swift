@@ -6,8 +6,6 @@ import SwiftUI
 struct BurrowHomeView: View {
     @StateObject private var model = BurrowHomeModel()
     @Environment(\.displayScale) private var displayScale
-    @State private var showBag = false
-    @State private var showMolt = false
     @Environment(\.scenePhase) private var scenePhase
     private let minuteTick = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
@@ -35,7 +33,7 @@ struct BurrowHomeView: View {
         .overlay(alignment: .topLeading) { boxButton }
         .overlay(alignment: .top) { modeBar }
         .overlay {
-            if showBag {
+            if model.showBag {
                 FindsBagView(bag: model.bag, canAct: model.canAct, freeSlots: model.freeSlots.count,
                              onEat: { k in closeBag(); model.feed(kind: k) },
                              onPlace: { k in closeBag(); model.startPlacing(k) },
@@ -44,8 +42,8 @@ struct BurrowHomeView: View {
             }
         }
         .overlay {
-            if showMolt {
-                MoltPanelView(molt: model.molt, odds: model.odds) { withAnimation(.easeOut(duration: 0.15)) { showMolt = false } }
+            if model.showMolt {
+                MoltPanelView(molt: model.molt, odds: model.odds) { withAnimation(.easeOut(duration: 0.15)) { model.showMolt = false } }
                     .transition(.opacity)
             }
         }
@@ -82,13 +80,13 @@ struct BurrowHomeView: View {
         .onChange(of: scenePhase) { _, phase in
             switch phase {
             case .active: model.tick()
-            case .background: model.persist()
+            case .background: model.leaveTrip(); model.persist()
             default: break
             }
         }
         #if DEBUG
         .task {
-            if BurrowDebug.showBag { showBag = true }
+            if BurrowDebug.showBag { model.showBag = true }
             await runDemoIfRequested()
             await runMoltDemoIfRequested()
             await runLoopDemoIfRequested()
@@ -101,7 +99,7 @@ struct BurrowHomeView: View {
         model.layout = L
     }
 
-    private func closeBag() { withAnimation(.easeOut(duration: 0.15)) { showBag = false } }
+    private func closeBag() { withAnimation(.easeOut(duration: 0.15)) { model.showBag = false } }
 
     #if DEBUG
     /// `-burrowDemo` (use with `-burrowReset`). Times are seconds after the view appears:
@@ -123,7 +121,7 @@ struct BurrowHomeView: View {
         model.pet(); await wait(1.0)                    // 15.0
         model.tapSlot(2); await wait(3.0)               // 16.0
         model.removeSelected(); await wait(2.5)         // 19.0
-        withAnimation { showBag = true }                // 21.5
+        withAnimation { model.showBag = true }          // 21.5
     }
 
     /// `-burrowMoltDemo` (use with `-burrowReset -burrowMoltReady`). Seconds after the view appears:
@@ -149,8 +147,8 @@ struct BurrowHomeView: View {
     private func runMoltDemoIfRequested() async {
         guard BurrowDebug.moltDemo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
-        await wait(2.0); withAnimation { showMolt = true }
-        await wait(3.0); withAnimation { showMolt = false }
+        await wait(2.0); withAnimation { model.showMolt = true }
+        await wait(3.0); withAnimation { model.showMolt = false }
         await wait(2.0); model.tapGrub()
         await wait(2.5); model.confirmMolt()
         await wait(6.0); withAnimation { model.dismissReveal() }
@@ -427,7 +425,7 @@ struct BurrowHomeView: View {
                     HStack(spacing: 12) {
                         statBar("BELLY", model.belly, BurrowInk.berry)
                         statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
-                        Button { showMolt = true } label: {
+                        Button { model.showMolt = true } label: {
                             statBar("MOLT", model.molt, BurrowInk.amber, tag: model.isMoltReady ? "READY" : nil)
                         }
                         .buttonStyle(PixelPressStyle())
@@ -442,7 +440,7 @@ struct BurrowHomeView: View {
                     hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
                         model.cancelPlacing()
                         model.clearSelection()
-                        withAnimation(.easeOut(duration: 0.15)) { showBag = true }
+                        withAnimation(.easeOut(duration: 0.15)) { model.showBag = true }
                     }
                 }
             }

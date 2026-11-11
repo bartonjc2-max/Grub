@@ -12,6 +12,12 @@ struct BurrowFX: Identifiable {
     let life: TimeInterval
 }
 
+/// A dig in progress: which spot, and how many strikes are left in it.
+struct DigTrip: Equatable {
+    let spot: Int
+    var strikesLeft: Int
+}
+
 /// View model for the burrow home: owns the save, runs `BurrowRules`, turns events
 /// into effects/toasts/haptics, and persists after every change.
 @MainActor
@@ -37,6 +43,13 @@ final class BurrowHomeModel: ObservableObject {
     @Published private(set) var namingEgg = false
     /// The specimen box is open.
     @Published var showBox = false
+    /// The finds bag and molt panels. These live on the model rather than in the view so
+    /// `canStartTrip` can see them — it has to refuse a trip while any panel is open.
+    @Published var showBag = false
+    @Published var showMolt = false
+    /// The dig in progress, if any. Set by `startTrip`, cleared when the find turns up,
+    /// the strikes run out, or the player leaves.
+    @Published private(set) var trip: DigTrip?
     /// Animation-clock time of the last egg crack (the egg shakes for 0.3 s).
     @Published private(set) var crackAt: TimeInterval = -10
 
@@ -192,6 +205,44 @@ final class BurrowHomeModel: ObservableObject {
         }
     }
 
+    // MARK: The dig
+
+    /// Spec §2 "Stage gating". `canAct` is only `stage == .larva`, so it can't be reused here —
+    /// digging is allowed during the egg stage too.
+    ///
+    /// There's no `!inCocoon` clause because there's no cocoon state to check: `startMolt` sets
+    /// `stage = .adult` synchronously, so the stage test below already excludes it.
+    var canStartTrip: Bool {
+        (save.stage == .egg || save.stage == .larva)
+            && trip == nil && revealing == nil && placing == nil
+            && !namingEgg && !confirmingMolt && !showBox && !showBag && !showMolt
+    }
+
+    func startTrip(spot: Int) {
+        guard canStartTrip else { return }
+        let r = BurrowRules.startTrip(save, spot: spot)
+        apply(r)
+        for case .tripStarted(let s, let n) in r.events { trip = DigTrip(spot: s, strikesLeft: n) }
+    }
+
+    func strike(tile: Int) {
+        guard var t = trip else { return }
+        let r = BurrowRules.strike(save, spot: t.spot, tile: tile, strikesLeft: t.strikesLeft)
+        apply(r)                 // `apply` already persists when the save changed
+        if r.events.contains(where: { if case .refused = $0 { return true }; return false }) { return }
+        t.strikesLeft -= 1
+        trip = t
+        if r.events.contains(where: { if case .dugUp = $0 { return true }; return false }) {
+            trip = nil
+        } else if t.strikesLeft == 0 {
+            say(Self.message(.noStrikes))
+            trip = nil
+        }
+    }
+
+    /// Leaving early is the same as running out: the save already holds every broken tile.
+    func leaveTrip() { trip = nil }
+
     // MARK: Events → effects
 
     private func apply(_ r: BurrowResult) {
@@ -218,6 +269,12 @@ final class BurrowHomeModel: ObservableObject {
             add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: t + 0.45, life: 1.2))
             add(.init(kind: .text("BONUS! +" + kind.label, BurrowInk.teal), x: Double(p.x), y: Double(p.y - 11), born: t + 0.5, life: 1.4))
             Haptics.soft()
+        case .tileBroken(_, let heat):
+            // No particle here: the burrow FX layer draws under the grid overlay, so anything
+            // added would be invisible. The tile art changing is the feedback; this is the feel.
+            if heat == .hot { Haptics.thud() } else { Haptics.soft() }
+        case .rockChipped:
+            Haptics.thud()
         case .ate(_, let joyGained):
             chompAt = t
             add(.init(kind: .text("+BELLY", BurrowInk.berry), x: Double(grubTop.x), y: Double(grubTop.y - 2), born: t, life: 1.2))
