@@ -186,7 +186,7 @@ struct BurrowHomeView: View {
         ZStack(alignment: .topLeading) {
             ForEach(0..<BurrowRules.decorSlots, id: \.self) { i in decorSlot(i, L, t) }
             ForEach(model.buried, id: \.spot) { f in
-                if let a = BurrowSpots.anchor(f.spot) { marker(spot: f.spot, anchor: a, L, t) }
+                marker(spot: f.spot, L, t)
             }
             grub(L, t)
             ForEach(model.fx) { e in effect(e, L, t) }
@@ -194,9 +194,9 @@ struct BurrowHomeView: View {
     }
 
     @ViewBuilder
-    private func marker(spot: Int, anchor: CellAnchor, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
-        let p = L.resolve(anchor)
-        let phase = Double((anchor.x * 7 + anchor.dy) % 10) / 10
+    private func marker(spot: Int, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
+        let p = BurrowSpots.resolve(spot, L)
+        let phase = Double((spot * 7) % 10) / 10
         let bob = Int(t / 0.45 + phase * 2) % 2
         let hinted = t - model.digHintAt < 1.6
         let hot = hinted && Int(t / 0.14) % 2 == 0
@@ -537,7 +537,7 @@ struct BurrowHomeView: View {
 /// The static burrow bitmap; only re-rendered when the layout or the dug holes change.
 struct BurrowBackdrop: View, Equatable {
     let layout: BurrowLayout
-    let holes: [CellAnchor]
+    let holes: [Int]
 
     var body: some View {
         PixelImage(buffer: BurrowArt.backdrop(layout, holes: holes), cell: layout.cell)

@@ -213,8 +213,7 @@ final class BurrowRulesTests: XCTestCase {
     }
 
     func test_spot_table_matches_rules() {
-        XCTAssertEqual(BurrowSpots.anchors.count, BurrowRules.spotCount)
-        XCTAssertNil(BurrowSpots.anchor(BurrowRules.spotCount))
+        XCTAssertEqual(BurrowSpots.spots.count, BurrowRules.spotCount)
     }
 
     // MARK: finds (phase 2)

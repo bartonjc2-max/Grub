@@ -75,7 +75,7 @@ enum FindKind: String, Codable, CaseIterable, Identifiable, CodingKeyRepresentab
 }
 
 struct BuriedFind: Codable, Equatable {
-    var spot: Int        // index into BurrowSpots.anchors
+    var spot: Int        // index into BurrowSpots.spots
     var kind: FindKind
 }
 

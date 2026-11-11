@@ -80,7 +80,7 @@ final class BurrowHomeModel: ObservableObject {
     var digsLeft: Int { save.digs }
     var bag: [FindKind: Int] { save.bag }
     var buried: [BuriedFind] { save.buried }
-    var holes: [CellAnchor] { save.holes.compactMap(BurrowSpots.anchor) }
+    var holes: [Int] { save.holes }
     var foodCount: Int { save.bag.filter { $0.key.isFood }.values.reduce(0, +) }
     var findCount: Int { save.bag.values.reduce(0, +) }
     var isHappy: Bool { BurrowRules.isHappy(save) }
@@ -205,16 +205,16 @@ final class BurrowHomeModel: ObservableObject {
         let t = now
         switch e {
         case .dugUp(let spot, let kind):
-            guard let L = layout, let a = BurrowSpots.anchor(spot) else { break }
-            let p = L.resolve(a)
+            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
+            let p = BurrowSpots.resolve(spot, L)
             add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y), born: t, life: 0.7))
             add(.init(kind: .reveal(kind), x: Double(p.x), y: Double(p.y), born: t, life: 1.2))
             add(.init(kind: .text("+" + kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: t + 0.15, life: 1.3))
             Haptics.thud()
             if save.digs == 0 { say("THAT'S ALL\nFOR NOW") }
         case .bonusFind(let spot, let kind):
-            guard let L = layout, let a = BurrowSpots.anchor(spot) else { break }
-            let p = L.resolve(a)
+            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
+            let p = BurrowSpots.resolve(spot, L)
             add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: t + 0.45, life: 1.2))
             add(.init(kind: .text("BONUS! +" + kind.label, BurrowInk.teal), x: Double(p.x), y: Double(p.y - 11), born: t + 0.5, life: 1.4))
             Haptics.soft()

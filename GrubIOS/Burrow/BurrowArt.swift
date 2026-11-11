@@ -7,14 +7,11 @@ struct CellRect: Equatable {
     var maxX: Int { x + w }
     var maxY: Int { y + h }
     var midX: Int { x + w / 2 }
-}
 
-/// A spot in the burrow expressed relative to a landmark, so it lands sensibly on any screen height.
-struct CellAnchor: Equatable, Hashable {
-    enum Ref: Hashable { case surface, chamberTop, chamberBottom }
-    let ref: Ref
-    let x: Int   // design column (0..<64)
-    let dy: Int  // rows below the landmark
+    /// Design-space hit test.
+    func contains(x: Int, y: Int) -> Bool {
+        (self.x..<maxX).contains(x) && (self.y..<maxY).contains(y)
+    }
 }
 
 /// Screen geometry. The burrow is designed on a 64-column grid; each cell is a whole
@@ -50,14 +47,6 @@ struct BurrowLayout: Equatable {
         sideL = CellRect(x: 3, y: chamber.maxY + gap + 4, w: 12, h: 11)
     }
 
-    func resolve(_ a: CellAnchor) -> (x: Int, y: Int) {
-        switch a.ref {
-        case .surface:       return (a.x, surface + a.dy)
-        case .chamberTop:    return (a.x, chamber.y + a.dy)
-        case .chamberBottom: return (a.x, chamber.maxY + a.dy)
-        }
-    }
-
     /// Screen point (top-left of a cell) for a design-space cell.
     func point(_ dx: Double, _ dy: Double) -> CGPoint {
         CGPoint(x: originX + (CGFloat(x0) + dx) * cell, y: dy * cell)
@@ -74,6 +63,11 @@ extension BurrowLayout {
         let b3 = b2 + Int(Double(soil) * 0.24)
         return (b1, b2, b3)
     }
+
+    /// First row covered by the bottom panel. The soil bands run to the bottom of the screen,
+    /// so the deep band's lower rows sit *behind* the HUD — a spot there can't be seen or
+    /// tapped. Same 176pt the initialiser reserves for the panel.
+    var hudTopRow: Int { rows - Int(ceil(176 / cell)) }
 
     /// Spec §1: loose = soil1, clay = soil2, deep = soil3. soil4 holds no spots.
     func rows(for layer: SoilLayer) -> Range<Int> {
@@ -101,7 +95,7 @@ extension BurrowLayout {
 // MARK: - Backdrop (sky, surface, soil, tunnels, decor)
 
 enum BurrowArt {
-    static func backdrop(_ L: BurrowLayout, holes: [CellAnchor]) -> PixelBuffer {
+    static func backdrop(_ L: BurrowLayout, holes: [Int]) -> PixelBuffer {
         var b = PixelBuffer(width: L.cols, height: L.rows)
         let X = L.x0, S = L.surface
         func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) { b.fill(X + x, y, w, h, c) }
@@ -174,8 +168,8 @@ enum BurrowArt {
         // Rooms start empty: decor is placed by the player (BurrowLayout.decorSlot).
 
         // Pockets left by digging.
-        for a in holes {
-            let p = L.resolve(a)
+        for spot in holes where BurrowSpots.spots.indices.contains(spot) {
+            let p = BurrowSpots.resolve(spot, L)
             r(p.x - 2, p.y - 1, 5, 3, I.hollow); r(p.x - 1, p.y - 2, 3, 1, I.hollow); r(p.x - 1, p.y + 2, 3, 1, I.hollow)
         }
         return b

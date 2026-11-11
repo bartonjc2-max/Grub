@@ -27,6 +27,7 @@
 		45F3B5C67483C76FD4C63246 /* GameOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */; };
 		466EE0E34A3B8AB2DDD5E812 /* GrubIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23532E87C898D774055B275C /* GrubIOSApp.swift */; };
 		4D1521AC1474002BB9A014E7 /* GameState+Burrow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAB23882DE94A37931A500A /* GameState+Burrow.swift */; };
+		4E2876BBE2242D2E2111E81C /* BurrowSpotsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */; };
 		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
 		59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */; };
 		5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */; };
@@ -123,6 +124,7 @@
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
 		5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngineTests.swift; sourceTree = "<group>"; };
 		62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPrompt.swift; sourceTree = "<group>"; };
+		6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowSpotsTests.swift; sourceTree = "<group>"; };
 		6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowPacingTests.swift; sourceTree = "<group>"; };
 		7469FC51D000185D732BB134 /* GameSelectorOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectorOverlay.swift; sourceTree = "<group>"; };
 		79EE00B6A047FC079E273D80 /* AdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdService.swift; sourceTree = "<group>"; };
@@ -271,6 +273,7 @@
 				0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */,
 				6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */,
 				B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */,
+				6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */,
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
@@ -447,6 +450,7 @@
 				59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */,
 				BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */,
 				5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */,
+				4E2876BBE2242D2E2111E81C /* BurrowSpotsTests.swift in Sources */,
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
