@@ -71,4 +71,27 @@ final class BurrowStoreTests: XCTestCase {
         XCTAssertEqual(store.load(now: t0), .fresh(now: t0))
         XCTAssertTrue(FileManager.default.fileExists(atPath: store.corruptURL.path))
     }
+
+    /// A real v1 payload: BuriedFind had only spot + kind. Shared by the migration tests.
+    static let v1JSON = """
+    {"version":1,"stage":"larva","name":"PIP","eggCracks":3,"belly":6,"joy":6,"molt":2,
+     "digs":3,"buried":[{"spot":0,"kind":"berry"},{"spot":3,"kind":"crystal"}],
+     "holes":[1],"bag":{"root":2},"placed":{},"eaten":{},"specimens":[],
+     "lastTick":750000000,"digTimer":0,"buryTimer":0,"bellyTimer":0,"joyTimer":0,
+     "lastPetAt":749990000}
+    """
+
+    func test_a_version_1_save_still_loads() throws {
+        let store = BurrowStore(directory: tempDir())
+        try FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+        try Data(Self.v1JSON.utf8).write(to: store.fileURL)
+
+        let save = store.load()
+
+        XCTAssertEqual(save.name, "PIP", "the grub survived the upgrade")
+        XCTAssertEqual(save.buried.map(\.kind), [.berry, .crystal], "kinds are preserved as-is")
+        XCTAssertEqual(save.holes, [1])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: store.corruptURL.path),
+                       "a v1 save must never be treated as corrupt")
+    }
 }
