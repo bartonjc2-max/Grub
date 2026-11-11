@@ -16,7 +16,14 @@ struct BurrowHomeView: View {
             let L = BurrowLayout(size: geo.size, displayScale: displayScale)
             ZStack(alignment: .topLeading) {
                 BurrowBackdrop(layout: L, holes: model.holes, spurs: model.spurs).equatable()
-                titleBlock(L, width: geo.size.width)
+                // The title is an identity beat for a new egg, not a permanent fixture: it
+                // costs about 12 rows of sky, it tells you the name of the app you already
+                // opened, and on the dig screen the grid's own header lands on top of it.
+                // A new generation is a new egg, so it comes back for that.
+                if model.stage == .egg {
+                    titleBlock(L, width: geo.size.width)
+                        .transition(.opacity)
+                }
                 TimelineView(.animation(minimumInterval: 1.0 / 24)) { tl in
                     livingLayer(L, t: tl.date.timeIntervalSinceReferenceDate)
                         .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
@@ -24,6 +31,7 @@ struct BurrowHomeView: View {
             }
             .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
             .clipped()
+            .animation(.easeOut(duration: 0.6), value: model.stage)
             .onAppear { place(L) }
             .onChange(of: geo.size) { _, _ in place(L) }
         }
