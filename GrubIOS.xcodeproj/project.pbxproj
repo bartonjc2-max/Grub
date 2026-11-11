@@ -11,6 +11,7 @@
 		0D5A1E3C5C8030D7868F3FDA /* DescentSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */; };
 		0D8793D0B6B5DE74D1015CD2 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3878A3E074253723060C33C3 /* SplashView.swift */; };
 		0E46907CF823E0F4A3C29314 /* BurrowArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975C586B84FDFD27C0FEB4D7 /* BurrowArt.swift */; };
+		10E716D4A5997CA42B34E244 /* BurrowWaypointsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB81E80A2E895BDD70D7C9A0 /* BurrowWaypointsTests.swift */; };
 		1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD61054EC068F65E69CB0B2C /* BurrowSave.swift */; };
 		170DE5EFF6EE98E45FB72726 /* DigTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8C04AC3A7A5762446261C0 /* DigTypesTests.swift */; };
 		1AB1E9A1F48170855A0D9ECD /* DigRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A21567E7CFE6D0586E6809A /* DigRules.swift */; };
@@ -92,6 +93,7 @@
 		F4C11411D9A06DE6785B4B90 /* DigGen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C2FA934FAE149FCEFC2AC4 /* DigGen.swift */; };
 		F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */; };
 		FC46E0629DD6C9795403FDCB /* DigSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDC48EFD68280D254DF25CF /* DigSolver.swift */; };
+		FD17E6AECBD34CBF8807C39A /* BurrowWaypoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B5F033C75C26A921EF1FBA2 /* BurrowWaypoints.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +130,7 @@
 		4828EF7C3AE93783A7D6775E /* BurrowHomeModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowHomeModelTests.swift; sourceTree = "<group>"; };
 		4A012B7067909685AAA6CF93 /* BurrowSpots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowSpots.swift; sourceTree = "<group>"; };
 		4A5947FAA9A9CED0D6148CE5 /* DescentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngine.swift; sourceTree = "<group>"; };
+		4B5F033C75C26A921EF1FBA2 /* BurrowWaypoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowWaypoints.swift; sourceTree = "<group>"; };
 		4D68B37A2B05EF7D3C3CA363 /* AnalyticsEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsEvent.swift; sourceTree = "<group>"; };
 		5624CADC5A38E7D506E60526 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubAssetTests.swift; sourceTree = "<group>"; };
@@ -164,6 +167,7 @@
 		B70E0FC31C838D246B046BFA /* DescentTuning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentTuning.swift; sourceTree = "<group>"; };
 		BA6C121078F1A4C269BC4F9A /* SaveVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVersionTests.swift; sourceTree = "<group>"; };
 		BB530A92485B49730BC1516A /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		BB81E80A2E895BDD70D7C9A0 /* BurrowWaypointsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowWaypointsTests.swift; sourceTree = "<group>"; };
 		BC136FBCB633A87B965DB0E4 /* RetentionTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTrackerTests.swift; sourceTree = "<group>"; };
 		BD61054EC068F65E69CB0B2C /* BurrowSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowSave.swift; sourceTree = "<group>"; };
 		C560F450949A013DE2033C78 /* RetentionTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetentionTracker.swift; sourceTree = "<group>"; };
@@ -291,6 +295,7 @@
 				B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */,
 				6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */,
 				FCCFC71B094D62F0942BC01D /* BurrowStoreTests.swift */,
+				BB81E80A2E895BDD70D7C9A0 /* BurrowWaypointsTests.swift */,
 				5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */,
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
 				99CDF973F525CC3FA590AC55 /* DigBalanceTests.swift */,
@@ -350,6 +355,7 @@
 				BD61054EC068F65E69CB0B2C /* BurrowSave.swift */,
 				4A012B7067909685AAA6CF93 /* BurrowSpots.swift */,
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
+				4B5F033C75C26A921EF1FBA2 /* BurrowWaypoints.swift */,
 				24C2FA934FAE149FCEFC2AC4 /* DigGen.swift */,
 				8ABAB4CD94FDF5235A9638A9 /* DigGridView.swift */,
 				3A21567E7CFE6D0586E6809A /* DigRules.swift */,
@@ -476,6 +482,7 @@
 				5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */,
 				4E2876BBE2242D2E2111E81C /* BurrowSpotsTests.swift in Sources */,
 				D022F06058E4AAE1382C3903 /* BurrowStoreTests.swift in Sources */,
+				10E716D4A5997CA42B34E244 /* BurrowWaypointsTests.swift in Sources */,
 				8074A6AF18E37C163E4A1C6F /* DescentEngineTests.swift in Sources */,
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
 				EB652A10979879DDF1B52D0D /* DigBalanceTests.swift in Sources */,
@@ -511,6 +518,7 @@
 				1552F601A9A604BEA4A905A1 /* BurrowSave.swift in Sources */,
 				CE73E48FCBAFD9A7CCB22067 /* BurrowSpots.swift in Sources */,
 				444B93FD99A385798C60CD45 /* BurrowTypes.swift in Sources */,
+				FD17E6AECBD34CBF8807C39A /* BurrowWaypoints.swift in Sources */,
 				71F27363AF1AD002BE12B983 /* ContentView.swift in Sources */,
 				40AAFD9AE1A3CEFCB048F2E8 /* DescentControlsView.swift in Sources */,
 				9586D5985F915C8EA44275F7 /* DescentEngine.swift in Sources */,
