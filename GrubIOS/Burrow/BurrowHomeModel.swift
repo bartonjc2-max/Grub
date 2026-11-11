@@ -55,6 +55,9 @@ final class BurrowHomeModel: ObservableObject {
     /// The dig in progress, if any. Set by `startTrip`, cleared when the find turns up,
     /// the strikes run out, or the player leaves.
     @Published private(set) var trip: DigTrip?
+    /// Set when a dig comes in clean, so the grid can say so while the player is still
+    /// looking at it. Cleared when the trip ends.
+    @Published private(set) var cleanDigPrize: FindKind?
     /// The grid the trip is working on. A snapshot rather than a lookup into `save.buried`,
     /// because a successful dig *removes* the find from the save — and the zoom-out and the
     /// walk home still have to draw something. Without it the trip view vanished the moment
@@ -241,6 +244,7 @@ final class BurrowHomeModel: ObservableObject {
         for case .tripStarted(let s, let n) in r.events {
             trip = DigTrip(spot: s, strikesLeft: n, phase: first)
             tripFind = save.buried.first { $0.spot == s }
+            cleanDigPrize = nil
         }
     }
 
@@ -253,14 +257,14 @@ final class BurrowHomeModel: ObservableObject {
         case .zoomingIn:    advanceTo(.digging)
         case .digging:      break
         case .zoomingOut:   advanceTo(.crawlingHome)
-        case .crawlingHome: trip = nil; tripFind = nil
+        case .crawlingHome: trip = nil; tripFind = nil; cleanDigPrize = nil
         }
     }
 
     /// Used by the view's timers and by the tests, so neither has to reach into `trip`.
     func advanceTo(_ phase: TripPhase) {
         guard trip != nil else { return }
-        if phase == .crawlingHome, trip?.phase == .crawlingHome { trip = nil; tripFind = nil; return }
+        if phase == .crawlingHome, trip?.phase == .crawlingHome { trip = nil; tripFind = nil; cleanDigPrize = nil; return }
         trip?.phase = phase
     }
 
@@ -289,7 +293,12 @@ final class BurrowHomeModel: ObservableObject {
 
     /// BACK, and going to the background, end the trip at once — nobody should be made to
     /// watch the walk home. The save already holds every broken tile.
-    func leaveTrip() { trip = nil; tripFind = nil }
+    func leaveTrip() { trip = nil; tripFind = nil; cleanDigPrize = nil }
+
+    /// How long the zoom-out and the walk home take, near enough — the longest a find's
+    /// effects have to wait before the burrow is on screen again. `DigTripView` owns the real
+    /// timings (0.6 s zoom, up to 1.5 s crawl); this only has to outlast them.
+    static let returnDelay: TimeInterval = 2.2
 
     // MARK: Events → effects
 
@@ -306,11 +315,24 @@ final class BurrowHomeModel: ObservableObject {
         case .dugUp(let spot, let kind):
             guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
             let p = BurrowSpots.resolve(spot, L)
-            add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y), born: t, life: 0.7))
-            add(.init(kind: .reveal(kind), x: Double(p.x), y: Double(p.y), born: t, life: 1.2))
-            add(.init(kind: .text("+" + kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: t + 0.15, life: 1.3))
+            // Held back until the grub is home. These draw in the burrow's effects layer,
+            // which sits *under* the trip overlay — played at once they spend their whole
+            // life behind the grid and the zoom-out, and the player never sees the payoff.
+            let home = t + Self.returnDelay
+            add(.init(kind: .dirt, x: Double(p.x), y: Double(p.y), born: home, life: 0.7))
+            add(.init(kind: .reveal(kind), x: Double(p.x), y: Double(p.y), born: home, life: 1.2))
+            add(.init(kind: .text("+" + kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: home + 0.15, life: 1.3))
             Haptics.thud()
             if save.digs == 0 { say("THAT'S ALL\nFOR NOW") }
+        case .cleanDig(let spot, let kind):
+            cleanDigPrize = kind          // the grid says it immediately; the burrow echoes it
+            Haptics.soft()
+            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
+            let p = BurrowSpots.resolve(spot, L)
+            let home = t + Self.returnDelay
+            add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: home + 0.45, life: 1.2))
+            add(.init(kind: .text("CLEAN DIG!\n+" + kind.label, BurrowInk.teal),
+                      x: Double(p.x), y: Double(p.y - 11), born: home + 0.5, life: 1.6))
         case .tileBroken(_, let heat):
             // No particle here: the burrow FX layer draws under the grid overlay, so anything
             // added would be invisible. The tile art changing is the feedback; this is the feel.

@@ -512,6 +512,15 @@ enum IconArt {
                                          ".HHHH."],
                                    palette: ["H": BurrowInk.copper, "L": BurrowInk.cream])
     static let bang = PixelBuffer(art: ["A", "A", "A", ".", "A"], palette: ["A": BurrowInk.amber])
+    /// The shovel, lit. Used for the strikes that are still inside the clean-dig window, so
+    /// the grid shows at a glance whether the bonus is still in reach.
+    static let shovelLit = PixelBuffer(art: ["....HH",
+                                             "...HH.",
+                                             "..HH..",
+                                             "BBH...",
+                                             "BBB...",
+                                             "BB...."],
+                                       palette: ["H": BurrowInk.amberHi, "B": BurrowInk.cream])
     static let heart = PixelBuffer(art: [".R.R.",
                                          "RRRRR",
                                          ".RRR.",

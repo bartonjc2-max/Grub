@@ -25,7 +25,10 @@ struct DigGridView: View {
     var body: some View {
         VStack(spacing: px * 4) {
             header
-            grid
+            ZStack {
+                grid
+                if let prize = model.cleanDigPrize { cleanBanner(prize) }
+            }
             Button("BACK") { model.leaveTrip() }
                 .font(GrubFont.size(9))
                 .foregroundColor(Color(ink: BurrowInk.cream))
@@ -53,16 +56,49 @@ struct DigGridView: View {
         }
     }
 
-    /// One shovel per strike left, so the budget is readable at a glance rather than counted.
+    /// Is a win right now still worth a bonus? The winning strike itself costs one, so the
+    /// window is open while more than `cleanDigStrikes` remain in hand.
+    private var bonusLive: Bool { trip.strikesLeft - 1 >= BurrowRules.cleanDigStrikes }
+
+    /// One shovel per strike left. The lit ones are the clean-dig window: while any of them
+    /// is showing, finding the item still pays a bonus. Spending them dims the row from the
+    /// left, so the stake is visible without a word of explanation.
     private var strikeRow: some View {
-        HStack(spacing: px) {
-            ForEach(0..<max(trip.strikesLeft, 0), id: \.self) { _ in
-                PixelImage(buffer: IconArt.shovel, cell: px)
+        VStack(spacing: px) {
+            HStack(spacing: px) {
+                ForEach(0..<max(trip.strikesLeft, 0), id: \.self) { i in
+                    PixelImage(buffer: i >= BurrowRules.cleanDigStrikes ? IconArt.shovelLit : IconArt.shovel,
+                               cell: px)
+                }
+            }
+            Text(bonusLive ? "CLEAN DIG STILL ON" : " ")
+                .font(GrubFont.size(6))
+                .foregroundColor(Color(ink: BurrowInk.amberHi))
+        }
+        .frame(height: px * 10)
+        .accessibilityElement()
+        .accessibilityLabel("\(trip.strikesLeft) strikes left"
+                            + (bonusLive ? ", a clean dig is still possible" : ""))
+    }
+
+    /// Said here, over the grid, because this is where the player is looking when it happens.
+    /// The burrow plays its own version once the grub is home.
+    private func cleanBanner(_ prize: FindKind) -> some View {
+        VStack(spacing: px * 2) {
+            Text("CLEAN DIG!")
+                .font(GrubFont.size(12))
+                .foregroundColor(Color(ink: BurrowInk.amberHi))
+            HStack(spacing: px * 2) {
+                PixelImage(buffer: prize.sprite, cell: px)
+                Text("+" + prize.label)
+                    .font(GrubFont.size(9))
+                    .foregroundColor(Color(ink: BurrowInk.teal))
             }
         }
-        .frame(height: px * 6)
-        .accessibilityElement()
-        .accessibilityLabel("\(trip.strikesLeft) strikes left")
+        .padding(px * 4)
+        .background(Color(ink: BurrowInk.hollow))
+        .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 3))
+        .transition(.opacity)
     }
 
     private var grid: some View {

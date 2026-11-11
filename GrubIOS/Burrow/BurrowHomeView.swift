@@ -177,7 +177,9 @@ struct BurrowHomeView: View {
         while model.trip != nil, model.trip?.phase != .digging {
             await wait(0.1)
         }
-        for tile in [cold, warm, rock, rock, f].compactMap({ $0 }) {
+        // Two reads, then straight to it: clay grants 6, so finding it on the third strike
+        // leaves 3 in hand and pays the clean-dig bonus. The demo shows the good outcome.
+        for tile in [cold, warm, f].compactMap({ $0 }) {
             await wait(1.4)
             model.strike(tile: tile)
         }

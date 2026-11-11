@@ -50,6 +50,41 @@ spec says otherwise (the dig itself, the happy bonus roll, spot markers, the pac
 > greedy player now wins 96–100 % of grids rather than 82–100 %; the layers' difficulty is
 > carried by their obstacles and find tables more than by their strike counts.
 
+### The clean dig (added 2026-11-11)
+
+Finding the item with **3 or more strikes still in hand** pays a bonus find, drawn from the
+spot's own soil table. The grid says so at once ("CLEAN DIG! + <kind>"), and the burrow plays
+its own version once the grub is home.
+
+**Why it exists.** The mini-game as first built was won 96–100 % of the time, and a win cost
+3.3–4.0 strikes of a 5–6 budget — so the budget was barely doing anything and there was
+nothing to play *for*. That cannot be fixed by cutting strikes: 25 tiles sorted into 3 answers
+puts the information floor at **2.93 strikes**, so the search was already being solved at its
+theoretical minimum. Trimming the budget would have converted skill into luck, which is how
+the rooty problem happened. The lever had to be what a dig is *worth*, not whether it is won.
+
+**Why 3.** Measured over 6,000 seeded trips, the spare-strike distribution is 0: 6 %, 1: 23 %,
+2: 31 %, 3: 21 %, 4: 7 %, 5+: 4 %, lost: 4 %. A threshold of ≥2 fires on 65 % of trips (the
+default outcome), ≥4 on 12 % (not worth chasing), and **≥3 on 34 %** — which happens to be the
+rate of the hidden bonus-find roll this replaces. Same payoff, earned instead of rolled.
+
+It is harder on deep soil (5 strikes, so a clean dig means finding it in two) than on loose
+(6). That is left alone deliberately: deep pockets pay the better base find and the better
+bonus, so the layer stays worth visiting.
+
+**The strike row shows the window.** The strikes still inside it are drawn lit; spending them
+dims the row, so the stake is legible without a word of explanation.
+
+**Pacing.** The bonus returns molting to the original figures — 2.3 / 2.3 / 4.9 days for
+4 / 2 / 1 visits a day, against 2.3 / 2.4 / 4.5 before the mini-game existed. Note the sim
+plays every dig with `DigSolver`, which earns the bonus more often than a person will, so a
+real once-a-day player sits between 4.9 and the 5.3 measured without it.
+
+**What this does not fix.** The base win is still near-certain. That is the intended shape for
+a cozy idle pet: you are never robbed of a dig charge (progress is kept, and that was Jesse's
+call), but playing well is now worth something. If the search itself ever needs to get harder,
+the lever is grid size, not strike count — 6×6 moves the floor to 3.3 strikes and 7×7 to 3.5.
+
 ### The grid
 
 - 5 × 5 tiles, indexed `0..<25` (row-major, row 0 at the top).

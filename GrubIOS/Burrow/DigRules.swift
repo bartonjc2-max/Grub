@@ -31,6 +31,19 @@ extension BurrowRules {
         return BurrowResult(save: s, events: [.tripStarted(spot: spot, strikes: tripStrikes(s, spot: spot))])
     }
 
+    /// What a clean dig turns up alongside the find, drawn from the spot's own soil — so deep
+    /// pockets pay better, which is some consolation for how rarely a 5-strike dig comes in
+    /// three under.
+    ///
+    /// Derived rather than stored: seeded from the spot *and* the find's position, so it is
+    /// stable for a given burial, different the next time that spot is filled, and needs no
+    /// new save field (which migrated v1 finds would not have had).
+    static func bonusKind(for find: BuriedFind) -> FindKind {
+        var rng = BurrowRNG(seed: BuriedFind.seed(for: find.spot)
+                            &+ UInt64(find.findTile) &* 2_654_435_761)
+        return DigGen.rollKind(layer: BurrowSpots.layer(find.spot), rng: &rng)
+    }
+
     /// One shovel strike at `tile`. `strikesLeft` is passed in only so the rules can refuse;
     /// the caller decrements it whenever the result is not a refusal.
     static func strike(_ s0: BurrowSave, spot: Int, tile: Int, strikesLeft: Int) -> BurrowResult {
@@ -59,6 +72,14 @@ extension BurrowRules {
                 s.holes.append(spot)
                 s.bag[find.kind, default: 0] += 1
                 events.append(.dugUp(spot: spot, kind: find.kind))
+                // Finding it with strikes to spare pays out whatever else was in the pocket.
+                // This is the whole reason to read the grid rather than tap it flat: the win
+                // itself is nearly certain, the margin is not.
+                if strikesLeft - 1 >= cleanDigStrikes {
+                    let extra = bonusKind(for: find)
+                    s.bag[extra, default: 0] += 1
+                    events.append(.cleanDig(spot: spot, kind: extra))
+                }
             }
             return BurrowResult(save: s, events: events)
         }

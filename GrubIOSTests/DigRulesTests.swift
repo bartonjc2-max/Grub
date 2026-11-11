@@ -142,6 +142,52 @@ final class DigRulesTests: XCTestCase {
                        [.refused(.alreadyBroken)])
     }
 
+    // MARK: the clean dig
+
+    func test_finding_it_with_three_to_spare_pays_a_bonus() {
+        // 4 in hand, so 3 remain after the winning strike.
+        let r = BurrowRules.strike(rigged(), spot: 0, tile: 12, strikesLeft: 4)
+        guard case .cleanDig(0, let extra)? = r.events.last else {
+            return XCTFail("no bonus: \(r.events)")
+        }
+        XCTAssertEqual(r.events.count, 3, "tile broken, dug up, then the bonus")
+        XCTAssertEqual(r.save.bag[extra], (extra == .berry ? 1 : 0) + 1 + (extra == .berry ? 1 : 0),
+                       "the bonus landed in the bag alongside the find")
+    }
+
+    func test_one_strike_short_of_clean_pays_nothing() {
+        let r = BurrowRules.strike(rigged(), spot: 0, tile: 12, strikesLeft: 3)
+        XCTAssertEqual(r.events, [.tileBroken(tile: 12, heat: .hot), .dugUp(spot: 0, kind: .berry)])
+    }
+
+    func test_a_scraped_win_pays_nothing() {
+        let r = BurrowRules.strike(rigged(), spot: 0, tile: 12, strikesLeft: 1)
+        XCTAssertFalse(r.events.contains { if case .cleanDig = $0 { return true }; return false })
+    }
+
+    func test_the_bonus_is_stable_for_a_burial_but_not_across_them() {
+        let find = BuriedFind(spot: 0, kind: .berry, condition: nil, findTile: 12, tiles: [])
+        XCTAssertEqual(BurrowRules.bonusKind(for: find), BurrowRules.bonusKind(for: find),
+                       "the same pocket holds the same thing")
+        var moved = find
+        moved.findTile = 7
+        let kinds = (0..<25).map { tile -> FindKind in
+            var f = find; f.findTile = tile
+            return BurrowRules.bonusKind(for: f)
+        }
+        XCTAssertGreaterThan(Set(kinds).count, 1, "a re-buried spot does not always pay the same")
+    }
+
+    func test_the_bonus_comes_from_the_spots_own_soil() {
+        // Spot 1 is loose, whose table holds no crystals or amber at any weight.
+        for tile in 0..<DigGrid.tileCount {
+            let f = BuriedFind(spot: 1, kind: .berry, condition: nil, findTile: tile, tiles: [])
+            let bonus = BurrowRules.bonusKind(for: f)
+            XCTAssertFalse([.crystal, .amber].contains(bonus),
+                           "loose soil paid out \(bonus) at tile \(tile)")
+        }
+    }
+
     func test_progress_is_kept_between_trips() {
         let r = BurrowRules.strike(rigged(), spot: 0, tile: 11, strikesLeft: 1)
         // The trip ends here (the model drops to 0 strikes), but the save keeps the hole.

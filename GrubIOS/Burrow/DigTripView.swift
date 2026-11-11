@@ -17,6 +17,7 @@ struct DigTripView: View {
     private static let crawlBase: TimeInterval = 1.0
     private static let crawlCap: TimeInterval = 1.5
     private static let zoom: TimeInterval = 0.6
+    private static let prizeHold: TimeInterval = 2.0
 
     private var path: [Waypoint] { BurrowWaypoints.path(to: trip.spot, layout) }
 
@@ -24,7 +25,10 @@ struct DigTripView: View {
         switch trip.phase {
         case .crawlingOut, .crawlingHome:
             return min(Self.crawlCap, Self.crawlBase + Double(path.count) * 0.05)
-        case .zoomingIn, .zoomingOut: return Self.zoom
+        case .zoomingIn: return Self.zoom
+        // A clean dig puts a banner on the grid, so the way out is held long enough to read
+        // it. Without this the reward is a 0.6 s flash behind a shrinking grid.
+        case .zoomingOut: return model.cleanDigPrize == nil ? Self.zoom : Self.prizeHold
         case .digging: return .infinity
         }
     }
@@ -35,6 +39,7 @@ struct DigTripView: View {
                 .opacity(dimmer)
                 .ignoresSafeArea()
                 .allowsHitTesting(trip.phase != .crawlingOut && trip.phase != .crawlingHome)
+                .animation(.easeInOut(duration: Self.zoom), value: trip.phase)
 
             switch trip.phase {
             case .crawlingOut, .crawlingHome:
@@ -44,7 +49,10 @@ struct DigTripView: View {
             case .zoomingIn, .zoomingOut, .digging:
                 TimelineView(.animation(minimumInterval: 1.0 / 24)) { tl in
                     let p = trip.phase == .digging ? 1 : progress(tl.date)
-                    let t = trip.phase == .zoomingOut ? 1 - p : p
+                    // While a prize is showing, the grid stays put until the last third, so
+                    // the banner isn't shrinking away while it is being read.
+                    let out = model.cleanDigPrize == nil ? p : max(0, (p - 0.66) * 3)
+                    let t = trip.phase == .zoomingOut ? 1 - out : p
                     grid
                         .scaleEffect(0.12 + 0.88 * eased(t), anchor: spotAnchor)
                         .opacity(trip.phase == .digging ? 1 : eased(t))
@@ -69,14 +77,14 @@ struct DigTripView: View {
             .frame(width: size.width, height: size.height)
     }
 
-    /// 0 while crawling (the burrow stays in view), full once the grid is up.
+    /// 0 while crawling (the burrow stays in view), full once the grid is up. A plain value
+    /// per phase, tweened by the animation modifier on the view — reading the clock here
+    /// instead only sampled it when the body happened to re-render, which left the burrow
+    /// half-faded at odd moments.
     private var dimmer: Double {
         switch trip.phase {
         case .crawlingOut, .crawlingHome: return 0
-        case .digging: return 0.95
-        case .zoomingIn, .zoomingOut:
-            let p = progress(Date())
-            return 0.95 * (trip.phase == .zoomingOut ? 1 - p : p)
+        case .zoomingIn, .zoomingOut, .digging: return 0.95
         }
     }
 
