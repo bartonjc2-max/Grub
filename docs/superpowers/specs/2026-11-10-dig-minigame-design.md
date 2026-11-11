@@ -138,10 +138,10 @@ because both the seeded tests and the save migration depend on reproducing it ex
    still diggable (soil or rock — a rock shows heat once broken; roots and the already-broken
    glinting tile don't count). On a **wet** spot, additionally at least **2** diggable tiles
    at d = 1, since d = 2 reads as cold there.
-5. If the check fails, retry from step 2, up to **40 attempts**. After that, drop obstacles
-   one at a time in reverse placement order until the check passes — a deterministic
-   fallback, so generation always terminates. (It always can: with no obstacles even a corner
-   find has 5 tiles at d ≤ 2 and 2 at d = 1.)
+5. If the check fails, retry from step 2, up to **40 attempts**. After that, re-place from
+   scratch with one fewer obstacle (roots first, then rocks) and repeat until the check passes
+   — a deterministic fallback, so generation always terminates. (It always can: with no
+   obstacles even a corner find has 5 tiles at d ≤ 2 and 2 at d = 1.)
 
 The function reports whether the fallback fired, so the generation tests can assert exact
 obstacle counts on the normal path and `≤ nominal` when it did. The whole grid is stored in
