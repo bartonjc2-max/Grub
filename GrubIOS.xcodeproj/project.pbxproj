@@ -71,6 +71,7 @@
 		BFC0C333ADA6AE3B7A8473A4 /* BurrowPacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F98676690E5F1CF02CCCDE0 /* BurrowPacingTests.swift */; };
 		C242072A2DE8510902CF628F /* SpriteRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20099951754158E5258BC160 /* SpriteRenderer.swift */; };
 		C5575F7C983DA8C71ACFB19D /* GameState+Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */; };
+		C7AACC45FC80E078E141DD1C /* DigSolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2F35A1C1AEE528BEE16D90 /* DigSolverTests.swift */; };
 		CC5E5F059F3ACBB05C09867C /* GameState+Minigames.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */; };
 		CE73E48FCBAFD9A7CCB22067 /* BurrowSpots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A012B7067909685AAA6CF93 /* BurrowSpots.swift */; };
 		CF026214B933457A384F2771 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3ACB89EDEDA233DB6170BF /* NotificationScheduler.swift */; };
@@ -88,6 +89,7 @@
 		F36E502CC2963502AED8F155 /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B17E563AE91B9EA5CA3E73 /* AdManager.swift */; };
 		F4C11411D9A06DE6785B4B90 /* DigGen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C2FA934FAE149FCEFC2AC4 /* DigGen.swift */; };
 		F764CCCA51E078D644E834AE /* AnalyticsEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD17A6EBA692842FB699EA3 /* AnalyticsEventTests.swift */; };
+		FC46E0629DD6C9795403FDCB /* DigSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EDC48EFD68280D254DF25CF /* DigSolver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +130,7 @@
 		5624CADC5A38E7D506E60526 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubAssetTests.swift; sourceTree = "<group>"; };
 		5DC3836B3CD11EE4F0E03D81 /* GameOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverlays.swift; sourceTree = "<group>"; };
+		5EDC48EFD68280D254DF25CF /* DigSolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigSolver.swift; sourceTree = "<group>"; };
 		5FB3F2B47C7A9F7FDB7E381C /* DescentEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentEngineTests.swift; sourceTree = "<group>"; };
 		62CB0D3A39E474BD7B646103 /* RatingPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingPrompt.swift; sourceTree = "<group>"; };
 		6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowSpotsTests.swift; sourceTree = "<group>"; };
@@ -168,6 +171,7 @@
 		D53EA29757EC2D32B6DB3C62 /* DescentSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescentSceneView.swift; sourceTree = "<group>"; };
 		D6580ADF3CD0CE4DAB41FA95 /* GameState+Minigames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Minigames.swift"; sourceTree = "<group>"; };
 		D7C5F7A381797CBEEEF1CA00 /* GameState+Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Journal.swift"; sourceTree = "<group>"; };
+		DB2F35A1C1AEE528BEE16D90 /* DigSolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigSolverTests.swift; sourceTree = "<group>"; };
 		DB962D590FD15802C31114E4 /* SpeciesArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeciesArt.swift; sourceTree = "<group>"; };
 		E46E0D0B69781DC107850A50 /* DigGenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigGenTests.swift; sourceTree = "<group>"; };
 		E72253F310EB1C1D9D78835D /* GrubIOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GrubIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -287,6 +291,7 @@
 				D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */,
 				E46E0D0B69781DC107850A50 /* DigGenTests.swift */,
 				8D2E7AA5019C84529F209495 /* DigRulesTests.swift */,
+				DB2F35A1C1AEE528BEE16D90 /* DigSolverTests.swift */,
 				CC8C04AC3A7A5762446261C0 /* DigTypesTests.swift */,
 				02139FA34595D8D7CE2E0F72 /* GameStateHooksTests.swift */,
 				5A57D87911AF311F57A3B065 /* GrubAssetTests.swift */,
@@ -342,6 +347,7 @@
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				24C2FA934FAE149FCEFC2AC4 /* DigGen.swift */,
 				3A21567E7CFE6D0586E6809A /* DigRules.swift */,
+				5EDC48EFD68280D254DF25CF /* DigSolver.swift */,
 				3BD133BAC810EAB917422709 /* DigTypes.swift */,
 				8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */,
 				DB962D590FD15802C31114E4 /* SpeciesArt.swift */,
@@ -468,6 +474,7 @@
 				5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */,
 				443ED31D45100314E7A84782 /* DigGenTests.swift in Sources */,
 				5237721EAE2660F520E34C0A /* DigRulesTests.swift in Sources */,
+				C7AACC45FC80E078E141DD1C /* DigSolverTests.swift in Sources */,
 				170DE5EFF6EE98E45FB72726 /* DigTypesTests.swift in Sources */,
 				86B25E6531084F7E13E15B08 /* GameStateHooksTests.swift in Sources */,
 				76CE89AE65237C4CC1159202 /* GrubAssetTests.swift in Sources */,
@@ -505,6 +512,7 @@
 				D408AD0BEC14A5D5CCAE7EF0 /* DescentView.swift in Sources */,
 				F4C11411D9A06DE6785B4B90 /* DigGen.swift in Sources */,
 				1AB1E9A1F48170855A0D9ECD /* DigRules.swift in Sources */,
+				FC46E0629DD6C9795403FDCB /* DigSolver.swift in Sources */,
 				E51AFE2B06B1C887902F1DC0 /* DigTypes.swift in Sources */,
 				04265678D21CA3F2009AE95B /* ExpeditionOverlay.swift in Sources */,
 				A0F5C2BEDFEBEE3E72E99EF4 /* ForageOverlay.swift in Sources */,
