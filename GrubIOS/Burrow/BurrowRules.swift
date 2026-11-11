@@ -8,7 +8,7 @@ enum Refusal: Equatable {
 
 enum BurrowEvent: Equatable {
     case buried(spot: Int, kind: FindKind)
-    case dugUp(spot: Int, kind: FindKind), bonusFind(spot: Int, kind: FindKind)
+    case dugUp(spot: Int, kind: FindKind)
     case ate(FindKind, joyGained: Bool), petted(joyGained: Bool)
     case placed(slot: Int, kind: FindKind), removed(slot: Int, kind: FindKind)
     case moltReady
@@ -34,7 +34,6 @@ enum BurrowRules {
     static let decorSlots = 4
     static let moltGoal = 10
     static let happyJoy = 7
-    static let bonusFindChance = 0.35
 
     static let digPeriod: TimeInterval = 3 * 3600
     static let buryPeriod: TimeInterval = 2 * 3600
@@ -121,38 +120,6 @@ enum BurrowRules {
         s.buried.append(f)
         s.holes.removeAll { $0 == spot }
         return f
-    }
-
-    static func weightedKind(rng: inout some RandomNumberGenerator) -> FindKind {
-        let total = FindKind.allCases.reduce(0) { $0 + $1.buryWeight }
-        var r = Int.random(in: 0..<total, using: &rng)
-        for k in FindKind.allCases {
-            if r < k.buryWeight { return k }
-            r -= k.buryWeight
-        }
-        return .berry
-    }
-
-    // MARK: Digging
-
-    /// Dig up the find at `spot`. Works in every stage. A happy grub (Joy ≥ 7) has a
-    /// 35 % chance to turn up a bonus find.
-    static func dig(_ s0: BurrowSave, spot: Int, now: Date,
-                    rng: inout some RandomNumberGenerator) -> BurrowResult {
-        guard let i = s0.buried.firstIndex(where: { $0.spot == spot }) else { return refuse(s0, .nothingBuriedThere) }
-        guard s0.digs > 0 else { return refuse(s0, .noDigs) }
-        var s = s0
-        let f = s.buried.remove(at: i)
-        s.digs -= 1
-        s.holes.append(spot)
-        s.bag[f.kind, default: 0] += 1
-        var events: [BurrowEvent] = [.dugUp(spot: spot, kind: f.kind)]
-        if isHappy(s), Double.random(in: 0..<1, using: &rng) < bonusFindChance {
-            let extra = weightedKind(rng: &rng)
-            s.bag[extra, default: 0] += 1
-            events.append(.bonusFind(spot: spot, kind: extra))
-        }
-        return BurrowResult(save: s, events: events)
     }
 
     // MARK: Care

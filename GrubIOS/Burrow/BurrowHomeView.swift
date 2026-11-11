@@ -128,9 +128,14 @@ struct BurrowHomeView: View {
         guard BurrowDebug.demo else { return }
         func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
         await wait(1.5)
+        // Three finds, each dug straight off its own grid — the demo cheats by reading
+        // findTile, which is the point: it's showing the loop, not playing the game.
         for _ in 0..<3 {
-            if let f = model.buried.first { model.dig(spot: f.spot) }
-            await wait(1.5)
+            guard let f = model.buried.first else { break }
+            model.startTrip(spot: f.spot)
+            await wait(0.8)
+            model.strike(tile: f.findTile)
+            await wait(0.7)
         }
         model.feed(); await wait(1.5)                   //  6.0
         model.feed(); await wait(2.5)                   //  7.5

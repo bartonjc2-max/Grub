@@ -56,20 +56,6 @@ enum FindKind: String, Codable, CaseIterable, Identifiable, CodingKeyRepresentab
         }
     }
 
-    /// Relative chance of being buried (spec §2). Sums to 100; foods are 70.
-    var buryWeight: Int {
-        switch self {
-        case .berry:    return 30
-        case .root:     return 15
-        case .mushroom: return 15
-        case .honeydew: return 10
-        case .crystal:  return 8
-        case .shell:    return 8
-        case .amber:    return 7
-        case .bone:     return 7
-        }
-    }
-
     /// Foods, in the order auto-feed tries them.
     static let feedOrder: [FindKind] = [.berry, .root, .mushroom, .honeydew]
 }

@@ -103,7 +103,7 @@ final class BurrowHomeModelTests: XCTestCase {
         let (m, _) = try larvaModel()
         m.startTrip(spot: 0)
         XCTAssertEqual(m.trip?.spot, 0)
-        XCTAssertEqual(m.trip?.strikesLeft, 5, "clay")
+        XCTAssertEqual(m.trip?.strikesLeft, 6, "clay")
         XCTAssertEqual(m.digsLeft, 2)
     }
 
@@ -111,7 +111,7 @@ final class BurrowHomeModelTests: XCTestCase {
         let (m, store) = try larvaModel()
         m.startTrip(spot: 0)
         m.strike(tile: 11)
-        XCTAssertEqual(m.trip?.strikesLeft, 4)
+        XCTAssertEqual(m.trip?.strikesLeft, 5)
         // The whole point of persisting per strike: a kill mid-trip keeps the progress.
         XCTAssertEqual(store.load(now: t0).buried.first?.tiles[11], .broken)
     }
@@ -122,15 +122,15 @@ final class BurrowHomeModelTests: XCTestCase {
         m.strike(tile: 11)          // soil, breaks
         m.strike(tile: 11)          // already broken → refused
         m.strike(tile: 0)           // root → refused
-        XCTAssertEqual(m.trip?.strikesLeft, 4, "only the first strike counted")
+        XCTAssertEqual(m.trip?.strikesLeft, 5, "only the first strike counted")
     }
 
     func test_running_out_ends_the_trip_and_keeps_progress() throws {
         let (m, _) = try larvaModel()
         m.startTrip(spot: 0)
-        for t in [1, 2, 3, 4, 5] { m.strike(tile: t) }   // 5 soil tiles, none is the find
+        for t in [1, 2, 3, 4, 5, 6] { m.strike(tile: t) }   // 6 soil tiles, none is the find
         XCTAssertNil(m.trip, "out of strikes")
-        XCTAssertEqual(m.save.buried.first?.tiles.filter { $0 == .broken }.count, 5,
+        XCTAssertEqual(m.save.buried.first?.tiles.filter { $0 == .broken }.count, 6,
                        "the holes stay dug")
     }
 

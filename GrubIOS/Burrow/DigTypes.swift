@@ -39,11 +39,17 @@ enum SoilLayer: String, CaseIterable, Equatable {
     case loose, clay, deep
 
     /// Strikes a trip to this layer grants, before conditions and mood.
+    ///
+    /// Clay and deep were 5 and 4 until the pacing was re-measured against the mini-game
+    /// (BurrowPacingTests, 2026-11-10). With those, a once-a-day player took 6.5 days to molt
+    /// against the parent spec's 5.5-day bar — the one-tap dig never failed and also paid a
+    /// 35 % bonus find, both of which are gone. Loose soil's 6 is untouched: it already solved
+    /// every grid, so a 7th strike changed nothing at all.
     var strikes: Int {
         switch self {
         case .loose: return 6
-        case .clay:  return 5
-        case .deep:  return 4
+        case .clay:  return 6
+        case .deep:  return 5
         }
     }
 

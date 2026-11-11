@@ -17,8 +17,26 @@ final class BurrowPacingTests: XCTestCase {
             for m in visitMinutes {
                 let now = t0.addingTimeInterval(TimeInterval(day * 86_400 + m * 60))
                 s = BurrowRules.advance(s, to: now, rng: &rng).save
-                while s.digs > 0, let f = s.buried.first {
-                    s = BurrowRules.dig(s, spot: f.spot, now: now, rng: &rng).save
+                // One trip per dig charge, played by the deterministic greedy solver.
+                // A spot that beats it is left for the next visit rather than retried with
+                // the remaining charges — that's what a player does, and without it the
+                // sim would spend every charge on the one spot it can't crack.
+                var attempted: Set<Int> = []
+                while s.digs > 0, let f = s.buried.first(where: { !attempted.contains($0.spot) }) {
+                    let spot = f.spot
+                    let started = BurrowRules.startTrip(s, spot: spot)
+                    guard case .tripStarted(_, let strikes)? = started.events.first else { break }
+                    s = started.save
+                    let played = DigSolver.play(tiles: f.tiles, findTile: f.findTile,
+                                                wet: f.condition == .wet, strikes: strikes)
+                    // Applied whether or not it won: a losing trip leaves its holes, which is
+                    // what makes the next trip to the same spot easier.
+                    var left = strikes
+                    for tile in played.moves {
+                        s = BurrowRules.strike(s, spot: spot, tile: tile, strikesLeft: left).save
+                        left -= 1
+                    }
+                    if !played.found { attempted.insert(spot) }
                 }
                 for k in FindKind.allCases where k.isDecor {
                     while s.bag[k, default: 0] > 0,
@@ -43,15 +61,21 @@ final class BurrowPacingTests: XCTestCase {
         return runs.reduce(0, +) / Double(runs.count)
     }
 
-    func test_four_visits_a_day_molts_in_about_2_3_days() {
-        XCTAssertEqual(averageDays([8 * 60, 12 * 60, 17 * 60, 22 * 60]), 2.3, accuracy: 0.5)
+    /// Spec bar: 2-4 visits a day molts in under 3 days. Measured 2.4 (2026-11-10, with the
+    /// dig mini-game and the greedy solver playing every trip).
+    func test_four_visits_a_day_molts_in_about_2_4_days() {
+        XCTAssertEqual(averageDays([8 * 60, 12 * 60, 17 * 60, 22 * 60]), 2.4, accuracy: 0.5)
     }
 
-    func test_two_visits_a_day_molts_in_about_2_4_days() {
-        XCTAssertEqual(averageDays([8 * 60, 20 * 60]), 2.4, accuracy: 0.5)
+    /// Measured 2.5. Same 3-day bar.
+    func test_two_visits_a_day_molts_in_about_2_5_days() {
+        XCTAssertEqual(averageDays([8 * 60, 20 * 60]), 2.5, accuracy: 0.5)
     }
 
-    func test_one_visit_a_day_molts_in_about_4_5_days() {
-        XCTAssertEqual(averageDays([19 * 60]), 4.5, accuracy: 0.5)
+    /// Spec bar: once a day molts in under 5.5 days. Measured 5.3 — slower than the one-tap
+    /// dig's 4.5, because a trip can now fail and the 35 % bonus find is gone.
+    func test_one_visit_a_day_molts_in_about_5_3_days() {
+        XCTAssertEqual(averageDays([19 * 60]), 5.3, accuracy: 0.5)
+        XCTAssertLessThan(averageDays([19 * 60]), 5.5, "the spec's once-a-day bar")
     }
 }

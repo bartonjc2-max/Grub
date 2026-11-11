@@ -14,13 +14,17 @@ import Foundation
 enum DigSolver {
     /// Would a player who always makes the locally best move find the item in `strikes`?
     static func solves(tiles: [DigTile], findTile: Int, wet: Bool, strikes: Int) -> Bool {
-        play(tiles: tiles, findTile: findTile, wet: wet, strikes: strikes) != nil
+        play(tiles: tiles, findTile: findTile, wet: wet, strikes: strikes).found
     }
 
-    /// The tiles it would strike, in order, ending on the find — or nil if it runs out.
-    /// The pacing sim needs the sequence, not just the verdict, so it can apply real
-    /// `BurrowRules.strike` calls and let the save do the bookkeeping.
-    static func play(tiles: [DigTile], findTile: Int, wet: Bool, strikes: Int) -> [Int]? {
+    /// The tiles it strikes, in order, and whether the last one was the find.
+    ///
+    /// **A losing trip still returns its strikes.** Broken tiles stay broken between trips
+    /// (spec §1 "Ending a trip"), so a caller that applies the moves only on a win leaves the
+    /// grid untouched after a failure — and then replays the identical losing trip forever,
+    /// because this solver is deterministic. The pacing sim hit exactly that.
+    static func play(tiles: [DigTile], findTile: Int, wet: Bool,
+                     strikes: Int) -> (moves: [Int], found: Bool) {
         var tiles = tiles
         var left = strikes
         var struck: [Int] = []
@@ -28,14 +32,14 @@ enum DigSolver {
         var candidates = Set(tiles.indices.filter { tiles[$0] != .root })
 
         while left > 0 {
-            guard let pick = choose(tiles: tiles, candidates: candidates) else { return nil }
+            guard let pick = choose(tiles: tiles, candidates: candidates) else { return (struck, false) }
             let cost = tiles[pick].cost
-            if cost > left { return nil }
+            if cost > left { return (struck, false) }
             left -= cost
             // One entry per strike, so a 2-hp rock appears twice.
             struck.append(contentsOf: Array(repeating: pick, count: cost))
             tiles[pick] = .broken
-            if pick == findTile { return struck }
+            if pick == findTile { return (struck, true) }
             candidates.remove(pick)
             // Keep only the candidates consistent with the heat just revealed.
             let heat = DigGrid.heat(distance: DigGrid.distance(pick, findTile), wet: wet)
@@ -43,7 +47,7 @@ enum DigSolver {
                 DigGrid.heat(distance: DigGrid.distance(pick, $0), wet: wet) == heat
             }
         }
-        return nil
+        return (struck, false)
     }
 
     /// Highest (expected candidates eliminated ÷ strike cost); ties go to the lowest index.

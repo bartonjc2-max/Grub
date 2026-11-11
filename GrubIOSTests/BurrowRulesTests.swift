@@ -134,49 +134,6 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertTrue(r.events.isEmpty)
     }
 
-    // MARK: dig
-
-    func test_dig_moves_find_to_bag_and_leaves_hole() {
-        let r = BurrowRules.dig(save { $0.joy = 0 }, spot: 1, now: t0, rng: &rng)
-        XCTAssertEqual(r.events, [.dugUp(spot: 1, kind: .root)])
-        XCTAssertEqual(r.save.digs, 2)
-        XCTAssertEqual(r.save.bag, [.berry: 1, .root: 1])
-        XCTAssertEqual(r.save.holes, [1])
-        XCTAssertFalse(r.save.buried.contains { $0.spot == 1 })
-    }
-
-    func test_dig_refusals() {
-        XCTAssertEqual(BurrowRules.dig(save(), spot: 7, now: t0, rng: &rng).events, [.refused(.nothingBuriedThere)])
-        let none = save { $0.digs = 0 }
-        let r = BurrowRules.dig(none, spot: 0, now: t0, rng: &rng)
-        XCTAssertEqual(r.events, [.refused(.noDigs)])
-        XCTAssertEqual(r.save, none)
-    }
-
-    func test_bonus_find_only_when_happy_at_about_35_percent() {
-        func bonusRate(joy: Int) -> Double {
-            var hits = 0
-            for _ in 0..<4000 {
-                let s = save { $0.joy = joy; $0.buried = [BuriedFind(spot: 0, kind: .berry)] }
-                let r = BurrowRules.dig(s, spot: 0, now: t0, rng: &rng)
-                if r.events.contains(where: { if case .bonusFind = $0 { return true } else { return false } }) { hits += 1 }
-            }
-            return Double(hits) / 4000
-        }
-        XCTAssertEqual(bonusRate(joy: 7), 0.35, accuracy: 0.03)
-        XCTAssertEqual(bonusRate(joy: 6), 0)
-    }
-
-    func test_bonus_find_lands_in_bag() {
-        var r: BurrowResult
-        repeat {
-            r = BurrowRules.dig(save { $0.joy = 10; $0.bag = [:] }, spot: 0, now: t0, rng: &rng)
-        } while r.events.count < 2
-        guard case .bonusFind(0, let extra) = r.events[1] else { return XCTFail("\(r.events)") }
-        XCTAssertEqual(r.save.bag.values.reduce(0, +), 2)
-        XCTAssertGreaterThanOrEqual(r.save.bag[extra] ?? 0, 1)
-    }
-
     // MARK: feed
 
     func test_feed_auto_eats_berry() {

@@ -117,7 +117,6 @@ final class BurrowHomeModel: ObservableObject {
     // MARK: Actions
 
     func tick() { apply(BurrowRules.advance(save, to: clock(), rng: &rng)) }
-    func dig(spot: Int) { apply(BurrowRules.dig(save, spot: spot, now: clock(), rng: &rng)) }
     func feed() { apply(BurrowRules.feed(save, kind: nil, now: clock())) }
     func pet() { apply(BurrowRules.pet(save, now: clock())) }
     func feed(kind: FindKind) { apply(BurrowRules.feed(save, kind: kind, now: clock())) }
@@ -263,12 +262,6 @@ final class BurrowHomeModel: ObservableObject {
             add(.init(kind: .text("+" + kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 6), born: t + 0.15, life: 1.3))
             Haptics.thud()
             if save.digs == 0 { say("THAT'S ALL\nFOR NOW") }
-        case .bonusFind(let spot, let kind):
-            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
-            let p = BurrowSpots.resolve(spot, L)
-            add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: t + 0.45, life: 1.2))
-            add(.init(kind: .text("BONUS! +" + kind.label, BurrowInk.teal), x: Double(p.x), y: Double(p.y - 11), born: t + 0.5, life: 1.4))
-            Haptics.soft()
         case .tileBroken(_, let heat):
             // No particle here: the burrow FX layer draws under the grid overlay, so anything
             // added would be invisible. The tile art changing is the feedback; this is the feel.

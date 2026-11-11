@@ -22,35 +22,35 @@ final class DigRulesTests: XCTestCase {
 
     func test_strikes_come_from_the_layer() {
         XCTAssertEqual(strikes(save(spot: 1), spot: 1), 6, "loose")
-        XCTAssertEqual(strikes(save(spot: 0), spot: 0), 5, "clay")
-        XCTAssertEqual(strikes(save(spot: 3), spot: 3), 4, "deep")
+        XCTAssertEqual(strikes(save(spot: 0), spot: 0), 6, "clay")
+        XCTAssertEqual(strikes(save(spot: 3), spot: 3), 5, "deep")
     }
 
     func test_only_wet_changes_the_strike_count() {
-        XCTAssertEqual(strikes(save(spot: 0, condition: .wet)), 7)
-        XCTAssertEqual(strikes(save(spot: 0, condition: .rooty)), 5, "rooty costs tiles, not strikes")
-        XCTAssertEqual(strikes(save(spot: 0, condition: .rocky)), 5, "rocky costs tiles, not strikes")
+        XCTAssertEqual(strikes(save(spot: 0, condition: .wet)), 8)
+        XCTAssertEqual(strikes(save(spot: 0, condition: .rooty)), 6, "rooty costs tiles, not strikes")
+        XCTAssertEqual(strikes(save(spot: 0, condition: .rocky)), 6, "rocky costs tiles, not strikes")
     }
 
     func test_a_happy_grub_digs_longer_and_a_sulking_one_shorter() {
-        XCTAssertEqual(strikes(save(joy: 7)), 7, "happy")
-        XCTAssertEqual(strikes(save(belly: 0)), 4, "sulking")
+        XCTAssertEqual(strikes(save(joy: 7)), 8, "happy")
+        XCTAssertEqual(strikes(save(belly: 0)), 5, "sulking")
     }
 
     func test_sulking_beats_happy_when_both_hold() {
-        XCTAssertEqual(strikes(save(belly: 0, joy: 10)), 4,
+        XCTAssertEqual(strikes(save(belly: 0, joy: 10)), 5,
                        "starving outweighs cheerful")
     }
 
     func test_an_egg_gets_no_mood_bonus() {
         var s = save(joy: 10, stage: .egg)
         s.name = ""
-        XCTAssertEqual(strikes(s), 5, "stats are larva-only")
+        XCTAssertEqual(strikes(s), 6, "stats are larva-only")
     }
 
-    func test_the_worst_case_is_three_strikes() {
-        XCTAssertEqual(strikes(save(spot: 3, belly: 0, condition: .rooty), spot: 3), 3,
-                       "deep 4, sulking -1; rooty no longer costs a strike")
+    func test_the_worst_case_is_four_strikes() {
+        XCTAssertEqual(strikes(save(spot: 3, belly: 0, condition: .rooty), spot: 3), 4,
+                       "deep 5, sulking -1; rooty no longer costs a strike")
     }
 
     func test_a_trip_spends_a_charge_and_marks_the_spot_visited() {

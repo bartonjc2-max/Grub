@@ -32,14 +32,23 @@ spec says otherwise (the dig itself, the happy bonus roll, spot markers, the pac
 
   `strikes = max(2, soilStrikes + conditionStrikes + moodStrikes)`
 
-  - soilStrikes: loose 6 · clay 5 · deep 4
+  - soilStrikes: loose 6 · clay 6 · deep 5
   - conditionStrikes: wet +2 · otherwise 0
   - moodStrikes: `isSulking(s) ? −1 : isHappy(s) ? +2 : 0`, using the existing helpers.
     Sulking wins when both hold (belly 0 with joy still high). Both helpers require
     `.larva`, so **an egg always gets +0** — stats don't exist yet at that stage.
 - Mood is read once, when the trip starts, and is not recomputed if `advance` runs mid-trip.
-- The worst case is 3 — deep (4) + sulking (−1) — so `max(2, …)` never actually clamps
+- The worst case is 4 — deep (5) + sulking (−1) — so `max(2, …)` never actually clamps
   today. It stays as a guard for future tuning; the test asserts the sum, not the clamp.
+
+> **Pacing note, 2026-11-10.** Clay and deep were 5 and 4 when this spec was written. Measured
+> against the finished mini-game (`BurrowPacingTests`, the greedy solver playing every trip), a
+> once-a-day player then took **6.5 days** to molt against the parent spec's 5.5-day bar: the
+> one-tap dig never failed *and* paid a 35 % bonus find, and both are gone. One extra strike on
+> clay and deep brings it to **5.3 days** (2–4 visits a day: 2.4–2.5, bar 3). Loose soil keeps
+> its 6 — it already solved every grid, so a 7th strike moved nothing. The cost is that a
+> greedy player now wins 96–100 % of grids rather than 82–100 %; the layers' difficulty is
+> carried by their obstacles and find tables more than by their strike counts.
 
 ### The grid
 
