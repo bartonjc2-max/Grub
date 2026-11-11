@@ -41,6 +41,28 @@ enum DigGen {
         }
     }
 
+    /// Spec §1 "Soil layers". Weights sum to 100 within each layer.
+    static func kindWeights(_ layer: SoilLayer) -> [(FindKind, Int)] {
+        switch layer {
+        case .loose: return [(.berry, 40), (.root, 25), (.mushroom, 15), (.shell, 10), (.bone, 10)]
+        case .clay:  return [(.berry, 30), (.root, 15), (.mushroom, 15), (.honeydew, 10),
+                             (.crystal, 8), (.shell, 8), (.amber, 7), (.bone, 7)]
+        case .deep:  return [(.honeydew, 20), (.crystal, 20), (.amber, 20),
+                             (.mushroom, 15), (.bone, 15), (.root, 10)]
+        }
+    }
+
+    static func rollKind(layer: SoilLayer, rng: inout some RandomNumberGenerator) -> FindKind {
+        let table = kindWeights(layer)
+        let total = table.reduce(0) { $0 + $1.1 }
+        var r = Int.random(in: 0..<total, using: &rng)
+        for (kind, w) in table {
+            if r < w { return kind }
+            r -= w
+        }
+        return table[0].0
+    }
+
     /// Spec §1 "Conditions": none 40 %, then wet / rocky / rooty / glinting at 15 % each.
     static func rollCondition(rng: inout some RandomNumberGenerator) -> DigCondition? {
         let r = Int.random(in: 0..<100, using: &rng)

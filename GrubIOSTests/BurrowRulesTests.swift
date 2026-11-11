@@ -56,13 +56,34 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(full.buryTimer, 0)
     }
 
-    func test_bury_weights() {
-        var counts: [FindKind: Int] = [:]
-        for _ in 0..<10_000 { counts[BurrowRules.weightedKind(rng: &rng), default: 0] += 1 }
-        let total = FindKind.allCases.reduce(0) { $0 + $1.buryWeight }
-        for k in FindKind.allCases {
-            let expected = Double(k.buryWeight) / Double(total)
-            XCTAssertEqual(Double(counts[k] ?? 0) / 10_000, expected, accuracy: 0.02, "\(k)")
+    func test_each_layer_buries_its_own_mix() {
+        var counts: [SoilLayer: [FindKind: Int]] = [:]
+        for layer in SoilLayer.allCases {
+            var rng = BurrowRNG(seed: 7)
+            var c: [FindKind: Int] = [:]
+            for _ in 0..<4000 { c[DigGen.rollKind(layer: layer, rng: &rng), default: 0] += 1 }
+            counts[layer] = c
+        }
+        XCTAssertEqual(counts[.loose]?[.crystal] ?? 0, 0, "loose soil holds no crystals")
+        XCTAssertGreaterThan(counts[.deep]?[.crystal] ?? 0, 500, "deep soil is where crystals live")
+        XCTAssertEqual(counts[.loose]?[.amber] ?? 0, 0)
+    }
+
+    func test_food_share_per_layer() {
+        func foodShare(_ layer: SoilLayer) -> Double {
+            var rng = BurrowRNG(seed: 11)
+            let n = 4000
+            let food = (0..<n).filter { _ in DigGen.rollKind(layer: layer, rng: &rng).isFood }.count
+            return Double(food) / Double(n)
+        }
+        XCTAssertEqual(foodShare(.loose), 0.80, accuracy: 0.03)
+        XCTAssertEqual(foodShare(.clay),  0.70, accuracy: 0.03)
+        XCTAssertEqual(foodShare(.deep),  0.45, accuracy: 0.03)
+    }
+
+    func test_every_layer_table_sums_to_100() {
+        for layer in SoilLayer.allCases {
+            XCTAssertEqual(DigGen.kindWeights(layer).reduce(0) { $0 + $1.1 }, 100, "\(layer)")
         }
     }
 
@@ -222,9 +243,14 @@ final class BurrowRulesTests: XCTestCase {
         XCTAssertEqual(FindKind.allCases.count, 8)
         XCTAssertEqual(FindKind.feedOrder, [.berry, .root, .mushroom, .honeydew])
         XCTAssertEqual(Set(FindKind.allCases.filter(\.isDecor)), [.crystal, .shell, .amber, .bone])
-        XCTAssertEqual(FindKind.allCases.reduce(0) { $0 + $1.buryWeight }, 100)
-        let foodWeight = FindKind.allCases.filter(\.isFood).reduce(0) { $0 + $1.buryWeight }
-        XCTAssertEqual(foodWeight, 70, "70 % of burials are food (Stat roles pacing)")
+        // Burial odds are per soil layer now (DigGen.kindWeights), not one global table.
+        // Food share is 80 / 70 / 45 by layer; over the 8 spots (3 loose, 3 clay, 2 deep)
+        // that averages 67.5 %, close to the 70 % the stat pacing was tuned against.
+        let perSpot = (0..<BurrowRules.spotCount).map { spot -> Double in
+            let table = DigGen.kindWeights(BurrowSpots.layer(spot))
+            return Double(table.filter { $0.0.isFood }.reduce(0) { $0 + $1.1 }) / 100
+        }
+        XCTAssertEqual(perSpot.reduce(0, +) / Double(perSpot.count), 0.675, accuracy: 0.001)
         XCTAssertEqual(FindKind.root.leansTo, .claws)
         XCTAssertEqual(FindKind.mushroom.leansTo, .stalk)
         XCTAssertEqual(FindKind.honeydew.leansTo, .fuzz)

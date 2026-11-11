@@ -107,7 +107,13 @@ enum BurrowRules {
     static func bury(_ s: inout BurrowSave, rng: inout some RandomNumberGenerator) -> BuriedFind? {
         let taken = Set(s.buried.map(\.spot))
         guard let spot = (0..<spotCount).filter({ !taken.contains($0) }).randomElement(using: &rng) else { return nil }
-        let f = BuriedFind(spot: spot, kind: weightedKind(rng: &rng))
+        // Draw order is part of the contract: spot -> kind -> condition -> grid.
+        let layer = BurrowSpots.layer(spot)
+        let kind = DigGen.rollKind(layer: layer, rng: &rng)
+        let condition = DigGen.rollCondition(rng: &rng)
+        let g = DigGen.make(layer: layer, condition: condition, rng: &rng)
+        let f = BuriedFind(spot: spot, kind: kind, condition: condition,
+                           findTile: g.findTile, tiles: g.tiles)
         s.buried.append(f)
         s.holes.removeAll { $0 == spot }
         return f

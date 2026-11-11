@@ -36,7 +36,7 @@ Each bar has one job, one logical cause, and a payoff the player can see. They c
 | Stat | What it means | Goes up | Goes down | Why the player cares |
 |---|---|---|---|---|
 | **BELLY** | fuel | a meal: +3 | −1 every 2 h | Meals are the only way to grow (each meal is +1 MOLT). The cap (TOO FULL at 10) spaces meals out, so it is the pacing gate. At 0 the grub **sulks**: Joy drains hourly. |
-| **JOY** | mood | pet: +1 (once per 15 min); a meal **different from the last one**: +1 | −1 every 4 h, **+1 h per placed decor** (up to 8 h); every 1 h while sulking | At 7+ the grub is **HAPPY**: every dig has a 35 % chance to turn up a **bonus find**. The JOY bar shows a HAPPY tag so the payoff is visible. |
+| **JOY** | mood | pet: +1 (once per 15 min); a meal **different from the last one**: +1 | −1 every 4 h, **+1 h per placed decor** (up to 8 h); every 1 h while sulking | At 7+ the grub is **HAPPY**: every dig has a 35 % chance to turn up a **bonus find**. The JOY bar shows a HAPPY tag so the payoff is visible. _(Superseded by the dig spec, 2026-11-10: the hidden bonus-find roll is gone; a happy grub gets +2 strikes in the dig mini-game instead. See `2026-11-10-dig-minigame-design.md`.)_ |
 | **MOLT** | growth | +1 per meal | never | At 10 the grub is ready to molt. What it ate and the decor shape *which* adult (odds); MOLT only says *when*. |
 
 Why this shape:
@@ -111,7 +111,7 @@ of 8 `CellAnchor`s.
 ```swift
 enum BurrowRules {
   static let moltGoal = 10
-  static let happyJoy = 7, bonusFindChance = 0.35
+  static let happyJoy = 7, bonusFindChance = 0.35   // bonusFindChance removed by the dig spec
   static func advance(_ s: BurrowSave, to now: Date, rng: inout some RandomNumberGenerator) -> BurrowResult
   static func dig(_ s: BurrowSave, spot: Int, now: Date, rng: inout some RandomNumberGenerator) -> BurrowResult
   static func feed(_ s: BurrowSave, kind: FindKind?, now: Date) -> BurrowResult   // nil = first food in bag order
@@ -179,7 +179,7 @@ mid-gap switches joy to the hourly drain) are exact.
 | Timer | Period | Effect | Active when |
 |---|---|---|---|
 | dig | 3 h | `digs += 1` | `digs < 3`; **reset to 0 while at the cap** (no banking) |
-| bury | 2 h | bury one weighted-random find in a random free spot (not in `buried`); removes that spot from `holes` | `buried.count < 4`; reset to 0 while at the cap |
+| bury | 2 h | bury one weighted-random find in a random free spot (not in `buried`); removes that spot from `holes`. _(Superseded by the dig spec, 2026-11-10: the kind is rolled from the spot's soil layer, not one global table. See `2026-11-10-dig-minigame-design.md`.)_ | `buried.count < 4`; reset to 0 while at the cap |
 | belly | 2 h | `belly −= 1` | stage `.larva` and `belly > 0` |
 | joy | `4 h + 1 h × placed decor` (max 8 h); **1 h while belly = 0** | `joy −= 1` | stage `.larva` and `joy > 0` |
 
@@ -306,7 +306,7 @@ In the existing ASCII-sprite / rect style in `BurrowArt.swift`, on the 64-column
   over 10k draws
 - belly/joy decay; joy switches to hourly at belly 0 *mid-gap* (the 1-minute simulation);
   each placed decor lengthens the joy period by 1 h (max 8 h); feeding raises molt while sulking
-- bonus find: only when happy, rate ≈ 35 % over many seeded digs, never while joy < 7
+- bonus find: only when happy, rate ≈ 35 % over many seeded digs, never while joy < 7 _(Superseded by the dig spec, 2026-11-10: the hidden bonus-find roll is gone; a happy grub gets +2 strikes in the dig mini-game instead. See `2026-11-10-dig-minigame-design.md`.)_
 - 72 h clamp; backward clock only resets `lastTick`
 - feed: auto order prefers variety, specific kind, TOO FULL, NO FOOD, NOT FOOD; +joy only for
   a different food than `lastMeal`; pet cooldown 15 min
