@@ -41,6 +41,18 @@ enum DigGen {
         }
     }
 
+    /// Spec §1 "Conditions": none 40 %, then wet / rocky / rooty / glinting at 15 % each.
+    static func rollCondition(rng: inout some RandomNumberGenerator) -> DigCondition? {
+        let r = Int.random(in: 0..<100, using: &rng)
+        switch r {
+        case ..<40: return nil
+        case ..<55: return .wet
+        case ..<70: return .rocky
+        case ..<85: return .rooty
+        default:    return .glinting
+        }
+    }
+
     /// Roots never cover the find; rocks may (that is rocky's cost).
     private static func place(rocks: Int, roots: Int, findTile: Int,
                               rng: inout some RandomNumberGenerator) -> [DigTile] {

@@ -79,6 +79,17 @@ final class DigGenTests: XCTestCase {
         }
     }
 
+    func test_conditions_roll_at_the_spec_odds() {
+        var rng = BurrowRNG(seed: 3)
+        var counts: [DigCondition?: Int] = [:]
+        let n = 2000
+        for _ in 0..<n { counts[DigGen.rollCondition(rng: &rng), default: 0] += 1 }
+        XCTAssertEqual(Double(counts[nil] ?? 0) / Double(n), 0.40, accuracy: 0.04)
+        for c in DigCondition.allCases {
+            XCTAssertEqual(Double(counts[c] ?? 0) / Double(n), 0.15, accuracy: 0.04, "\(c)")
+        }
+    }
+
     func test_generation_is_reproducible() {
         var a = BurrowRNG(seed: 99), b = BurrowRNG(seed: 99)
         let x = DigGen.make(layer: .clay, condition: .rocky, rng: &a)

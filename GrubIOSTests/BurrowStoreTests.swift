@@ -81,10 +81,16 @@ final class BurrowStoreTests: XCTestCase {
      "lastPetAt":749990000}
     """
 
-    func test_a_version_1_save_still_loads() throws {
+    /// A store in a fresh temp dir, pre-loaded with `json`.
+    func storeHolding(_ json: String) throws -> BurrowStore {
         let store = BurrowStore(directory: tempDir())
         try FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
-        try Data(Self.v1JSON.utf8).write(to: store.fileURL)
+        try Data(json.utf8).write(to: store.fileURL)
+        return store
+    }
+
+    func test_a_version_1_save_still_loads() throws {
+        let store = try storeHolding(Self.v1JSON)
 
         let save = store.load()
 
@@ -93,5 +99,39 @@ final class BurrowStoreTests: XCTestCase {
         XCTAssertEqual(save.holes, [1])
         XCTAssertFalse(FileManager.default.fileExists(atPath: store.corruptURL.path),
                        "a v1 save must never be treated as corrupt")
+    }
+
+    func test_a_v1_save_gains_grids_and_becomes_v2() throws {
+        let save = try storeHolding(Self.v1JSON).load()
+        XCTAssertEqual(save.version, 2)
+        XCTAssertEqual(save.buried.count, 2)
+        for f in save.buried {
+            XCTAssertEqual(f.tiles.count, DigGrid.tileCount, "spot \(f.spot) got a grid")
+            XCTAssertNotEqual(f.tiles[f.findTile], .root, "spot \(f.spot)")
+        }
+    }
+
+    func test_the_migrated_save_is_written_back_so_it_only_happens_once() throws {
+        let store = try storeHolding(Self.v1JSON)
+        _ = store.load()
+        let onDisk = try JSONDecoder().decode(BurrowSave.self, from: Data(contentsOf: store.fileURL))
+        XCTAssertEqual(onDisk.version, 2, "the upgrade was saved, not redone every launch")
+        XCTAssertEqual(onDisk.buried.first?.tiles.count, DigGrid.tileCount)
+    }
+
+    func test_migrating_the_same_save_twice_gives_the_same_grids() throws {
+        let first = try storeHolding(Self.v1JSON).load()
+        let second = try storeHolding(Self.v1JSON).load()
+        XCTAssertEqual(first.buried.map(\.tiles), second.buried.map(\.tiles),
+                       "the spot-derived seed must make migration repeatable")
+        XCTAssertEqual(first.buried.map(\.findTile), second.buried.map(\.findTile))
+    }
+
+    func test_a_part_written_v2_save_is_repaired() throws {
+        // version 2, but a buried find with no grid — a hand-edit, or a crash mid-write.
+        let broken = Self.v1JSON.replacingOccurrences(of: "\"version\":1", with: "\"version\":2")
+        let save = try storeHolding(broken).load()
+        XCTAssertEqual(save.buried.first?.tiles.count, DigGrid.tileCount,
+                       "a missing grid is repaired regardless of version")
     }
 }
