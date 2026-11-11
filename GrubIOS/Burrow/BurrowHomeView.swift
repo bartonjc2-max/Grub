@@ -171,6 +171,12 @@ struct BurrowHomeView: View {
         let rock = find.tiles.indices.first { find.tiles[$0].isRock && DigGrid.distance($0, f) <= 2 }
 
         withAnimation { model.startTrip(spot: 0) }
+        // Wait for the crawl and the zoom to finish. Striking before the grid is up is
+        // ignored by design, and an earlier version of this demo silently lost its first
+        // strike that way — the screenshots showed a dig that had never happened.
+        while model.trip != nil, model.trip?.phase != .digging {
+            await wait(0.1)
+        }
         for tile in [cold, warm, rock, rock, f].compactMap({ $0 }) {
             await wait(1.4)
             model.strike(tile: tile)
