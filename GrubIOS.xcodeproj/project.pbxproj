@@ -32,6 +32,7 @@
 		4E2876BBE2242D2E2111E81C /* BurrowSpotsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD363F4F97AC165991535DE /* BurrowSpotsTests.swift */; };
 		5237721EAE2660F520E34C0A /* DigRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2E7AA5019C84529F209495 /* DigRulesTests.swift */; };
 		55F0D78F488E4B861C47C22C /* GrubSpriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E27D9A28C56FDDD40E671D /* GrubSpriteView.swift */; };
+		597483B7089AEDCF149AD340 /* DigGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ABAB4CD94FDF5235A9638A9 /* DigGridView.swift */; };
 		59BD85198F2FDE0FD7212407 /* BurrowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E020F24B873AB8253B316D1 /* BurrowLayoutTests.swift */; };
 		5A07DCCD5EB3407A61CEF0C8 /* BurrowRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B34FC7FAE19656C872B2D6 /* BurrowRulesTests.swift */; };
 		5D4E6F6F4CC1C81C3A825799 /* DescentSceneSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5056588FF477121101C6C80 /* DescentSceneSmokeTests.swift */; };
@@ -142,6 +143,7 @@
 		7BCBE326714FB960EC58256D /* GameState+Crafting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameState+Crafting.swift"; sourceTree = "<group>"; };
 		82B41213D1E3F352FB708FFE /* BurrowArtTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowArtTests.swift; sourceTree = "<group>"; };
 		8962ABAC9B78E853C86DD70F /* BurrowRNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowRNG.swift; sourceTree = "<group>"; };
+		8ABAB4CD94FDF5235A9638A9 /* DigGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DigGridView.swift; sourceTree = "<group>"; };
 		8B23E63CDA62BC9820BAC9CD /* PixelBuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelBuffer.swift; sourceTree = "<group>"; };
 		8BEFF8AB22606442D65D1965 /* GrubFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrubFont.swift; sourceTree = "<group>"; };
 		8D27BE5630BFD4423D1DA49F /* BurrowOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurrowOverlay.swift; sourceTree = "<group>"; };
@@ -349,6 +351,7 @@
 				4A012B7067909685AAA6CF93 /* BurrowSpots.swift */,
 				0C9D8738EB29C023FFAD27A9 /* BurrowTypes.swift */,
 				24C2FA934FAE149FCEFC2AC4 /* DigGen.swift */,
+				8ABAB4CD94FDF5235A9638A9 /* DigGridView.swift */,
 				3A21567E7CFE6D0586E6809A /* DigRules.swift */,
 				5EDC48EFD68280D254DF25CF /* DigSolver.swift */,
 				3BD133BAC810EAB917422709 /* DigTypes.swift */,
@@ -515,6 +518,7 @@
 				2C9F3DD96C2B7B99E2D63DEA /* DescentTuning.swift in Sources */,
 				D408AD0BEC14A5D5CCAE7EF0 /* DescentView.swift in Sources */,
 				F4C11411D9A06DE6785B4B90 /* DigGen.swift in Sources */,
+				597483B7089AEDCF149AD340 /* DigGridView.swift in Sources */,
 				1AB1E9A1F48170855A0D9ECD /* DigRules.swift in Sources */,
 				FC46E0629DD6C9795403FDCB /* DigSolver.swift in Sources */,
 				E51AFE2B06B1C887902F1DC0 /* DigTypes.swift in Sources */,

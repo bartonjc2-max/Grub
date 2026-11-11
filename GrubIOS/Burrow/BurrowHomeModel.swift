@@ -405,5 +405,7 @@ enum BurrowDebug {
     static var moltDemo: Bool { args.contains("-burrowMoltDemo") }
     /// `-burrowLoopDemo` (use with `-burrowReset -burrowAdult horn`): pin → box → name → hatch.
     static var loopDemo: Bool { args.contains("-burrowLoopDemo") }
+    /// `-burrowDigDemo` (use with `-burrowReset`): hatch, then play one dig at spot 0.
+    static var digDemo: Bool { args.contains("-burrowDigDemo") }
 }
 #endif

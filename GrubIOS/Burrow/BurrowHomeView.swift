@@ -71,6 +71,23 @@ struct BurrowHomeView: View {
             }
         }
         .overlay {
+            // The dimmer has to be here, in the group attached *after* bottomHUD, and it has
+            // to swallow taps: the HUD's DIG and FINDS buttons and the grub's own tap gesture
+            // are not gated on `canStartTrip`, so without it they stay live under the grid.
+            if let trip = model.trip, let find = model.buried.first(where: { $0.spot == trip.spot }) {
+                ZStack {
+                    Color(ink: BurrowInk.hollow).opacity(0.95).ignoresSafeArea().onTapGesture {}
+                    GeometryReader { geo in
+                        DigGridView(model: model, trip: trip, find: find,
+                                    layout: BurrowLayout(size: geo.size, displayScale: displayScale),
+                                    width: geo.size.width)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    }
+                }
+                .transition(.opacity)
+            }
+        }
+        .overlay {
             if model.showBox {
                 SpecimenBoxView(specimens: model.specimens) { withAnimation(.easeOut(duration: 0.15)) { model.showBox = false } }
                     .transition(.opacity)
@@ -90,6 +107,7 @@ struct BurrowHomeView: View {
             await runDemoIfRequested()
             await runMoltDemoIfRequested()
             await runLoopDemoIfRequested()
+            await runDigDemoIfRequested()
         }
         #endif
     }
@@ -122,6 +140,38 @@ struct BurrowHomeView: View {
         model.tapSlot(2); await wait(3.0)               // 16.0
         model.removeSelected(); await wait(2.5)         // 19.0
         withAnimation { model.showBag = true }          // 21.5
+    }
+
+    /// `-burrowDigDemo` (use with `-burrowReset`). Hatches, then plays one dig at spot 0:
+    /// a cold tile, a warm one, a rock twice, then the find — clay's 5 strikes, exactly spent.
+    private func runDigDemoIfRequested() async {
+        guard BurrowDebug.digDemo else { return }
+        func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1_000_000_000)) }
+
+        // Hatch the way the loop demo does; there is no debug hatch flag.
+        await wait(1.0); _ = model.nameEgg("DIG")
+        for _ in 0..<BurrowRules.crackTaps { await wait(0.6); model.tapGrub() }
+        await wait(1.0)
+
+        guard let find = model.buried.first(where: { $0.spot == 0 }) else {
+            assertionFailure("the dig demo expects a find at spot 0"); return
+        }
+        assert(BurrowSpots.layer(0) == .clay, "the dig demo assumes spot 0 is clay")
+        assert(find.tiles.indices.contains { find.tiles[$0].isRock && DigGrid.distance($0, find.findTile) <= 2 },
+               "the fresh seed no longer puts a rock near the find; rescript the demo")
+
+        // Pick the script from the grid rather than hard-coding tile numbers, so it survives
+        // a change of seed: one cold tile, one warm, then the nearby rock, then the find.
+        let f = find.findTile
+        let cold = find.tiles.indices.first { find.tiles[$0] == .soil && DigGrid.distance($0, f) >= 3 }
+        let warm = find.tiles.indices.first { find.tiles[$0] == .soil && DigGrid.distance($0, f) == 2 }
+        let rock = find.tiles.indices.first { find.tiles[$0].isRock && DigGrid.distance($0, f) <= 2 }
+
+        withAnimation { model.startTrip(spot: 0) }
+        for tile in [cold, warm, rock, rock, f].compactMap({ $0 }) {
+            await wait(1.4)
+            model.strike(tile: tile)
+        }
     }
 
     /// `-burrowMoltDemo` (use with `-burrowReset -burrowMoltReady`). Seconds after the view appears:
@@ -211,10 +261,10 @@ struct BurrowHomeView: View {
             .frame(width: 48, height: 64)
             .contentShape(Rectangle())
             .position(x: cx, y: CGFloat(p.y - 3) * L.cell)
-            .onTapGesture { model.dig(spot: spot) }
+            .onTapGesture { model.startTrip(spot: spot) }
             .accessibilityElement()
             .accessibilityLabel("Buried find")
-            .accessibilityHint("Dig it up")
+            .accessibilityHint("Go and dig it up")
             .accessibilityAddTraits(.isButton)
     }
 

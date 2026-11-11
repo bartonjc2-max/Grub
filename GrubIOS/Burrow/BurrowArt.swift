@@ -341,6 +341,104 @@ extension FindKind {
     }
 }
 
+/// Tiles for the 5 × 5 dig grid (spec §1). Each is 9 × 9 pixels, drawn at `layout.cell * 2`
+/// points per pixel — so the grid spans 5 × 9 × 2 = 90 design cells against the burrow's 64,
+/// which is what makes arriving at a spot read as a zoom in rather than a screen change.
+///
+/// Heat is never colour alone (spec §6): hot carries a ▲, warm a single dot, cold nothing.
+enum DigArt {
+    static let side = 9
+
+    /// Untouched soil: a raised block with a lit top edge, so it reads as "not dug yet".
+    static let soil = PixelBuffer(art: ["LLLLLLLLL",
+                                        "LSSSSSSSd",
+                                        "LSSsSSSSd",
+                                        "LSSSSSsSd",
+                                        "LsSSSSSSd",
+                                        "LSSSSsSSd",
+                                        "LSSsSSSSd",
+                                        "LSSSSSSSd",
+                                        "ddddddddd"],
+                                  palette: ["L": BurrowInk.soil1, "S": BurrowInk.soil2,
+                                            "s": BurrowInk.speck, "d": BurrowInk.soil4])
+
+    /// A rock, still whole. `cracked` is the same stone after one hit.
+    static func rock(cracked: Bool) -> PixelBuffer {
+        PixelBuffer(art: ["LLLLLLLLL",
+                          "LSSSSSSSd",
+                          "LSRRRRRSd",
+                          "LRRhhRRRd",
+                          cracked ? "LRkkkkkRd" : "LRRhRRRRd",
+                          cracked ? "LRRkRkRRd" : "LRRRRhRRd",
+                          "LSRRRRRSd",
+                          "LSSSSSSSd",
+                          "ddddddddd"],
+                    palette: ["L": BurrowInk.soil1, "S": BurrowInk.soil2, "d": BurrowInk.soil4,
+                              "R": BurrowInk.steel, "h": BurrowInk.steelHi,
+                              "k": BurrowInk.hollow])
+    }
+    static let rockWhole = rock(cracked: false)
+    static let rockCracked = rock(cracked: true)
+
+    /// A root: can't be dug, and never hides the find.
+    static let root = PixelBuffer(art: ["LLLLLLLLL",
+                                        "LSSrSSSSd",
+                                        "LSSrrSSSd",
+                                        "LSrrRrSSd",
+                                        "LrrRRRrrd",
+                                        "LSSrRRrSd",
+                                        "LSSSrrSSd",
+                                        "LSSSSrSSd",
+                                        "ddddddddd"],
+                                  palette: ["L": BurrowInk.soil1, "S": BurrowInk.soil2,
+                                            "d": BurrowInk.soil4,
+                                            "R": BurrowInk.root, "r": BurrowInk.surface])
+
+    /// A tile already dug, showing how close the find was.
+    static func broken(_ heat: Heat) -> PixelBuffer {
+        switch heat {
+        // Hot is the brightest field in the game and carries a ▲; warm is a dim field with a
+        // single dot. The two must differ in brightness as well as glyph — colour alone fails
+        // for a colour-blind player, and glyph alone is too small to read at a glance.
+        case .hot:  return PixelBuffer(art: ["kkkkkkkkk",
+                                             "kHHHHHHHk",
+                                             "kHHHAHHHk",
+                                             "kHHAAAHHk",
+                                             "kHAAAAAHk",
+                                             "kHHHHHHHk",
+                                             "kHHHHHHHk",
+                                             "kHHHHHHHk",
+                                             "kkkkkkkkk"],
+                                       palette: ["k": BurrowInk.hollow, "H": BurrowInk.amber,
+                                                 "A": BurrowInk.amberHi])
+        case .warm: return PixelBuffer(art: ["kkkkkkkkk",
+                                             "kWWWWWWWk",
+                                             "kWWWWWWWk",
+                                             "kWWWWWWWk",
+                                             "kWWWAWWWk",
+                                             "kWWWWWWWk",
+                                             "kWWWWWWWk",
+                                             "kWWWWWWWk",
+                                             "kkkkkkkkk"],
+                                       palette: ["k": BurrowInk.hollow, "W": BurrowInk.amberLo,
+                                                 "A": BurrowInk.amber])
+        case .cold: return PixelBuffer(art: ["kkkkkkkkk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kCCCCCCCk",
+                                             "kkkkkkkkk"],
+                                       palette: ["k": BurrowInk.hollow, "C": BurrowInk.soil4])
+        }
+    }
+    static let brokenHot = broken(.hot)
+    static let brokenWarm = broken(.warm)
+    static let brokenCold = broken(.cold)
+}
+
 enum IconArt {
     static let shovel = PixelBuffer(art: ["....HH",
                                           "...HH.",
