@@ -74,7 +74,7 @@ struct BurrowHomeView: View {
             // The dimmer has to be here, in the group attached *after* bottomHUD, and it has
             // to swallow taps: the HUD's DIG and FINDS buttons and the grub's own tap gesture
             // are not gated on `canStartTrip`, so without it they stay live under the grid.
-            if let trip = model.trip, let find = model.buried.first(where: { $0.spot == trip.spot }) {
+            if let trip = model.trip, let find = model.tripFind {
                 GeometryReader { geo in
                     DigTripView(model: model, trip: trip, find: find,
                                 layout: BurrowLayout(size: geo.size, displayScale: displayScale),
@@ -247,15 +247,30 @@ struct BurrowHomeView: View {
     @ViewBuilder
     private func marker(spot: Int, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
         let p = BurrowSpots.resolve(spot, L)
+        let find = model.buried.first { $0.spot == spot }
         let phase = Double((spot * 7) % 10) / 10
         let bob = Int(t / 0.45 + phase * 2) % 2
         let hinted = t - model.digHintAt < 1.6
         let hot = hinted && Int(t / 0.14) % 2 == 0
         let twinkle = Int(t / 0.3 + phase * 3) % 3 != 0
         let cx = L.point(Double(p.x) + 0.5, 0).x
+        // A glinting spot starts with one tile already broken, so counting broken tiles alone
+        // would advertise the condition before the player has ever been there.
+        let freebie = find?.condition == .glinting ? 1 : 0
+        let showCrack = (find?.visited ?? false)
+            && (find?.tiles.filter { $0 == .broken }.count ?? 0) > freebie
 
-        PixelImage(buffer: hot ? Self.bangHot : IconArt.bang, cell: L.cell)
-            .position(x: cx, y: (CGFloat(p.y - 5 - bob) + 0.5) * L.cell)
+        PixelImage(buffer: hot ? Self.bangHot : (find?.kind.isFood ?? true ? MarkerArt.sprout : MarkerArt.glint),
+                   cell: L.cell)
+            .position(x: cx, y: (CGFloat(p.y - 6 - bob) + 0.5) * L.cell)
+        if let c = find?.condition, find?.visited == true {
+            PixelImage(buffer: MarkerArt.badge(c), cell: L.cell)
+                .position(x: cx + 4 * L.cell, y: (CGFloat(p.y - 5 - bob) + 0.5) * L.cell)
+        }
+        if showCrack {
+            PixelImage(buffer: MarkerArt.crack, cell: L.cell)
+                .position(x: cx - 4 * L.cell, y: (CGFloat(p.y - 4) + 0.5) * L.cell)
+        }
         if twinkle {
             PixelImage(buffer: IconArt.sparkle, cell: L.cell)
                 .position(x: cx, y: (CGFloat(p.y) + 0.5) * L.cell)
@@ -266,7 +281,7 @@ struct BurrowHomeView: View {
             .position(x: cx, y: CGFloat(p.y - 3) * L.cell)
             .onTapGesture { model.startTrip(spot: spot) }
             .accessibilityElement()
-            .accessibilityLabel("Buried find")
+            .accessibilityLabel(markerLabel(spot: spot, find: find))
             .accessibilityHint("Go and dig it up")
             .accessibilityAddTraits(.isButton)
     }
@@ -452,6 +467,16 @@ struct BurrowHomeView: View {
         .padding(.top, 8)
         .animation(.easeOut(duration: 0.15), value: model.placing)
         .animation(.easeOut(duration: 0.15), value: model.selectedSlot)
+    }
+
+    /// Says what the marker's art says: the soil, and whether this dig has been started.
+    private func markerLabel(spot: Int, find: BuriedFind?) -> String {
+        var parts = ["Buried find", BurrowSpots.layer(spot).label.lowercased()]
+        if find?.visited == true {
+            if let c = find?.condition { parts.append(c.label.lowercased()) }
+            parts.append("started")
+        }
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - Bottom HUD (stats + actions)

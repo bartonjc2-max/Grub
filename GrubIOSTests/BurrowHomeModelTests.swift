@@ -212,6 +212,21 @@ final class BurrowHomeModelTests: XCTestCase {
         m.skip(); XCTAssertNil(m.trip, "home again")
     }
 
+    /// Regression: the trip view looked the find up in `save.buried`, which a successful dig
+    /// empties — so the overlay vanished, nothing advanced the phases, and the grub was left
+    /// hidden outside its chamber for good.
+    func test_the_grid_survives_the_find_being_dug_up() throws {
+        let (m, _) = try larvaModel()
+        m.startTrip(spot: 0); m.advanceTo(.digging)
+        m.strike(tile: 12)
+        XCTAssertTrue(m.save.buried.isEmpty, "the find left the save")
+        XCTAssertNotNil(m.tripFind, "but the trip can still draw its grid")
+        XCTAssertEqual(m.tripFind?.tiles[12], .broken)
+        m.skip(); m.skip()
+        XCTAssertNil(m.trip)
+        XCTAssertNil(m.tripFind, "and it is cleared when the trip ends")
+    }
+
     func test_no_striking_before_the_grid_is_up() throws {
         let (m, _) = try larvaModel()
         m.startTrip(spot: 0)                    // still crawling out

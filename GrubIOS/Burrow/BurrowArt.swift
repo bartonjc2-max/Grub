@@ -364,6 +364,42 @@ extension FindKind {
 /// which is what makes arriving at a spot read as a zoom in rather than a screen change.
 ///
 /// Heat is never colour alone (spec §6): hot carries a ▲, warm a single dot, cold nothing.
+/// What a buried find shows above it in the burrow (spec §3). The old marker was one amber
+/// "!" for every spot; these say what is down there, how deep, what the soil is like, and
+/// whether the grub has started on it.
+enum MarkerArt {
+    /// A sprout for food, a glint for decor — so the player can choose what to go after.
+    static let sprout = PixelBuffer(art: [".L.",
+                                          "GLG",
+                                          ".L.",
+                                          ".L."],
+                                    palette: ["L": BurrowInk.leaf, "G": BurrowInk.teal])
+    static let glint = PixelBuffer(art: [".A.",
+                                         "AHA",
+                                         ".A."],
+                                   palette: ["A": BurrowInk.amber, "H": BurrowInk.amberHi])
+
+    /// The condition badge, shown only once the spot has been visited — before that, what the
+    /// soil is like is exactly what the trip is for finding out.
+    static func badge(_ c: DigCondition) -> PixelBuffer {
+        switch c {
+        case .wet:      return PixelBuffer(art: [".W.", "WWW", ".W."],
+                                           palette: ["W": BurrowInk.steelHi])
+        case .rocky:    return PixelBuffer(art: [".RR", "RRR", "RR."],
+                                           palette: ["R": BurrowInk.steel])
+        case .rooty:    return PixelBuffer(art: ["R..", ".R.", "RR."],
+                                           palette: ["R": BurrowInk.root])
+        case .glinting: return PixelBuffer(art: [".H.", "HAH", ".H."],
+                                           palette: ["H": BurrowInk.amberHi, "A": BurrowInk.cream])
+        }
+    }
+
+    /// Shown once the player has broken a tile here themselves, so a half-finished dig is
+    /// visible from the burrow.
+    static let crack = PixelBuffer(art: ["D.D", ".D.", "D.D"],
+                                   palette: ["D": BurrowInk.dirt])
+}
+
 enum DigArt {
     static let side = 9
 

@@ -55,6 +55,11 @@ final class BurrowHomeModel: ObservableObject {
     /// The dig in progress, if any. Set by `startTrip`, cleared when the find turns up,
     /// the strikes run out, or the player leaves.
     @Published private(set) var trip: DigTrip?
+    /// The grid the trip is working on. A snapshot rather than a lookup into `save.buried`,
+    /// because a successful dig *removes* the find from the save — and the zoom-out and the
+    /// walk home still have to draw something. Without it the trip view vanished the moment
+    /// the find turned up, so nothing advanced the phases and the grub never came home.
+    @Published private(set) var tripFind: BuriedFind?
     /// Animation-clock time of the last egg crack (the egg shakes for 0.3 s).
     @Published private(set) var crackAt: TimeInterval = -10
 
@@ -235,6 +240,7 @@ final class BurrowHomeModel: ObservableObject {
         let first: TripPhase = save.stage == .egg ? .zoomingIn : .crawlingOut
         for case .tripStarted(let s, let n) in r.events {
             trip = DigTrip(spot: s, strikesLeft: n, phase: first)
+            tripFind = save.buried.first { $0.spot == s }
         }
     }
 
@@ -247,14 +253,14 @@ final class BurrowHomeModel: ObservableObject {
         case .zoomingIn:    advanceTo(.digging)
         case .digging:      break
         case .zoomingOut:   advanceTo(.crawlingHome)
-        case .crawlingHome: trip = nil
+        case .crawlingHome: trip = nil; tripFind = nil
         }
     }
 
     /// Used by the view's timers and by the tests, so neither has to reach into `trip`.
     func advanceTo(_ phase: TripPhase) {
         guard trip != nil else { return }
-        if phase == .crawlingHome, trip?.phase == .crawlingHome { trip = nil; return }
+        if phase == .crawlingHome, trip?.phase == .crawlingHome { trip = nil; tripFind = nil; return }
         trip?.phase = phase
     }
 
@@ -265,6 +271,12 @@ final class BurrowHomeModel: ObservableObject {
         if r.events.contains(where: { if case .refused = $0 { return true }; return false }) { return }
         t.strikesLeft -= 1
         trip = t
+        if let f = save.buried.first(where: { $0.spot == t.spot }) {
+            tripFind = f
+        } else if var f = tripFind {
+            f.tiles[f.findTile] = .broken     // dug up: show the hole it came out of
+            tripFind = f
+        }
         // Either way the trip plays out backwards — zoom out, then crawl home. Teleporting
         // the grub back into its chamber was the thing this phase machine exists to prevent.
         if r.events.contains(where: { if case .dugUp = $0 { return true }; return false }) {
@@ -277,7 +289,7 @@ final class BurrowHomeModel: ObservableObject {
 
     /// BACK, and going to the background, end the trip at once — nobody should be made to
     /// watch the walk home. The save already holds every broken tile.
-    func leaveTrip() { trip = nil }
+    func leaveTrip() { trip = nil; tripFind = nil }
 
     // MARK: Events → effects
 
