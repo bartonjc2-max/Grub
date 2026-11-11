@@ -65,6 +65,26 @@ struct BurrowLayout: Equatable {
 }
 
 extension BurrowLayout {
+    /// Row boundaries of the four soil bands drawn by `BurrowArt.backdrop`.
+    /// soil1 = (surface+1 ..< b1), soil2 = (b1 ..< b2), soil3 = (b2 ..< b3), soil4 = (b3 ..< rows).
+    var soilBands: (b1: Int, b2: Int, b3: Int) {
+        let soil = rows - surface - 1
+        let b1 = surface + 1 + Int(Double(soil) * 0.24)
+        let b2 = b1 + Int(Double(soil) * 0.27)
+        let b3 = b2 + Int(Double(soil) * 0.24)
+        return (b1, b2, b3)
+    }
+
+    /// Spec §1: loose = soil1, clay = soil2, deep = soil3. soil4 holds no spots.
+    func rows(for layer: SoilLayer) -> Range<Int> {
+        let b = soilBands
+        switch layer {
+        case .loose: return (surface + 1)..<b.b1
+        case .clay:  return b.b1..<b.b2
+        case .deep:  return b.b2..<b.b3
+        }
+    }
+
     /// Bottom-centre cell of decor slot `i`: the 6×2 pedestal spans x-3…x+2, rows y…y+1,
     /// and the decor sprite stands on it (its bottom row at y-1).
     func decorSlot(_ i: Int) -> (x: Int, y: Int)? {
@@ -118,9 +138,8 @@ enum BurrowArt {
 
         // Ground: surface line + four soil bands.
         let soil = L.rows - S - 1
-        let b1 = S + 1 + Int(Double(soil) * 0.24)
-        let b2 = b1 + Int(Double(soil) * 0.27)
-        let b3 = b2 + Int(Double(soil) * 0.24)
+        let bands = L.soilBands
+        let (b1, b2, b3) = (bands.b1, bands.b2, bands.b3)
         band(S, S + 1, I.surface)
         band(S + 1, b1, I.soil1); band(b1, b2, I.soil2); band(b2, b3, I.soil3); band(b3, L.rows, I.soil4)
 

@@ -42,4 +42,18 @@ final class BurrowLayoutTests: XCTestCase {
         XCTAssertEqual(SpeciesArt.adult(.claws).width, 36)
         XCTAssertEqual(SpeciesArt.adult(.horn).height, 28)
     }
+
+    func test_soil_bands_split_the_soil_and_stay_ordered() {
+        for size in [CGSize(width: 375, height: 667),    // SE
+                     CGSize(width: 393, height: 852),    // 15
+                     CGSize(width: 430, height: 932),    // 15 Pro Max
+                     CGSize(width: 834, height: 1194)] { // iPad Pro 11"
+            let L = BurrowLayout(size: size, displayScale: 2)
+            let b = L.soilBands
+            XCTAssertGreaterThan(b.b1, L.surface, "\(size): band 1 starts below the surface")
+            XCTAssertLessThan(b.b1, b.b2, "\(size)")
+            XCTAssertLessThan(b.b2, b.b3, "\(size)")
+            XCTAssertLessThan(b.b3, L.rows, "\(size): band 4 has room")
+        }
+    }
 }
