@@ -501,5 +501,11 @@ enum BurrowDebug {
     static var loopDemo: Bool { args.contains("-burrowLoopDemo") }
     /// `-burrowDigDemo` (use with `-burrowReset`): hatch, then play one dig at spot 0.
     static var digDemo: Bool { args.contains("-burrowDigDemo") }
+    /// `-burrowPage N`: open on page N (0 burrow, 1 dig, 2 collection). The simulator will
+    /// not take synthetic touches here, so this is the only way to screenshot pages 2 and 3.
+    static var page: Int? {
+        guard let i = args.firstIndex(of: "-burrowPage"), i + 1 < args.count else { return nil }
+        return Int(args[i + 1])
+    }
 }
 #endif

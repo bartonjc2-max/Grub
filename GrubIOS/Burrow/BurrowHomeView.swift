@@ -3,8 +3,24 @@ import SwiftUI
 /// Home screen for the pixel-burrow redesign, built from the "Grub Hero Art" canvas:
 /// a side-on burrow cross-section with the grub in its central chamber, the GRUB title
 /// in the night sky, and buried finds marked with amber "!" (HATCH → RETURN → DIG → FEED).
+/// The three places the burrow is split across. One screen was carrying the pet, the dig
+/// sites, the decor, the collection and the stats at once — sixteen tap targets — and Jesse
+/// called it, correctly, too busy. Order matters: it is the loop, left to right.
+enum BurrowPage: Int, CaseIterable, Hashable {
+    case burrow, dig, collection
+
+    var title: String {
+        switch self {
+        case .burrow:     return "BURROW"
+        case .dig:        return "DIG"
+        case .collection: return "COLLECTION"
+        }
+    }
+}
+
 struct BurrowHomeView: View {
     @StateObject private var model = BurrowHomeModel()
+    @State private var page: BurrowPage = .burrow
     @Environment(\.displayScale) private var displayScale
     @Environment(\.scenePhase) private var scenePhase
     private let minuteTick = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -14,31 +30,24 @@ struct BurrowHomeView: View {
     var body: some View {
         GeometryReader { geo in
             let L = BurrowLayout(size: geo.size, displayScale: displayScale)
-            ZStack(alignment: .topLeading) {
-                BurrowBackdrop(layout: L, holes: model.holes, spurs: model.spurs).equatable()
-                // The title is an identity beat for a new egg, not a permanent fixture: it
-                // costs about 12 rows of sky, it tells you the name of the app you already
-                // opened, and on the dig screen the grid's own header lands on top of it.
-                // A new generation is a new egg, so it comes back for that.
-                if model.stage == .egg {
-                    titleBlock(L, width: geo.size.width)
-                        .transition(.opacity)
-                }
-                TimelineView(.animation(minimumInterval: 1.0 / 24)) { tl in
-                    livingLayer(L, t: tl.date.timeIntervalSinceReferenceDate)
-                        .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+            TabView(selection: $page) {
+                ForEach(BurrowPage.allCases, id: \.self) { p in
+                    world(p, L, size: geo.size).tag(p)
                 }
             }
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
-            .clipped()
-            .animation(.easeOut(duration: 0.6), value: model.stage)
-            .onAppear { place(L) }
+            // Our own dots, drawn in pixels above the HUD — the system ones land underneath it.
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .onAppear {
+                place(L)
+                #if DEBUG
+                if let n = BurrowDebug.page, let p = BurrowPage(rawValue: n) { page = p }
+                #endif
+            }
             .onChange(of: geo.size) { _, _ in place(L) }
         }
         .ignoresSafeArea()
         .background(Color(ink: BurrowInk.sky).ignoresSafeArea())
         .overlay(alignment: .bottom) { bottomHUD }
-        .overlay(alignment: .topLeading) { boxButton }
         .overlay(alignment: .top) { modeBar }
         .overlay {
             if model.showBag {
@@ -247,18 +256,49 @@ struct BurrowHomeView: View {
         .accessibilityElement(children: .combine)
     }
 
+    // MARK: - Pages
+
+    /// One page of the burrow. Every page draws the same world — it is one cross-section and
+    /// that is most of its charm — and differs in what it puts *on* it. Before the split the
+    /// single screen carried sixteen tap targets and five systems at once (the pet, the dig
+    /// sites, the decor, the collection and the stats), which is what made it unreadable.
+    @ViewBuilder
+    private func world(_ p: BurrowPage, _ L: BurrowLayout, size: CGSize) -> some View {
+        ZStack(alignment: .topLeading) {
+            BurrowBackdrop(page: p, layout: L, holes: model.holes, spurs: model.spurs).equatable()
+            // The title is an identity beat for a new egg, not a permanent fixture, and it
+            // belongs to the page the egg is on.
+            if p == .burrow, model.stage == .egg {
+                titleBlock(L, width: size.width)
+                    .transition(.opacity)
+            }
+            TimelineView(.animation(minimumInterval: 1.0 / 24)) { tl in
+                livingLayer(p, L, t: tl.date.timeIntervalSinceReferenceDate)
+                    .frame(width: size.width, height: size.height, alignment: .topLeading)
+            }
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .clipped()
+        .animation(.easeOut(duration: 0.6), value: model.stage)
+    }
+
     // MARK: - Animated layer (markers, grub, effects)
 
     @ViewBuilder
-    private func livingLayer(_ L: BurrowLayout, t: TimeInterval) -> some View {
+    private func livingLayer(_ p: BurrowPage, _ L: BurrowLayout, t: TimeInterval) -> some View {
         ZStack(alignment: .topLeading) {
-            specimenShelf(L.sideR, from: 0, L)
-            specimenShelf(L.sideL, from: L.shelfSlots(L.sideR), L)
-            ForEach(0..<BurrowRules.decorSlots, id: \.self) { i in decorSlot(i, L, t) }
-            ForEach(model.buried, id: \.spot) { f in
-                marker(spot: f.spot, L, t)
+            if p == .collection {
+                specimenShelf(L)
+                ForEach(0..<BurrowRules.decorSlots, id: \.self) { i in decorSlot(i, L, t) }
             }
-            if !model.isAwayDigging { grub(L, t) }
+            if p == .dig {
+                ForEach(model.buried, id: \.spot) { f in
+                    marker(spot: f.spot, L, t)
+                }
+            }
+            // The grub belongs to its chamber, and only the BURROW page draws one. Putting it
+            // on the soil face or in the gallery would be putting it nowhere.
+            if p == .burrow, !model.isAwayDigging { grub(L, t) }
             ForEach(model.fx) { e in effect(e, L, t) }
         }
     }
@@ -362,34 +402,34 @@ struct BurrowHomeView: View {
         }
     }
 
-    /// The specimen shelf — the newest pinned adults standing on a ledge in a side room.
+    /// The specimen ledge running across the gallery, newest first.
     ///
-    /// The rooms used to hold two decor slots and nothing else, which is what made them read
-    /// as wasted space: four slots that fill up once and then never change again. The
-    /// collection grows every time an adult is pinned, so it earns the spare room, and the
-    /// reason to look gets better the longer the game is played. Tapping a room opens the
-    /// full list — the shelf shows only what fits.
+    /// It used to be split between the two side rooms, which were 12 and 14 cells wide and
+    /// showed three busts between them. One wall in a room built for it shows eight, and the
+    /// rest are a tap away.
     @ViewBuilder
-    private func specimenShelf(_ room: CellRect, from: Int, _ L: BurrowLayout) -> some View {
-        let s = L.shelf(room)
-        let shown = Array(model.specimens.reversed().dropFirst(from).prefix(L.shelfSlots(room)))
-        // The ledge is drawn whether or not anything stands on it, so an empty room reads as
-        // a shelf waiting to be filled rather than as a hole in the ground.
+    private func specimenShelf(_ L: BurrowLayout) -> some View {
+        let s = L.shelf
+        let shown = Array(model.specimens.reversed().prefix(L.shelfSlots))
+        // The ledge is drawn whether or not anything stands on it, so an empty gallery reads
+        // as a shelf waiting to be filled rather than as a blank wall.
         Rectangle()
             .fill(Color(ink: BurrowInk.root))
             .frame(width: CGFloat(s.width) * L.cell, height: L.cell)
             .position(x: L.point(Double(s.x0) + Double(s.width) / 2, 0).x,
                       y: (CGFloat(s.y) + 0.5) * L.cell)
+        // Centred rather than left-packed: three busts shoved into the left end of a wide
+        // ledge reads as a layout bug, not as a collection with room to grow.
+        let startX = s.x0 + max(0, (s.width - shown.count * 6) / 2)
         ForEach(Array(shown.enumerated()), id: \.offset) { k, sp in
             let spr = IconArt.specimen(sp.species)
-            let o = L.point(Double(s.x0 + k * 6), Double(s.y - spr.height))
+            let o = L.point(Double(startX + k * 6), Double(s.y - spr.height))
             PixelImage(buffer: spr, cell: L.cell)
                 .position(x: o.x + CGFloat(spr.width) * L.cell / 2,
                           y: o.y + CGFloat(spr.height) * L.cell / 2)
         }
-        // Before the first molt there is nothing to show, so the first place says what it is
-        // for. Only on the room that holds the newest specimens.
-        if from == 0 && shown.isEmpty {
+        // Before the first molt there is nothing to show, so the first place says what it is for.
+        if shown.isEmpty {
             let o = IconArt.slotEmpty
             PixelImage(buffer: o, cell: L.cell)
                 .position(x: L.point(Double(s.x0) + 3, 0).x,
@@ -397,10 +437,10 @@ struct BurrowHomeView: View {
                 .opacity(0.5)
         }
         Color.clear
-            .frame(width: CGFloat(room.w) * L.cell, height: CGFloat(room.h) * L.cell)
+            .frame(width: CGFloat(s.width) * L.cell, height: 10 * L.cell)
             .contentShape(Rectangle())
-            .position(x: L.point(Double(room.x) + Double(room.w) / 2, 0).x,
-                      y: (CGFloat(room.y) + CGFloat(room.h) / 2) * L.cell)
+            .position(x: L.point(Double(s.x0) + Double(s.width) / 2, 0).x,
+                      y: (CGFloat(s.y) - 4) * L.cell)
             .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { model.showBox = true } }
             .accessibilityElement()
             .accessibilityLabel(model.specimens.isEmpty
@@ -514,27 +554,6 @@ struct BurrowHomeView: View {
         .fixedSize()
     }
 
-    // MARK: - Specimen box button
-
-    private var boxButton: some View {
-        Button { model.showBox = true } label: {
-            PixelImage(buffer: IconArt.box, cell: 4)
-                .padding(8)
-                .background(Color(ink: BurrowInk.hollow))
-                .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
-                .overlay(alignment: .topTrailing) {
-                    if !model.specimens.isEmpty {
-                        Text("\(model.specimens.count)").font(GrubFont.size(7))
-                            .foregroundColor(Color(ink: BurrowInk.hollow))
-                            .padding(3).background(Color(ink: BurrowInk.amber))
-                            .offset(x: 5, y: -5)
-                    }
-                }
-        }
-        .buttonStyle(PixelPressStyle())
-        .padding(.leading, 14).padding(.top, 54)
-        .accessibilityLabel("Specimen box, \(model.specimens.count)")
-    }
 
     // MARK: - Mode bar (placing / removing decor)
 
@@ -580,34 +599,12 @@ struct BurrowHomeView: View {
                     .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.amber), lineWidth: 3))
                     .transition(.opacity)
             }
+            pageBar
             VStack(spacing: 14) {
-                if model.stage == .adult, let sp = model.adult {
-                    stageBanner("MOLTED INTO \(sp.label)!", "TAP IT TO PIN IT", ink: sp.color)
-                } else if model.stage == .egg {
-                    stageBanner("A NEW EGG!",
-                                model.name.isEmpty ? "TAP IT TO NAME IT" : "TAP TO HATCH \(model.eggCracks)/\(BurrowRules.crackTaps)",
-                                ink: GrubArt.bodyColor(tint: model.tint))
-                } else {
-                    HStack(spacing: 12) {
-                        statBar("BELLY", model.belly, BurrowInk.berry)
-                        statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
-                        Button { model.showMolt = true } label: {
-                            statBar("MOLT", model.molt, BurrowInk.amber, tag: model.isMoltReady ? "READY" : nil)
-                        }
-                        .buttonStyle(PixelPressStyle())
-                        .accessibilityHint("Show molt odds")
-                    }
-                }
-                HStack(spacing: 10) {
-                    hudButton(icon: FindKind.berry.sprite, title: "FEED", count: model.foodCount) { model.feed() }
-                        .disabled(!model.canAct).opacity(model.canAct ? 1 : 0.4)
-                    hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
-                              hot: model.digsLeft > 0 && !model.buried.isEmpty) { model.digHint() }
-                    hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
-                        model.cancelPlacing()
-                        model.clearSelection()
-                        withAnimation(.easeOut(duration: 0.15)) { model.showBag = true }
-                    }
+                switch page {
+                case .burrow:     burrowHUD
+                case .dig:        digHUD
+                case .collection: collectionHUD
                 }
             }
             .padding(12)
@@ -617,6 +614,90 @@ struct BurrowHomeView: View {
         .padding(.horizontal, 12)
         .padding(.bottom, 4)
         .animation(.easeOut(duration: 0.15), value: model.toast)
+        .animation(.easeOut(duration: 0.2), value: page)
+    }
+
+    /// Where you are and what else there is. Pixel dots rather than the system page control,
+    /// which draws underneath the HUD and in the wrong idiom.
+    private var pageBar: some View {
+        HStack(spacing: 8) {
+            ForEach(BurrowPage.allCases, id: \.self) { p in
+                Button { withAnimation(.easeOut(duration: 0.25)) { page = p } } label: {
+                    HStack(spacing: 6) {
+                        Rectangle()
+                            .fill(Color(ink: p == page ? BurrowInk.amber : BurrowInk.root))
+                            .frame(width: 8, height: 8)
+                        if p == page {
+                            Text(p.title).font(GrubFont.size(7))
+                                .foregroundColor(Color(ink: BurrowInk.cream))
+                        }
+                    }
+                }
+                .buttonStyle(PixelPressStyle())
+                .accessibilityLabel(p.title)
+                .accessibilityAddTraits(p == page ? [.isSelected, .isButton] : .isButton)
+            }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(Color(ink: BurrowInk.hollow))
+        .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
+    }
+
+    /// The pet. Its state, and the one thing you do to it directly.
+    @ViewBuilder
+    private var burrowHUD: some View {
+        if model.stage == .adult, let sp = model.adult {
+            stageBanner("MOLTED INTO \(sp.label)!", "TAP IT TO PIN IT", ink: sp.color)
+        } else if model.stage == .egg {
+            stageBanner("A NEW EGG!",
+                        model.name.isEmpty ? "TAP IT TO NAME IT" : "TAP TO HATCH \(model.eggCracks)/\(BurrowRules.crackTaps)",
+                        ink: GrubArt.bodyColor(tint: model.tint))
+        } else {
+            HStack(spacing: 12) {
+                statBar("BELLY", model.belly, BurrowInk.berry)
+                statBar("JOY", model.joy, BurrowInk.teal, tag: model.isHappy ? "HAPPY" : nil)
+                Button { model.showMolt = true } label: {
+                    statBar("MOLT", model.molt, BurrowInk.amber, tag: model.isMoltReady ? "READY" : nil)
+                }
+                .buttonStyle(PixelPressStyle())
+                .accessibilityHint("Show molt odds")
+            }
+            HStack(spacing: 10) {
+                hudButton(icon: FindKind.berry.sprite, title: "FEED", count: model.foodCount) { model.feed() }
+                    .disabled(!model.canAct).opacity(model.canAct ? 1 : 0.4)
+                // A player who never swipes never digs, so the pet's page has to say there is
+                // something to go and do — and take them there.
+                hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
+                          hot: model.digsLeft > 0 && !model.buried.isEmpty) {
+                    withAnimation(.easeOut(duration: 0.25)) { page = .dig }
+                }
+            }
+        }
+    }
+
+    /// The soil and what is in it.
+    @ViewBuilder
+    private var digHUD: some View {
+        Text(model.buried.isEmpty ? "NOTHING BURIED YET"
+                                  : "\(model.buried.count) SPOT\(model.buried.count == 1 ? "" : "S") TO DIG")
+            .font(GrubFont.size(8))
+            .foregroundColor(Color(ink: BurrowInk.cream))
+        hudButton(icon: IconArt.shovel, title: "DIG", count: model.digsLeft,
+                  hot: model.digsLeft > 0 && !model.buried.isEmpty) { model.digHint() }
+    }
+
+    /// What you have earned and where you put it.
+    @ViewBuilder
+    private var collectionHUD: some View {
+        Text(model.specimens.isEmpty ? "NOTHING PINNED YET"
+                                     : "\(model.specimens.count) PINNED")
+            .font(GrubFont.size(8))
+            .foregroundColor(Color(ink: BurrowInk.cream))
+        hudButton(icon: IconArt.pouch, title: "FINDS", count: model.findCount) {
+            model.cancelPlacing()
+            model.clearSelection()
+            withAnimation(.easeOut(duration: 0.15)) { model.showBag = true }
+        }
     }
 
     private func statBar(_ label: String, _ value: Int, _ ink: UInt32, tag: String? = nil) -> some View {
@@ -700,6 +781,7 @@ struct BurrowHomeView: View {
 
 /// The static burrow bitmap; only re-rendered when the layout or the dug holes change.
 struct BurrowBackdrop: View, Equatable {
+    let page: BurrowPage
     let layout: BurrowLayout
     let holes: [Int]
     /// Spots the grub has visited. A stored property, not a computed one: the view is
@@ -708,7 +790,8 @@ struct BurrowBackdrop: View, Equatable {
     let spurs: [Int]
 
     var body: some View {
-        PixelImage(buffer: BurrowArt.backdrop(layout, holes: holes, spurs: spurs), cell: layout.cell)
+        PixelImage(buffer: BurrowArt.backdrop(page, layout, holes: holes, spurs: spurs),
+                   cell: layout.cell)
             .offset(x: layout.originX)
             .accessibilityHidden(true)
     }

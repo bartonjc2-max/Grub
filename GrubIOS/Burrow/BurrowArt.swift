@@ -79,155 +79,252 @@ extension BurrowLayout {
         }
     }
 
-    /// Top-centre cell of decor slot `i`: the 6×4 plinth spans x-3…x+2, rows y…y+3, and the
-    /// decor sprite stands on it (its bottom row at y-1).
-    ///
-    /// All four now live in the chamber, where the player actually looks — 0 and 1 standing
-    /// on the floor either side of the grub, 2 and 3 on the walls above them. The side rooms
-    /// used to hold 0 and 1; they hold the specimen shelf now, because a collection that
-    /// grows forever earns the spare room better than four decor slots that fill up once and
-    /// then never change again.
+    /// The display room on the COLLECTION page — its own space, not the burrow's side rooms.
+    /// Those were 12 and 14 cells wide and could show three busts between them; this is 58
+    /// wide and shows eight, which is the difference between a shelf and a gallery.
+    var gallery: CellRect {
+        // A fixed height, centred in what the HUD leaves. Stretching it to fill the screen
+        // put the alcoves at the top and the ledge at the bottom with nothing between them.
+        let h = min(44, max(28, hudTopRow - 10))
+        return CellRect(x: 3, y: max(5, (hudTopRow - h) / 2), w: 58, h: h)
+    }
+
+    /// Top-centre cell of decor niche `i`: the 6×2 plinth spans x-3…x+2, rows y…y+1, and the
+    /// decor sprite stands on it (its bottom row at y-1). Four alcoves evenly across the
+    /// gallery's back wall — they used to be scattered round the chamber floor, competing
+    /// with the grub for the same frame.
     func decorSlot(_ i: Int) -> (x: Int, y: Int)? {
-        switch i {
-        case 0: return (chamber.x + 4, chamber.maxY - 3)
-        case 1: return (chamber.maxX - 4, chamber.maxY - 3)
-        case 2: return (chamber.x + 4, chamber.y + 9)
-        case 3: return (chamber.maxX - 4, chamber.y + 9)
-        default: return nil
-        }
+        guard (0..<4).contains(i) else { return nil }
+        let g = gallery, step = g.w / 4
+        return (g.x + step / 2 + i * step, g.y + 14)
     }
 
-    /// Slots 2 and 3 hang off the chamber wall instead of standing on its floor, so they get
-    /// the bracket plinth rather than the footed one.
-    func decorIsShelf(_ i: Int) -> Bool { i >= 2 }
+    /// Every niche hangs on the gallery wall now, so they all get the bracket plinth.
+    func decorIsShelf(_ i: Int) -> Bool { true }
 
-    /// The specimen shelf: a thin ledge across a side room, and where each pinned specimen
-    /// stands on it. `slot` counts left to right within the room; a room fits `shelfSlots`.
-    func shelf(_ room: CellRect) -> (y: Int, x0: Int, width: Int) {
-        (y: room.maxY - 3, x0: room.x + 1, width: room.w - 2)
+    /// The specimen ledge running across the gallery, and how many busts stand on it. Each is
+    /// 5 cells wide with a cell of air; the rest of the collection is a tap away.
+    var shelf: (y: Int, x0: Int, width: Int) {
+        let g = gallery
+        return (y: g.maxY - 8, x0: g.x + 2, width: g.w - 4)
     }
-
-    /// How many specimens a room's ledge shows. Each one is 5 cells wide with a cell of air
-    /// either side; the rest of the collection stays in the full list behind a tap.
-    func shelfSlots(_ room: CellRect) -> Int { max(1, (room.w - 2) / 6) }
+    var shelfSlots: Int { max(1, (shelf.width - 2) / 6) }
 }
 
 // MARK: - Backdrop (sky, surface, soil, tunnels, decor)
 
 enum BurrowArt {
-    static func backdrop(_ L: BurrowLayout, holes: [Int], spurs: [Int] = []) -> PixelBuffer {
-        var b = PixelBuffer(width: L.cols, height: L.rows)
-        let X = L.x0, S = L.surface
-        func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) { b.fill(X + x, y, w, h, c) }
-        func band(_ y0: Int, _ y1: Int, _ c: UInt32) { b.fill(0, y0, L.cols, y1 - y0, c) }
-        typealias I = BurrowInk
-        func chamber(_ c: CellRect, bevel v: Int) {
-            r(c.x, c.y, c.w, c.h, I.hollow)
-            r(c.x + v, c.y - v, c.w - 2 * v, v, I.hollow)
-            r(c.x + v, c.maxY, c.w - 2 * v, v, I.hollow)
-            r(c.x - v, c.y + 2 * v, v, c.h - 4 * v, I.hollow)
-            r(c.maxX, c.y + 2 * v, v, c.h - 4 * v, I.hollow)
+    /// Each page has its own backdrop.
+    ///
+    /// One drawing behind all three made the split cosmetic: the busiest picture in the game
+    /// was still there on every page and only the foreground moved. These share helpers —
+    /// sky, grit, carving — but never a composition. BURROW is a room at night, DIG is a
+    /// soil face with no sky at all, COLLECTION is an interior you are standing in.
+    static func backdrop(_ page: BurrowPage, _ L: BurrowLayout,
+                         holes: [Int], spurs: [Int] = []) -> PixelBuffer {
+        switch page {
+        case .burrow:     return home(L)
+        case .dig:        return strata(L, holes: holes, spurs: spurs)
+        case .collection: return gallery(L)
         }
+    }
 
-        // Sky + stars (positions from the hero, stretched to this sky).
-        band(0, S, I.sky)
-        let heroStars = [(6, 5), (19, 22), (33, 4), (52, 24), (68, 5), (79, 21), (97, 12), (103, 24), (11, 14), (88, 27), (42, 13)]
-        for (hx, hy) in heroStars {
-            let x = Int(Double(hx) / 108 * 64)
-            let y = 3 + Int(Double(hy) / 30 * Double(max(10, S - 10)))
-            r(x, y, 1, 1, I.teal)
+    // MARK: Shared pieces
+
+    /// A bitmap addressed in **design** columns, so no caller has to remember `x0`.
+    private struct Canvas {
+        var b: PixelBuffer
+        let L: BurrowLayout
+        init(_ L: BurrowLayout) { self.L = L; b = PixelBuffer(width: L.cols, height: L.rows) }
+        mutating func r(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ c: UInt32) {
+            b.fill(L.x0 + x, y, w, h, c)
         }
-
-        // Moon.
-        let mx = 52, my = max(10, S - 30)
-        r(mx + 1, my, 6, 1, I.cream); r(mx, my + 1, 8, 6, I.cream); r(mx + 1, my + 7, 6, 1, I.cream)
-        r(mx + 2, my + 2, 2, 2, I.creamDim); r(mx + 5, my + 5, 1, 1, I.creamDim)
-
-        // Surface mushrooms.
-        func bigShroom(_ x: Int) {
-            r(x + 3, S - 3, 2, 3, I.cream); r(x, S - 5, 8, 2, I.mushroom); r(x + 2, S - 6, 4, 1, I.mushroomHi)
+        /// Full bitmap width, so a band reaches the bezels on every screen.
+        mutating func band(_ y0: Int, _ y1: Int, _ c: UInt32) {
+            b.fill(0, y0, L.cols, max(0, y1 - y0), c)
         }
-        bigShroom(3); bigShroom(51)
-        r(29, S - 2, 1, 2, I.cream); r(27, S - 3, 5, 1, I.mushroom)
+        /// A space with a bevelled edge, so a room reads as dug rather than stamped out.
+        mutating func carve(_ c: CellRect, bevel v: Int, _ ink: UInt32 = BurrowInk.hollow) {
+            r(c.x, c.y, c.w, c.h, ink)
+            r(c.x + v, c.y - v, c.w - 2 * v, v, ink)
+            r(c.x + v, c.maxY, c.w - 2 * v, v, ink)
+            r(c.x - v, c.y + 2 * v, v, c.h - 4 * v, ink)
+            r(c.maxX, c.y + 2 * v, v, c.h - 4 * v, ink)
+        }
+    }
 
-        // Ground: surface line + four soil bands.
-        let soil = L.rows - S - 1
-        let bands = L.soilBands
-        let (b1, b2, b3) = (bands.b1, bands.b2, bands.b3)
-        band(S, S + 1, I.surface)
-        band(S + 1, b1, I.soil1); band(b1, b2, I.soil2); band(b2, b3, I.soil3); band(b3, L.rows, I.soil4)
-
-        // Speckles (deterministic LCG so the burrow never shimmers between launches). Each
-        // fleck takes its own band's colour, so texture stays texture and recedes behind the
-        // mounds; the lower bands get a second pass, because mineral grit is what makes depth
-        // read even on a stretch of soil with nothing buried in it.
+    /// Deterministic noise — the burrow must never shimmer between launches.
+    private struct Noise {
         var seed: UInt32 = 0x9e37_79b9
-        func rnd(_ n: Int) -> Int { seed = seed &* 1_664_525 &+ 1_013_904_223; return Int(seed >> 8) % max(1, n) }
+        mutating func next(_ n: Int) -> Int {
+            seed = seed &* 1_664_525 &+ 1_013_904_223
+            return Int(seed >> 8) % max(1, n)
+        }
+    }
+
+    private static func sky(_ c: inout Canvas, height S: Int) {
+        c.band(0, S, BurrowInk.sky)
+        let hero = [(6, 5), (19, 22), (33, 4), (52, 24), (68, 5), (79, 21),
+                    (97, 12), (103, 24), (11, 14), (88, 27), (42, 13)]
+        for (hx, hy) in hero {
+            c.r(Int(Double(hx) / 108 * 64),
+                3 + Int(Double(hy) / 30 * Double(max(10, S - 10))), 1, 1, BurrowInk.teal)
+        }
+    }
+
+    private static func moon(_ c: inout Canvas, at my: Int) {
+        typealias I = BurrowInk
+        let mx = 52
+        c.r(mx + 1, my, 6, 1, I.cream); c.r(mx, my + 1, 8, 6, I.cream)
+        c.r(mx + 1, my + 7, 6, 1, I.cream)
+        c.r(mx + 2, my + 2, 2, 2, I.creamDim); c.r(mx + 5, my + 5, 1, 1, I.creamDim)
+    }
+
+    private static func mushrooms(_ c: inout Canvas, on S: Int) {
+        typealias I = BurrowInk
+        func big(_ x: Int) {
+            c.r(x + 3, S - 3, 2, 3, I.cream)
+            c.r(x, S - 5, 8, 2, I.mushroom)
+            c.r(x + 2, S - 6, 4, 1, I.mushroomHi)
+        }
+        big(3); big(51)
+        c.r(29, S - 2, 1, 2, I.cream); c.r(27, S - 3, 5, 1, I.mushroom)
+    }
+
+    // MARK: BURROW — the pet's room at night
+
+    /// Sky, a quiet two-tone earth, and one big chamber with tunnels leaving it. No strata,
+    /// no dig spots, no gallery: this page is the animal, and anything else on it competes.
+    private static func home(_ L: BurrowLayout) -> PixelBuffer {
+        typealias I = BurrowInk
+        var c = Canvas(L)
+        let S = L.surface, C = L.chamber, split = L.soilBands.b2
+        sky(&c, height: S)
+        moon(&c, at: max(10, S - 30))
+        mushrooms(&c, on: S)
+        c.band(S, S + 1, I.surface)
+        // Two tones rather than four bands. Depth is the DIG page's job; banding here only
+        // drew hard lines across the room the player is meant to be looking at.
+        c.band(S + 1, split, I.soil1)
+        c.band(split, L.rows, I.soil2)
+        var n = Noise()
+        for _ in 0..<(L.cols * max(1, L.rows - S) / 95) {
+            let y = S + 2 + n.next(max(1, L.rows - S - 2))
+            c.b.fill(n.next(L.cols), y, n.next(2) + 1, 1, y < split ? I.speck1 : I.speck2)
+        }
+        c.r(44, S + 1, 1, 7, I.root); c.r(45, S + 8, 1, 3, I.root); c.r(2, S + 1, 1, 4, I.root)
+
+        // Tunnels leaving the room — they are the reason to believe there is somewhere to
+        // swipe to, and they are cut off rather than resolved, so they promise rather than show.
+        c.r(6, S, 4, 14, I.hollow)
+        c.r(6, S + 9, 28, 4, I.hollow)
+        c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)
+        c.r(C.maxX, C.y + 12, 12, 4, I.hollow)
+        c.r(22, C.maxY, 4, 10, I.hollow)
+        c.carve(C, bevel: 2)
+        // A packed floor inside, so the grub stands on something rather than hanging in a void.
+        c.r(C.x + 1, C.maxY - 3, C.w - 2, 1, I.root)
+        c.r(C.x + 1, C.maxY - 2, C.w - 2, 2, I.soil2)
+        return c.b
+    }
+
+    // MARK: DIG — the soil face
+
+    /// No sky, no chamber, no rooms: soil from the top of the screen to the bottom. The four
+    /// layers the entire difficulty model rests on get a lit rim at each boundary, and grit
+    /// that thickens with depth, so "deeper is different" reads before a single mound does.
+    ///
+    /// The band rows are `L.soilBands` untouched, because `BurrowSpots.resolve` places every
+    /// mound against them — a prettier spacing here would put the markers in the wrong layer.
+    private static func strata(_ L: BurrowLayout, holes: [Int], spurs: [Int]) -> PixelBuffer {
+        typealias I = BurrowInk
+        var c = Canvas(L)
+        let (b1, b2, b3) = L.soilBands
+        c.band(0, b1, I.soil1); c.band(b1, b2, I.soil2)
+        c.band(b2, b3, I.soil3); c.band(b3, L.rows, I.soil4)
+        // A lit rim on top of each layer. One pixel, and it turns four similar browns into
+        // four named places.
+        for (y, ink) in [(b1, I.speck2), (b2, I.speck3), (b3, I.speck4)] {
+            c.band(y, y + 1, ink)
+        }
+        var n = Noise()
         func fleck(_ y: Int) -> UInt32 {
             if y < b1 { return I.speck1 }
             if y < b2 { return I.speck2 }
             if y < b3 { return I.speck3 }
             return I.speck4
         }
-        for _ in 0..<(L.cols * soil / 55) {
-            let y = S + 2 + rnd(max(1, soil - 2))
-            b.fill(rnd(L.cols), y, rnd(2) + 1, 1, fleck(y))
+        for _ in 0..<(L.cols * L.rows / 40) {
+            let y = n.next(L.rows)
+            c.b.fill(n.next(L.cols), y, n.next(2) + 1, 1, fleck(y))
         }
-        for _ in 0..<(L.cols * max(0, L.rows - b2) / 70) {
-            let y = b2 + rnd(max(1, L.rows - b2))
-            b.fill(rnd(L.cols), y, rnd(2) + 1, 1, fleck(y))
+        // Pebbles in the lower two layers — mineral, and a reason the deep soil looks harder.
+        for _ in 0..<(L.cols * max(0, L.rows - b2) / 90) {
+            let y = b2 + n.next(max(1, L.rows - b2))
+            c.b.fill(n.next(L.cols), y, 2, 2, fleck(y))
         }
+        // Roots trailing down from a surface that is just off the top of this page.
+        for (x, len) in [(8, 9), (23, 5), (44, 12), (52, 6), (61, 8)] {
+            c.r(x, 0, 1, len, I.root)
+            c.r(x + 1, len, 1, max(1, len / 3), I.root)
+        }
+        // The fossil, embedded in the clay with its socket shadow.
+        let fy = b1 + 4
+        c.r(48, fy + 1, 5, 1, I.shade); c.r(47, fy, 1, 3, I.shade); c.r(53, fy, 1, 3, I.shade)
+        c.r(48, fy, 5, 1, I.creamDim); c.r(47, fy - 1, 1, 3, I.creamDim)
+        c.r(53, fy - 1, 1, 3, I.creamDim)
 
-        // Roots hanging from the surface.
-        r(44, S + 1, 1, 7, I.root); r(45, S + 8, 1, 3, I.root); r(61, S + 1, 1, 5, I.root); r(2, S + 1, 1, 4, I.root)
-
-        // A buried fossil. The dark socket is what makes it read as embedded in the earth
-        // rather than stuck on top of it — the same grounding trick the dig mounds use. It is
-        // scenery, not a marker: nothing here is tappable.
-        r(48, S + 6, 5, 1, I.shade); r(47, S + 5, 1, 3, I.shade); r(53, S + 5, 1, 3, I.shade)
-        r(48, S + 5, 5, 1, I.creamDim); r(47, S + 4, 1, 3, I.creamDim); r(53, S + 4, 1, 3, I.creamDim)
-
-        // Tunnels.
-        let C = L.chamber
-        r(6, S, 4, 14, I.hollow)                       // entrance shaft (breaks the surface)
-        r(6, S + 9, 28, 4, I.hollow)                   // crawl
-        r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow) // drop into the chamber
-        chamber(C, bevel: 2)
-        // → right side-chamber
-        r(C.maxX, C.y + 12, 10, 4, I.hollow)
-        r(56, C.y + 12, 4, max(0, L.sideR.y - (C.y + 12)), I.hollow)
-        chamber(L.sideR, bevel: 1)
-        // → left side-chamber
-        r(22, C.maxY, 4, max(0, L.sideL.y + 7 - C.maxY), I.hollow)
-        r(L.sideL.maxX - 1, L.sideL.y + 3, 26 - (L.sideL.maxX - 1), 4, I.hollow)
-        chamber(L.sideL, bevel: 1)
-
-        // Rooms start empty: decor is placed by the player (BurrowLayout.decorSlot).
-
-        // The channel the grub dug on its way to a spot it has visited. Capped at 8 cells:
-        // some spots sit 14 rows from their nearest tunnel, and an uncapped spur would run
-        // all the way up into the title.
+        // The channel the grub dug on its way to a spot it has visited, capped at 8 cells.
         for spot in Set(spurs) where BurrowSpots.spots.indices.contains(spot) {
-            let route = BurrowWaypoints.path(to: spot, L)
-            guard route.count >= 2 else { continue }
-            let end = route[route.count - 1], from = route[route.count - 2]
-            let dx = end.x - from.x, dy = end.y - from.y
-            let length = min(8, abs(dx) + abs(dy))
-            guard length > 0 else { continue }
-            for step in 0...length {
-                let t = Double(step) / Double(length)
-                let x = end.x - Int((Double(dx) * (1 - t)).rounded())
-                let y = end.y - Int((Double(dy) * (1 - t)).rounded())
-                r(x - 1, y - 1, 2, 2, I.hollow)
+            let p = BurrowSpots.resolve(spot, L)
+            for step in 0...8 {
+                c.r(p.x - 1, max(0, p.y - 4 - step), 2, 2, I.hollow)
             }
         }
-
         // Pockets left by digging.
         for spot in holes where BurrowSpots.spots.indices.contains(spot) {
             let p = BurrowSpots.resolve(spot, L)
-            r(p.x - 2, p.y - 1, 5, 3, I.hollow); r(p.x - 1, p.y - 2, 3, 1, I.hollow); r(p.x - 1, p.y + 2, 3, 1, I.hollow)
+            c.r(p.x - 2, p.y - 1, 5, 3, I.hollow)
+            c.r(p.x - 1, p.y - 2, 3, 1, I.hollow)
+            c.r(p.x - 1, p.y + 2, 3, 1, I.hollow)
         }
-        return b
+        return c.b
+    }
+
+    // MARK: COLLECTION — a room you are standing in
+
+    /// An interior, not a cross-section: no sky, packed-earth walls, four alcoves cut into
+    /// the back wall for the decor, and a long ledge for the busts. The side rooms this
+    /// replaced were 12 and 14 cells wide and held three specimens between them.
+    private static func gallery(_ L: BurrowLayout) -> PixelBuffer {
+        typealias I = BurrowInk
+        var c = Canvas(L)
+        let g = L.gallery
+        // Solid earth, so the room reads as carved out of the ground rather than floating.
+        c.band(0, L.rows, I.soil4)
+        var n = Noise()
+        for _ in 0..<(L.cols * L.rows / 120) {
+            c.b.fill(n.next(L.cols), n.next(L.rows), n.next(2) + 1, 1, I.speck4)
+        }
+        c.carve(g, bevel: 2, I.soil2)
+        c.r(g.x, g.y, g.w, 1, I.root)                    // ceiling rail
+        c.r(g.x, g.maxY - 5, g.w, 5, I.soil3)            // floor
+        c.r(g.x, g.maxY - 5, g.w, 1, I.root)
+        // Alcoves. There is no lighting system — one flat bitmap of hard colours — so the
+        // warmth round each mouth is a hand-drawn dither rather than a glow.
+        for i in 0..<BurrowRules.decorSlots {
+            guard let p = L.decorSlot(i) else { continue }
+            c.r(p.x - 5, p.y - 10, 11, 12, I.soil3)
+            c.r(p.x - 5, p.y - 10, 11, 1, I.root)
+            c.r(p.x - 5, p.y - 9, 1, 11, I.soil2); c.r(p.x + 5, p.y - 9, 1, 11, I.soil2)
+            for k in stride(from: -4, through: 4, by: 2) {
+                c.r(p.x + k, p.y - 11, 1, 1, I.amberLo)
+            }
+        }
+        // The ledge's shadow; the ledge itself is drawn live, over the specimens.
+        let sh = L.shelf
+        c.r(sh.x0 - 1, sh.y + 1, sh.width + 2, 1, I.shade)
+        return c.b
     }
 }
 
