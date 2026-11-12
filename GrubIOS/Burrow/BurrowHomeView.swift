@@ -620,27 +620,32 @@ struct BurrowHomeView: View {
     /// Where you are and what else there is. Pixel dots rather than the system page control,
     /// which draws underneath the HUD and in the wrong idiom.
     private var pageBar: some View {
-        HStack(spacing: 8) {
-            ForEach(BurrowPage.allCases, id: \.self) { p in
-                Button { withAnimation(.easeOut(duration: 0.25)) { page = p } } label: {
-                    HStack(spacing: 6) {
+        VStack(spacing: 7) {
+            // The box holds the dots and nothing else. With the name inside it, the box
+            // changed width as you swiped and the dots shuffled sideways under your thumb.
+            HStack(spacing: 4) {
+                ForEach(BurrowPage.allCases, id: \.self) { p in
+                    Button { withAnimation(.easeOut(duration: 0.25)) { page = p } } label: {
                         Rectangle()
                             .fill(Color(ink: p == page ? BurrowInk.amber : BurrowInk.root))
                             .frame(width: 8, height: 8)
-                        if p == page {
-                            Text(p.title).font(GrubFont.size(7))
-                                .foregroundColor(Color(ink: BurrowInk.cream))
-                        }
+                            // An 8-point dot is not a tap target; the padding is.
+                            .padding(5)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(PixelPressStyle())
+                    .accessibilityLabel(p.title)
+                    .accessibilityAddTraits(p == page ? [.isSelected, .isButton] : .isButton)
                 }
-                .buttonStyle(PixelPressStyle())
-                .accessibilityLabel(p.title)
-                .accessibilityAddTraits(p == page ? [.isSelected, .isButton] : .isButton)
             }
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(Color(ink: BurrowInk.hollow))
+            .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
+
+            Text(page.title).font(GrubFont.size(7))
+                .foregroundColor(Color(ink: BurrowInk.cream))
+                .accessibilityHidden(true)      // the dots already say it
         }
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(Color(ink: BurrowInk.hollow))
-        .overlay(Rectangle().strokeBorder(Color(ink: BurrowInk.soil1), lineWidth: 3))
     }
 
     /// The pet. Its state, and the one thing you do to it directly.

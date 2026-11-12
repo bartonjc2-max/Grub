@@ -187,7 +187,9 @@ enum BurrowArt {
             c.r(x, S - 5, 8, 2, I.mushroom)
             c.r(x + 2, S - 6, 4, 1, I.mushroomHi)
         }
-        big(3); big(51)
+        // Clear of the entrance shaft at columns 6–9: a cap sitting over the mouth of the
+        // burrow read as the hole being blocked.
+        big(14); big(51)
         c.r(29, S - 2, 1, 2, I.cream); c.r(27, S - 3, 5, 1, I.mushroom)
     }
 
@@ -214,17 +216,22 @@ enum BurrowArt {
         }
         c.r(44, S + 1, 1, 7, I.root); c.r(45, S + 8, 1, 3, I.root); c.r(2, S + 1, 1, 4, I.root)
 
-        // Tunnels leaving the room — they are the reason to believe there is somewhere to
-        // swipe to, and they are cut off rather than resolved, so they promise rather than show.
-        c.r(6, S, 4, 14, I.hollow)
-        c.r(6, S + 9, 28, 4, I.hollow)
-        c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)
-        c.r(C.maxX, C.y + 12, 12, 4, I.hollow)
-        c.r(22, C.maxY, 4, 10, I.hollow)
+        // Tunnels leaving the room. Every one of them runs off the edge of the frame: a
+        // tunnel that stops in the middle of the soil reads as unfinished art, not as a
+        // passage, which is exactly how the earlier stubs looked.
+        let edge = BurrowLayout.designCols
+        c.r(6, S, 4, 14, I.hollow)                                   // entrance, breaks the surface
+        c.r(6, S + 9, 28, 4, I.hollow)                               // crawl
+        c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)           // drop into the den
+        c.r(C.maxX, C.y + 12, edge - C.maxX, 4, I.hollow)            // out to the right edge
+        c.r(0, C.maxY - 10, C.x, 4, I.hollow)                        // out to the left edge
         c.carve(C, bevel: 2)
-        // A packed floor inside, so the grub stands on something rather than hanging in a void.
+        // A packed floor, so the grub stands on something rather than hanging in a void — and
+        // it has to cover the bevel's lower lip too. Drawn only across the room's own width,
+        // it left a detached dark band hanging under the den.
         c.r(C.x + 1, C.maxY - 3, C.w - 2, 1, I.root)
         c.r(C.x + 1, C.maxY - 2, C.w - 2, 2, I.soil2)
+        c.r(C.x + 2, C.maxY, C.w - 4, 2, I.soil2)
         return c.b
     }
 
