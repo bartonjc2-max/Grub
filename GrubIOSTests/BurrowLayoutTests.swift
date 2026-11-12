@@ -60,6 +60,21 @@ final class BurrowLayoutTests: XCTestCase {
         }
     }
 
+    /// The den's floor is what the grub stands on — `grub()` puts its feet at
+    /// `chamber.maxY` — and the packed earth under it runs four rows deeper. If that slides
+    /// beneath the HUD the animal appears to stand on the panel.
+    func test_the_den_floor_sits_above_the_hud_on_every_screen() {
+        for size in [CGSize(width: 375, height: 667), CGSize(width: 390, height: 844),
+                     CGSize(width: 393, height: 852), CGSize(width: 430, height: 932),
+                     CGSize(width: 834, height: 1194)] {
+            let L = BurrowLayout(size: size, displayScale: 2)
+            XCTAssertLessThan(L.chamber.maxY + 4, L.hudTopRow, "\(size): floor under the HUD")
+            XCTAssertGreaterThan(L.chamber.y, L.surface, "\(size): the den breaks the surface")
+            // And the grub has to fit between the floor and the ceiling of its own room.
+            XCTAssertLessThanOrEqual(GrubArt.height, L.chamber.h, "\(size): grub taller than the den")
+        }
+    }
+
     /// Two spots sit within half a mound of the screen edge. The mound clamps so it is never
     /// sliced by the bezel — the dome and its cast shadow are the whole affordance.
     func test_dig_mounds_stay_whole_on_screen() {

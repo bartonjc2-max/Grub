@@ -216,23 +216,71 @@ enum BurrowArt {
         }
         c.r(44, S + 1, 1, 7, I.root); c.r(45, S + 8, 1, 3, I.root); c.r(2, S + 1, 1, 4, I.root)
 
-        // Tunnels leaving the room. Every one of them runs off the edge of the frame: a
-        // tunnel that stops in the middle of the soil reads as unfinished art, not as a
-        // passage, which is exactly how the earlier stubs looked.
-        let edge = BurrowLayout.designCols
+        // The way in, from the surface. The den's own exits are drawn with it.
         c.r(6, S, 4, 14, I.hollow)                                   // entrance, breaks the surface
         c.r(6, S + 9, 28, 4, I.hollow)                               // crawl
-        c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)           // drop into the den
-        c.r(C.maxX, C.y + 12, edge - C.maxX, 4, I.hollow)            // out to the right edge
-        c.r(0, C.maxY - 10, C.x, 4, I.hollow)                        // out to the left edge
-        c.carve(C, bevel: 2)
-        // A packed floor, so the grub stands on something rather than hanging in a void — and
-        // it has to cover the bevel's lower lip too. Drawn only across the room's own width,
-        // it left a detached dark band hanging under the den.
-        c.r(C.x + 1, C.maxY - 3, C.w - 2, 1, I.root)
-        c.r(C.x + 1, C.maxY - 2, C.w - 2, 2, I.soil2)
-        c.r(C.x + 2, C.maxY, C.w - 4, 2, I.soil2)
+        c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)           // drop into the ceiling
+        den(&c, C)
         return c.b
+    }
+
+    /// The den: a dug cavity, not a stamped box.
+    ///
+    /// It was a rectangle with a stepped bevel, a floor that stopped short of its own walls,
+    /// and tunnels meeting it at two unrelated heights. This draws a profile instead —
+    /// narrow at the ceiling, widest at shoulder height, flat at the floor — with a cell of
+    /// slop on each row so no wall is a ruled line. The floor's top row is `C.maxY`, which
+    /// is exactly where `grub()` puts the feet, so the animal stands on it rather than near it.
+    private static func den(_ c: inout Canvas, _ C: CellRect) {
+        typealias I = BurrowInk
+        var n = Noise()
+        // Inset from each wall, down the cavity. Hand-stepped rather than an ellipse: chunky
+        // steps are what make a hole look carved instead of printed.
+        let profile: [(Double, Int)] = [(0, 13), (0.07, 8), (0.14, 5), (0.22, 3),
+                                        (0.33, 1), (0.42, 0), (0.72, 0), (0.86, 1), (1, 2)]
+        // The slop is held for four rows at a time. Re-rolled every row it came out as a
+        // one-pixel fringe down both walls — static, not earth.
+        var slopL = 0, slopR = 0
+        for row in 0..<C.h {
+            let t = Double(row) / Double(max(1, C.h - 1))
+            var inset = profile[profile.count - 1].1
+            for k in 1..<profile.count where t <= profile[k].0 {
+                let (t0, i0) = profile[k - 1], (t1, i1) = profile[k]
+                let f = t1 == t0 ? 0 : (t - t0) / (t1 - t0)
+                inset = Int((Double(i0) + Double(i1 - i0) * f).rounded())
+                break
+            }
+            // 0 or +1 only. Letting it go negative bit chunks out of the dome and the
+            // silhouette stopped reading as a dug room.
+            if row % 4 == 0 { slopL = n.next(2); slopR = n.next(2) }
+            let l = C.x + max(0, inset + slopL)
+            let r = C.maxX - max(0, inset + slopR)
+            c.r(l, C.y + row, max(2, r - l), 1, I.hollow)
+        }
+
+        // ONE exit, at floor level, turning down after a few cells and dropping off the
+        // frame. Two of them plus their shafts made a wide dark "П" under the room and took
+        // over the lower half of the page; the den already has a way in through its ceiling,
+        // and one way out is enough to say the burrow continues. Left, so the room is not
+        // symmetrical about the animal standing in it.
+        let mouthY = C.maxY - 4, rows = c.L.rows
+        c.r(3, mouthY, C.x + 4, 3, I.hollow)                  // out of the wall
+        c.r(3, mouthY, 3, rows - mouthY, I.hollow)            // and down, off the frame
+        c.r(3, mouthY - 1, C.x + 4, 1, I.root)                // a lip, so it reads as a passage
+
+        // Roots through the ceiling, where the cavity is narrow.
+        for (x, len) in [(24, 4), (38, 3), (41, 5)] { c.r(x, C.y + 2, 1, len, I.root) }
+
+        // The floor: a rim the grub stands on, packed earth under it, and a shadow line so it
+        // sits in the ground rather than on top of it. It runs past the den's own walls so it
+        // carries through both tunnel mouths and the grub could walk out along it.
+        c.r(0, C.maxY, C.x + 7, 1, I.root)
+        c.r(C.x, C.maxY, C.w, 1, I.root)
+        c.r(C.x, C.maxY + 1, C.w, 3, I.soil2)
+        c.r(C.x + 1, C.maxY + 4, C.w - 2, 1, I.shade)
+        // A scrape of bedding off to one side, so the room looks lived in rather than swept.
+        c.r(C.x + 3, C.maxY - 1, 7, 1, I.soil1)
+        c.r(C.x + 4, C.maxY - 2, 5, 1, I.soil1)
     }
 
     // MARK: DIG — the soil face
