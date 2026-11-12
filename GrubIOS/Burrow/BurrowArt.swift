@@ -444,7 +444,7 @@ enum MarkerArt {
              : PixelBuffer(art: [".A.",
                                  "AHA",
                                  ".A."],
-                           palette: ["A": BurrowInk.amber, "H": BurrowInk.amberHi])
+                           palette: ["A": BurrowInk.tellGoldLo, "H": BurrowInk.tellGold])
     }
 
     /// The condition badge, shown only once the spot has been visited — before that, what the

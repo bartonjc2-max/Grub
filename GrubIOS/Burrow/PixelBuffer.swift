@@ -34,6 +34,13 @@ enum BurrowInk {
     /// A plant green for the food tell. Deliberately not `leaf`/`teal`: those are the grub's
     /// own colours, and a marker wearing them reads as another grub, not as a thing to tap.
     static let sprig: UInt32        = 0x7ab648
+    /// The decor tell's gold. Deliberately not `amber`/`amberHi`: at luminance 228 `amberHi`
+    /// was the brightest pixel in the game — brighter than the moon (223) and well past the
+    /// grub (162), so a buried trinket out-shouted the pet. These sit at 146/115, bracketing
+    /// the food tell's `sprig` (152) so gold and green read at the same weight and both stay
+    /// under the grub.
+    static let tellGold: UInt32     = 0xcf8a1e
+    static let tellGoldLo: UInt32   = 0xa8691a
     static let teal: UInt32         = 0x4ecca3
     static let cream: UInt32        = 0xe8e0c0
     static let creamDim: UInt32     = 0xc9c0a0

@@ -14,7 +14,12 @@ struct BurrowFX: Identifiable {
 
 /// Where a trip has got to. The two zoom phases and the two crawls exist so the view can
 /// animate between the burrow and the grid; `digging` is the only one the player drives.
-enum TripPhase: Equatable { case crawlingOut, zoomingIn, digging, zoomingOut, crawlingHome }
+/// `burrowingIn` and `surfacing` are the hinge of the cut-scene: the grub digs into the mound
+/// and vanishes, and the grid blooms out of that same hole. Without them the grub simply
+/// disappeared mid-stride and the grid appeared — a cut pretending to be a scene.
+enum TripPhase: Equatable {
+    case crawlingOut, burrowingIn, zoomingIn, digging, zoomingOut, surfacing, crawlingHome
+}
 
 /// A dig in progress: which spot, how many strikes are left, and where it has got to.
 struct DigTrip: Equatable {
@@ -253,10 +258,15 @@ final class BurrowHomeModel: ObservableObject {
     func skip() {
         guard let t = trip else { return }
         switch t.phase {
-        case .crawlingOut:  advanceTo(.zoomingIn)
+        case .crawlingOut:  advanceTo(.burrowingIn)
+        case .burrowingIn:  advanceTo(.zoomingIn)
         case .zoomingIn:    advanceTo(.digging)
         case .digging:      break
-        case .zoomingOut:   advanceTo(.crawlingHome)
+        // An egg never travelled, so it has nothing to surface from or crawl back along.
+        case .zoomingOut:
+            if save.stage == .egg { trip = nil; tripFind = nil; cleanDigPrize = nil }
+            else { advanceTo(.surfacing) }
+        case .surfacing:    advanceTo(.crawlingHome)
         case .crawlingHome: trip = nil; tripFind = nil; cleanDigPrize = nil
         }
     }

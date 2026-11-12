@@ -195,9 +195,14 @@ final class BurrowHomeModelTests: XCTestCase {
         XCTAssertEqual(m.trip?.phase, .zoomingIn, "an egg can't travel")
     }
 
+    /// The cut-scene's beats, in order. `burrowingIn` is the hinge — the grub digs into the
+    /// mound and goes under, and the grid blooms out of that same hole. It is short on screen
+    /// (0.75 s), which makes it easy to break without anyone noticing, so the order is pinned
+    /// here rather than left to a screenshot that has to be caught at the right instant.
     func test_phases_run_in_order_and_skip_jumps_one_at_a_time() throws {
         let (m, _) = try larvaModel()
         m.startTrip(spot: 0)
+        m.skip(); XCTAssertEqual(m.trip?.phase, .burrowingIn, "it digs in before the grid")
         m.skip(); XCTAssertEqual(m.trip?.phase, .zoomingIn)
         m.skip(); XCTAssertEqual(m.trip?.phase, .digging)
         m.skip(); XCTAssertEqual(m.trip?.phase, .digging, "skip does nothing while digging")
@@ -208,8 +213,18 @@ final class BurrowHomeModelTests: XCTestCase {
         m.startTrip(spot: 0); m.advanceTo(.digging)
         m.strike(tile: 12)                      // the find
         XCTAssertEqual(m.trip?.phase, .zoomingOut, "the trip plays out backwards")
+        m.skip(); XCTAssertEqual(m.trip?.phase, .surfacing, "it climbs back out of the hole")
         m.skip(); XCTAssertEqual(m.trip?.phase, .crawlingHome)
         m.skip(); XCTAssertNil(m.trip, "home again")
+    }
+
+    /// An egg never travelled, so it has nothing to surface from. Before the cut-scene it was
+    /// sent down the walk-home path anyway, which drew a larva sprite crawling for an egg.
+    func test_an_egg_ends_the_trip_at_the_zoom_out() throws {
+        let m = try eggModelWithRiggedSpot()
+        m.startTrip(spot: 0); m.advanceTo(.zoomingOut)
+        m.skip()
+        XCTAssertNil(m.trip, "an egg has no journey to play backwards")
     }
 
     /// Regression: the trip view looked the find up in `save.buried`, which a successful dig
@@ -222,7 +237,7 @@ final class BurrowHomeModelTests: XCTestCase {
         XCTAssertTrue(m.save.buried.isEmpty, "the find left the save")
         XCTAssertNotNil(m.tripFind, "but the trip can still draw its grid")
         XCTAssertEqual(m.tripFind?.tiles[12], .broken)
-        m.skip(); m.skip()
+        m.skip(); m.skip(); m.skip()        // surfacing → crawling home → home
         XCTAssertNil(m.trip)
         XCTAssertNil(m.tripFind, "and it is cleared when the trip ends")
     }
