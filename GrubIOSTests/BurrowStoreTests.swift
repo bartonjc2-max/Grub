@@ -34,6 +34,63 @@ final class BurrowStoreTests: XCTestCase {
         XCTAssertTrue(json.contains("\"berry\":1"), json)
     }
 
+    /// The guard that matters most in this file.
+    ///
+    /// Swift's synthesized `Decodable` ignores a property's default value — a missing key
+    /// throws — and `load` treats any decode failure as corruption: it moves the file aside
+    /// and hands back a fresh egg. So adding a field to `BurrowSave` without a lenient
+    /// decoder would delete every player's game on the update that ships it. This decodes a
+    /// save written before a field existed and asserts it survives, which is the behaviour
+    /// the *next* field added to that struct depends on, not just today's two.
+    func test_a_save_missing_newer_fields_survives_rather_than_being_wiped() throws {
+        var s = BurrowSave.fresh(now: t0)
+        s.name = "PIP"
+        s.placed = [1: .amber]
+        s.specimens = [Specimen(name: "PIP", species: .horn, pinnedAt: t0)]
+        let full = try JSONSerialization.jsonObject(with: JSONEncoder().encode(s)) as! [String: Any]
+
+        // Every key that carries a default, removed — i.e. a file written by any older build.
+        var old = full
+        for k in ["bestTier", "bank", "holes", "placed", "eaten", "specimens", "eggCracks",
+                  "digTimer", "buryTimer", "bellyTimer", "joyTimer", "version", "name"] {
+            old.removeValue(forKey: k)
+        }
+        let data = try JSONSerialization.data(withJSONObject: old)
+
+        let dir = tempDir()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let store = BurrowStore(directory: dir)
+        try data.write(to: store.fileURL)
+
+        let loaded = store.load(now: t0)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: store.corruptURL.path),
+                       "an older save is not corruption")
+        XCTAssertEqual(loaded.stage, .egg, "the real fields came through")
+        XCTAssertEqual(loaded.belly, 6)
+        XCTAssertEqual(loaded.bag, [.berry: 1])
+        XCTAssertEqual(loaded.buried.count, 3)
+        XCTAssertTrue(loaded.bestTier.isEmpty, "the new fields fall back to their defaults")
+        XCTAssertTrue(loaded.bank.isEmpty)
+        XCTAssertEqual(loaded.tier(.crystal), 1, "and read as plain, which is tier 1")
+        XCTAssertEqual(loaded.version, BurrowSave.currentVersion, "migrated forward")
+    }
+
+    /// A save that is genuinely broken — missing a field that never had a default — must
+    /// still be treated as corruption, or half a game comes back looking whole.
+    func test_a_save_missing_a_required_field_is_still_corruption() throws {
+        var full = try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(BurrowSave.fresh(now: t0))) as! [String: Any]
+        full.removeValue(forKey: "belly")
+        let dir = tempDir()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let store = BurrowStore(directory: dir)
+        try JSONSerialization.data(withJSONObject: full).write(to: store.fileURL)
+
+        _ = store.load(now: t0)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: store.corruptURL.path),
+                      "kept, not deleted")
+    }
+
     private func tempDir() -> URL {
         let d = FileManager.default.temporaryDirectory.appendingPathComponent("burrow-\(UUID().uuidString)")
         addTeardownBlock { try? FileManager.default.removeItem(at: d) }
@@ -101,9 +158,9 @@ final class BurrowStoreTests: XCTestCase {
                        "a v1 save must never be treated as corrupt")
     }
 
-    func test_a_v1_save_gains_grids_and_becomes_v2() throws {
+    func test_a_v1_save_gains_grids_and_is_brought_to_the_current_version() throws {
         let save = try storeHolding(Self.v1JSON).load()
-        XCTAssertEqual(save.version, 2)
+        XCTAssertEqual(save.version, BurrowSave.currentVersion)
         XCTAssertEqual(save.buried.count, 2)
         for f in save.buried {
             XCTAssertEqual(f.tiles.count, DigGrid.tileCount, "spot \(f.spot) got a grid")
@@ -115,7 +172,8 @@ final class BurrowStoreTests: XCTestCase {
         let store = try storeHolding(Self.v1JSON)
         _ = store.load()
         let onDisk = try JSONDecoder().decode(BurrowSave.self, from: Data(contentsOf: store.fileURL))
-        XCTAssertEqual(onDisk.version, 2, "the upgrade was saved, not redone every launch")
+        XCTAssertEqual(onDisk.version, BurrowSave.currentVersion,
+                       "the upgrade was saved, not redone every launch")
         XCTAssertEqual(onDisk.buried.first?.tiles.count, DigGrid.tileCount)
     }
 

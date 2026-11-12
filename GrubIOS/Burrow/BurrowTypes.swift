@@ -56,6 +56,19 @@ enum FindKind: String, Codable, CaseIterable, Identifiable, CodingKeyRepresentab
         }
     }
 
+    /// Decor comes out of the ground in three conditions. Three, not more: four kinds × three
+    /// tiers is twelve visibly different objects, which is enough of a chase without a dozen
+    /// new sprites — and unlike a longer list of kinds, it does not run out, because the top
+    /// tier of every kind is a long way off. A longer list would only move the wall.
+    static let maxTier = 3
+    static func tierName(_ t: Int) -> String {
+        switch max(1, min(maxTier, t)) {
+        case 1:  return "CHIPPED"
+        case 2:  return "FINE"
+        default: return "PRISTINE"
+        }
+    }
+
     /// Foods, in the order auto-feed tries them.
     static let feedOrder: [FindKind] = [.berry, .root, .mushroom, .honeydew]
 }
