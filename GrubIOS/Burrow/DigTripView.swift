@@ -22,12 +22,15 @@ struct DigTripView: View {
     private static let burrowIn: TimeInterval = 0.75
     private static let surfacing: TimeInterval = 0.55
 
-    /// How small the grub gets by the time it reaches the spot. The burrow is drawn side-on,
+    /// How small the grub gets by the time it reaches the top. The burrow is drawn side-on,
     /// so there is no perspective to shrink it — this *is* the depth cue, and it is the beat
     /// that turns the walk into a journey instead of a sprite sliding across a backdrop.
-    private static let farScale: Double = 0.45
+    /// Small, because going up and out is meant to read as going a long way back.
+    private static let farScale: Double = 0.30
 
-    private var path: [Waypoint] { BurrowWaypoints.path(to: trip.spot, layout) }
+    /// Up out of the burrow and along under the surface — not toward the mound. See
+    /// `BurrowWaypoints.exit` for what that choice costs.
+    private var path: [Waypoint] { BurrowWaypoints.exit(layout, towards: trip.spot) }
 
     private var duration: TimeInterval {
         switch trip.phase {
@@ -126,18 +129,16 @@ struct DigTripView: View {
     /// The spot's position as a unit point, so the zoom grows out of the soil being dug
     /// rather than out of the middle of the screen.
     private var spotAnchor: UnitPoint {
-        return UnitPoint(x: min(1, max(0, moundX / size.width)),
-                         y: min(1, max(0, moundY / size.height)))
+        UnitPoint(x: min(1, max(0, digX / size.width)),
+                  y: min(1, max(0, CGFloat(digRow) * layout.cell / size.height)))
     }
 
-    /// Where the mound is on screen — the same clamped centre the burrow draws it at, and the
-    /// crown the grub digs into. The grid grows out of this point, so the hole it vanished
-    /// into is the hole the mini-game opens from.
-    private var moundX: CGFloat {
-        layout.point(BurrowSpots.markerCentre(trip.spot, layout, width: MarkerArt.mound.width), 0).x
-    }
-    private var moundCrownRow: Double { Double(BurrowSpots.resolve(trip.spot, layout).y) - 4 }
-    private var moundY: CGFloat { (CGFloat(moundCrownRow) + 2) * layout.cell }
+    /// Where the grub digs in and goes under — the end of the exit route, up in the topsoil.
+    /// The grid grows out of this point, so the hole it vanished into is the hole the
+    /// mini-game opens from. It is no longer the mound: going up and out severs that.
+    private var digEnd: Waypoint { path.last ?? BurrowWaypoints.home(layout) }
+    private var digX: CGFloat { layout.point(Double(digEnd.x), 0).x }
+    private var digRow: Double { Double(digEnd.y) }
 
     /// The grub itself, somewhere along the route. `crawlingHome` runs the path backwards.
     @ViewBuilder
@@ -175,11 +176,11 @@ struct DigTripView: View {
         let c = cell(for: scale)
         // It sinks as it shrinks, so it reads as going *into* the ground rather than simply
         // fading out where it stood.
-        let bottom = moundCrownRow + q * 3
+        let bottom = digRow + q * 3
 
         if scale > 0.03 {
             PixelImage(buffer: sprite, cell: c)
-                .position(x: moundX,
+                .position(x: digX,
                           y: CGFloat(bottom) * layout.cell - CGFloat(sprite.height) * c / 2)
                 .accessibilityHidden(true)
         }
@@ -192,8 +193,8 @@ struct DigTripView: View {
                 Rectangle()
                     .fill(Color(ink: k % 2 == 0 ? BurrowInk.dirt : BurrowInk.dirtHi))
                     .frame(width: layout.cell, height: layout.cell)
-                    .position(x: moundX + CGFloat(dir * (2 + Double(k % 3)) * fly) * layout.cell,
-                              y: CGFloat(moundCrownRow - 3.5 * sin(fly * .pi)) * layout.cell)
+                    .position(x: digX + CGFloat(dir * (2 + Double(k % 3)) * fly) * layout.cell,
+                              y: CGFloat(digRow - 3.5 * sin(fly * .pi)) * layout.cell)
                     .opacity(1 - fly)
                     .accessibilityHidden(true)
             }

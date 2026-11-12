@@ -405,15 +405,19 @@ thing as drawn, a glint), so twelve recognisable objects cost four drawings.
   reads a missing `version` as 1 instead of as corruption. `BurrowStoreTests` guards both.
 
 **The trip is a cut-scene.** It was a cut pretending to be one: the grub walked at constant
-size, then vanished mid-stride while the grid appeared. Now it shrinks to `farScale` 0.45 as it
-travels (the burrow is side-on, so the ramp *is* the depth cue), digs into the mound in a
-`burrowingIn` phase, throws dirt and sinks out of sight, and the grid blooms from that same
-hole — the zoom anchor moved to the mound crown. `surfacing` mirrors it on the way back. An egg
-ends its trip at the zoom-out; it never travelled. Tap-to-skip still covers every beat.
+size, then vanished mid-stride while the grid appeared. Now it climbs up out of the burrow
+(`BurrowWaypoints.exit`), shrinks to `farScale` 0.30 along the way — the burrow is drawn
+side-on, so the ramp *is* the depth cue — reaches the topsoil just under the surface line,
+digs in during a `burrowingIn` phase, throws dirt and sinks out of sight. The grid then blooms
+from that hole. `surfacing` mirrors it on the way back. An egg ends its trip at the zoom-out;
+it never travelled. Tap-to-skip covers every beat.
 
-Interpretation flagged to Jesse: "into the top of the game area" is built as receding **toward
-the mound**, not flying up and off, because flying up severs the grub↔mound link and the
-continuous hand-off into the grid. Swapping the shrink vector is cheap if he wants the other.
+**Up and out, not in toward the mound — Jesse's call, 2026-11-12.** He was asked, because the
+two readings of "into the top of the game area" cost different things in a side-on
+cross-section. Going up severs the link between the grub and the particular mound it is
+digging: the route is now the same shape wherever the find is, and the zoom anchor is the
+grub's vanishing point rather than the mound. The exit column leans toward the spot so a
+left-hand dig still leaves to the left, which is as much of that link as this shape keeps.
 
 ## Out of scope
 

@@ -38,6 +38,23 @@ enum BurrowWaypoints {
         return subdivide(best + [target])
     }
 
+    /// The cut-scene route: up out of the burrow and along under the surface, where the grub
+    /// shrinks away to nothing and digs in.
+    ///
+    /// Jesse's call (2026-11-12) over receding toward the mound. It costs the link between the
+    /// grub and the spot it is about to dig — the route is the same shape wherever the find
+    /// is, and the grid now blooms from where the grub vanished rather than from the mound on
+    /// the home screen. The exit column leans toward the spot so a left-hand dig still reads
+    /// as heading left, which is as much of that link as this shape can keep.
+    static func exit(_ L: BurrowLayout, towards spot: Int) -> [Waypoint] {
+        let x = min(56, max(8, BurrowSpots.resolve(spot, L).x))
+        return subdivide([home(L),
+                          Waypoint(x: 32, y: L.chamber.y + 1),     // up the drop shaft
+                          Waypoint(x: 32, y: L.surface + 11),      // into the crawl tunnel
+                          Waypoint(x: x, y: L.surface + 11),       // along it, toward the spot
+                          Waypoint(x: x, y: L.surface + 3)])       // and up to the topsoil
+    }
+
     /// Where the grub stands in its chamber.
     static func home(_ L: BurrowLayout) -> Waypoint {
         Waypoint(x: L.chamber.midX, y: L.chamber.maxY - 3)
