@@ -79,17 +79,37 @@ extension BurrowLayout {
         }
     }
 
-    /// Bottom-centre cell of decor slot `i`: the 6×2 pedestal spans x-3…x+2, rows y…y+1,
-    /// and the decor sprite stands on it (its bottom row at y-1).
+    /// Top-centre cell of decor slot `i`: the 6×4 plinth spans x-3…x+2, rows y…y+3, and the
+    /// decor sprite stands on it (its bottom row at y-1).
+    ///
+    /// All four now live in the chamber, where the player actually looks — 0 and 1 standing
+    /// on the floor either side of the grub, 2 and 3 on the walls above them. The side rooms
+    /// used to hold 0 and 1; they hold the specimen shelf now, because a collection that
+    /// grows forever earns the spare room better than four decor slots that fill up once and
+    /// then never change again.
     func decorSlot(_ i: Int) -> (x: Int, y: Int)? {
         switch i {
-        case 0: return (sideL.midX, sideL.maxY - 2)
-        case 1: return (sideR.midX, sideR.maxY - 2)
-        case 2: return (chamber.x + 5, chamber.maxY - 2)
-        case 3: return (chamber.maxX - 4, chamber.maxY - 2)
+        case 0: return (chamber.x + 4, chamber.maxY - 3)
+        case 1: return (chamber.maxX - 4, chamber.maxY - 3)
+        case 2: return (chamber.x + 4, chamber.y + 9)
+        case 3: return (chamber.maxX - 4, chamber.y + 9)
         default: return nil
         }
     }
+
+    /// Slots 2 and 3 hang off the chamber wall instead of standing on its floor, so they get
+    /// the bracket plinth rather than the footed one.
+    func decorIsShelf(_ i: Int) -> Bool { i >= 2 }
+
+    /// The specimen shelf: a thin ledge across a side room, and where each pinned specimen
+    /// stands on it. `slot` counts left to right within the room; a room fits `shelfSlots`.
+    func shelf(_ room: CellRect) -> (y: Int, x0: Int, width: Int) {
+        (y: room.maxY - 3, x0: room.x + 1, width: room.w - 2)
+    }
+
+    /// How many specimens a room's ledge shows. Each one is 5 cells wide with a cell of air
+    /// either side; the rest of the collection stays in the full list behind a tap.
+    func shelfSlots(_ room: CellRect) -> Int { max(1, (room.w - 2) / 6) }
 }
 
 // MARK: - Backdrop (sky, surface, soil, tunnels, decor)
@@ -137,18 +157,35 @@ enum BurrowArt {
         band(S, S + 1, I.surface)
         band(S + 1, b1, I.soil1); band(b1, b2, I.soil2); band(b2, b3, I.soil3); band(b3, L.rows, I.soil4)
 
-        // Speckles (deterministic LCG so the burrow never shimmers between launches).
+        // Speckles (deterministic LCG so the burrow never shimmers between launches). Each
+        // fleck takes its own band's colour, so texture stays texture and recedes behind the
+        // mounds; the lower bands get a second pass, because mineral grit is what makes depth
+        // read even on a stretch of soil with nothing buried in it.
         var seed: UInt32 = 0x9e37_79b9
         func rnd(_ n: Int) -> Int { seed = seed &* 1_664_525 &+ 1_013_904_223; return Int(seed >> 8) % max(1, n) }
+        func fleck(_ y: Int) -> UInt32 {
+            if y < b1 { return I.speck1 }
+            if y < b2 { return I.speck2 }
+            if y < b3 { return I.speck3 }
+            return I.speck4
+        }
         for _ in 0..<(L.cols * soil / 55) {
-            b.fill(rnd(L.cols), S + 2 + rnd(max(1, soil - 2)), rnd(2) + 1, 1, I.speck)
+            let y = S + 2 + rnd(max(1, soil - 2))
+            b.fill(rnd(L.cols), y, rnd(2) + 1, 1, fleck(y))
+        }
+        for _ in 0..<(L.cols * max(0, L.rows - b2) / 70) {
+            let y = b2 + rnd(max(1, L.rows - b2))
+            b.fill(rnd(L.cols), y, rnd(2) + 1, 1, fleck(y))
         }
 
         // Roots hanging from the surface.
         r(44, S + 1, 1, 7, I.root); r(45, S + 8, 1, 3, I.root); r(61, S + 1, 1, 5, I.root); r(2, S + 1, 1, 4, I.root)
 
-        // A buried bone (decor).
-        r(48, S + 5, 5, 1, I.cream); r(47, S + 4, 1, 3, I.cream); r(53, S + 4, 1, 3, I.cream)
+        // A buried fossil. The dark socket is what makes it read as embedded in the earth
+        // rather than stuck on top of it — the same grounding trick the dig mounds use. It is
+        // scenery, not a marker: nothing here is tappable.
+        r(48, S + 6, 5, 1, I.shade); r(47, S + 5, 1, 3, I.shade); r(53, S + 5, 1, 3, I.shade)
+        r(48, S + 5, 5, 1, I.creamDim); r(47, S + 4, 1, 3, I.creamDim); r(53, S + 4, 1, 3, I.creamDim)
 
         // Tunnels.
         let C = L.chamber
@@ -368,16 +405,47 @@ extension FindKind {
 /// "!" for every spot; these say what is down there, how deep, what the soil is like, and
 /// whether the grub has started on it.
 enum MarkerArt {
-    /// A sprout for food, a glint for decor — so the player can choose what to go after.
-    static let sprout = PixelBuffer(art: [".L.",
-                                          "GLG",
-                                          ".L.",
-                                          ".L."],
-                                    palette: ["L": BurrowInk.leaf, "G": BurrowInk.teal])
-    static let glint = PixelBuffer(art: [".A.",
-                                         "AHA",
-                                         ".A."],
-                                   palette: ["A": BurrowInk.amber, "H": BurrowInk.amberHi])
+    /// A dig site, sitting **on** the soil instead of floating over it. One vocabulary: a
+    /// mound always means "dig here". The old marker was a 3×3 icon hovering six rows above
+    /// untouched ground, which read as scenery rather than as a place — and the food one wore
+    /// the grub's own teal, so it read as another grub.
+    ///
+    /// 11×6. The last row is the shadow it casts, and that cast shadow is the whole
+    /// difference between a glint and a place.
+    static let mound = PixelBuffer(art: ["....HHD....",
+                                         "..HHDDDDD..",
+                                         ".HDDDDDDDD.",
+                                         "HDDDDDDDDDD",
+                                         "DDDDDDDDDDD",
+                                         "SSSSSSSSSSS"],
+                                   palette: ["H": BurrowInk.dirtHi, "D": BurrowInk.dirt,
+                                             "S": BurrowInk.shade])
+
+    /// The same mound once the player has broken tiles here: the crown has caved in and the
+    /// hole they started shows through, so a half-finished dig is legible from the burrow.
+    static let moundOpen = PixelBuffer(art: ["...D.K.D...",
+                                             "..DDKKKDD..",
+                                             ".DDKKKKKDD.",
+                                             "DDDKKKKKDDD",
+                                             "DDDDKKKDDDD",
+                                             "SSSSSSSSSSS"],
+                                       palette: ["D": BurrowInk.dirt, "K": BurrowInk.hollow,
+                                                 "S": BurrowInk.shade])
+
+    /// What kind of find is down there. This stays — with three digs a day, choosing what to
+    /// go after is most of the daily decision — but it is demoted to a tell sitting on the
+    /// mound, and it never uses the grub's teal.
+    static func tell(food: Bool) -> PixelBuffer {
+        food ? PixelBuffer(art: [".G.",
+                                 "GGG",
+                                 ".G.",
+                                 ".R."],
+                           palette: ["G": BurrowInk.sprig, "R": BurrowInk.root])
+             : PixelBuffer(art: [".A.",
+                                 "AHA",
+                                 ".A."],
+                           palette: ["A": BurrowInk.amber, "H": BurrowInk.amberHi])
+    }
 
     /// The condition badge, shown only once the spot has been visited — before that, what the
     /// soil is like is exactly what the trip is for finding out.
@@ -394,10 +462,6 @@ enum MarkerArt {
         }
     }
 
-    /// Shown once the player has broken a tile here themselves, so a half-finished dig is
-    /// visible from the burrow.
-    static let crack = PixelBuffer(art: ["D.D", ".D.", "D.D"],
-                                   palette: ["D": BurrowInk.dirt])
 }
 
 enum DigArt {
@@ -528,15 +592,41 @@ enum IconArt {
                                    palette: ["R": BurrowInk.berry])
     static let sparkle = PixelBuffer(art: ["A"], palette: ["A": BurrowInk.amberHi])
 
-    /// Decor-slot pedestal (6×2). `lit` is the glowing version shown while placing.
-    static func pedestal(lit: Bool) -> PixelBuffer {
-        PixelBuffer(art: ["TTTTTT",
-                          ".BBBB."],
+    /// Decor plinth (6×4). A 6×2 bar read as a smudge on the ground; a slab on a stem with a
+    /// foot reads as furniture, which is what makes an empty slot look like somewhere to put
+    /// something rather than like a gap in the art. `shelf` is the wall-mounted variant used
+    /// by the two upper slots: it hangs on a bracket instead of standing on a foot.
+    static func pedestal(lit: Bool, shelf: Bool = false) -> PixelBuffer {
+        PixelBuffer(art: shelf ? ["TTTTTT", "BBBBBB"]
+                               : ["TTTTTT", "BBBBBB", ".BBBB."],
                     palette: ["T": lit ? BurrowInk.amber : BurrowInk.root,
                               "B": lit ? BurrowInk.amberLo : BurrowInk.soil1])
     }
     static let pedestalDim = pedestal(lit: false)
     static let pedestalLit = pedestal(lit: true)
+    static let shelfDim = pedestal(lit: false, shelf: true)
+    static let shelfLit = pedestal(lit: true, shelf: true)
+
+    /// A free slot's "put something here" mark, shown faintly on the plinth. It stays small
+    /// and quiet on purpose: a full dashed box on every empty slot turned the chamber into
+    /// wallpaper, which is the clutter this whole change is meant to remove.
+    static let slotEmpty = PixelBuffer(art: [".P.",
+                                             "PPP",
+                                             ".P."],
+                                       palette: ["P": BurrowInk.root])
+
+    /// One pinned specimen on the shelf (5×6). The adult sprites are ~21 cells wide, which no
+    /// 12-cell side room can show even one of, so the shelf carries a species-tinted bust with
+    /// a pin through it — small enough that a room holds two, and the full list is a tap away.
+    static func specimen(_ sp: Species) -> PixelBuffer {
+        PixelBuffer(art: ["..P..",
+                          ".CCC.",
+                          "CCCCC",
+                          "CECEC",
+                          "CCCCC",
+                          ".CCC."],
+                    palette: ["C": sp.color, "E": BurrowInk.hollow, "P": BurrowInk.creamDim])
+    }
 
     static let box = PixelBuffer(art: ["CCCCCCC",
                                        "C.....C",

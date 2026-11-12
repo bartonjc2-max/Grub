@@ -335,6 +335,46 @@ One implementation plan per phase; each phase ships playable.
 4. **Collect + hatch** — pin, specimen box, egg, naming, cracks, tint, lineage, `fresh` starts
    at `.egg`.
 
+## Home-screen legibility (2026-11-12)
+
+Jesse, on the shipped build: "the dig sites aren't defined well, and the holes to place
+trinkets don't read coherent or confuse the user — they seem like a waste of the Home
+Screen." Measured against the running app, all three complaints were one failure: nothing on
+the screen was **anchored**, so everything read as scatter.
+
+- **Dig sites are mounds, not icons.** A spot was a 3×3 sprite floating six rows above
+  undisturbed soil — and the food one wore `teal`, the grub's own colour, so it read as
+  flora. It is now a raised mound of turned earth (`MarkerArt.mound`) whose bottom row is the
+  shadow it casts on the soil. The cast shadow is the whole difference between a glint and a
+  place. One vocabulary: a mound always means "dig here".
+  - Three states, all from data that already existed: untouched (`buried`, not `visited`),
+    opened (`moundOpen`, once the player has broken a tile themselves), and spent — already
+    drawn, as the pocket `backdrop` carves for every spot in `save.holes`.
+  - The food/decor tell survives, because with three digs a day choosing what to go after is
+    most of the daily decision. It is demoted to a small mark sitting *on* the crown: a
+    `sprig`-green plant for food, an amber glint for decor. Never the grub's teal.
+  - `BurrowSpots.markerCentre` clamps the mound to the design grid: spots 5 and 6 sit within
+    half a mound of the bezel, and a sliced mound stops reading as a mound. Art only — the
+    spot itself never moves, so the save and the dig rules are untouched.
+
+- **The soil layers are visible.** The four bands were `4a2618 / 3e2014 / 331a10 / 28140c` —
+  74 → 62 → 51 → 40 on red, one hue — so the loose/clay/deep model the whole dig difficulty
+  rests on was invisible. They now darken **and cool** with depth, warm rust topsoil to a
+  blue-violet bedrock that meets the sky's family, and each band's flecks are a lighter
+  version of itself with a second pass of grit in the lower two.
+
+- **Decor moved into the chamber; the side rooms hold the collection.** A slot was a 6×2 bar
+  on the floor of an unlit cavity. All four are now in the chamber — 0 and 1 standing on the
+  floor either side of the grub, 2 and 3 on the walls above — each in a recess with a back
+  wall, so an empty slot reads as somewhere to put something rather than as a gap in the art.
+  `placed[i]` is unchanged, so this is layout only and no save migrates.
+  - The side rooms hold the **specimen shelf**: the newest pinned adults on a ledge, newest
+    first, tap for the full `SpecimenBoxView`. A lit shelf is still a shelf — the rooms needed
+    a reason to be looked at, and the collection is the one thing that grows forever. It was
+    behind a modal behind a 20px button in the sky; now it is on the screen every open.
+  - Adult sprites are ~21 cells wide and the rooms are 12 and 14, so the shelf shows a
+    species-tinted bust (`IconArt.specimen`) rather than the adult itself.
+
 ## Out of scope
 
 Local notifications ("digs are back"), sound, multiple burrows, cloud sync, migrating

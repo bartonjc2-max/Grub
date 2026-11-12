@@ -10,14 +10,30 @@ import UIKit
 enum BurrowInk {
     static let sky: UInt32          = 0x0d1226
     static let surface: UInt32      = 0x7a3e2a
-    static let soil1: UInt32        = 0x4a2618
-    static let soil2: UInt32        = 0x3e2014
-    static let soil3: UInt32        = 0x331a10
-    static let soil4: UInt32        = 0x28140c
-    static let speck: UInt32        = 0x5a2f1e
+    // The four bands darken **and cool** with depth: warm rust topsoil, duller clay, then
+    // mineral soil and bedrock that shift toward the sky's blue-violet. Darkening alone was
+    // the old scheme (74 → 62 → 51 → 40 on red, one hue) and it made the layers invisible —
+    // which hid the whole loose/clay/deep difficulty model from the player.
+    static let soil1: UInt32        = 0x5a2e1b
+    static let soil2: UInt32        = 0x47281f
+    static let soil3: UInt32        = 0x34232b
+    static let soil4: UInt32        = 0x221d2b
+    static let speck: UInt32        = 0x6b3b26
+    /// Flecks, one per band: a lighter version of that band, so texture reads as texture and
+    /// recedes behind the mounds instead of competing with them.
+    static let speck1: UInt32       = 0x6d3a22
+    static let speck2: UInt32       = 0x58331f
+    static let speck3: UInt32       = 0x453039
+    static let speck4: UInt32       = 0x302a3a
     static let root: UInt32         = 0x5e3322
     static let hollow: UInt32       = 0x140a06
     static let dirt: UInt32         = 0x9a5638
+    /// Freshly turned earth — the lit crown of a dig mound — and the shadow it casts.
+    static let dirtHi: UInt32       = 0xc07a47
+    static let shade: UInt32        = 0x19100a
+    /// A plant green for the food tell. Deliberately not `leaf`/`teal`: those are the grub's
+    /// own colours, and a marker wearing them reads as another grub, not as a thing to tap.
+    static let sprig: UInt32        = 0x7ab648
     static let teal: UInt32         = 0x4ecca3
     static let cream: UInt32        = 0xe8e0c0
     static let creamDim: UInt32     = 0xc9c0a0

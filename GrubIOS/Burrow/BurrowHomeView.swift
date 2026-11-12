@@ -251,6 +251,8 @@ struct BurrowHomeView: View {
     @ViewBuilder
     private func livingLayer(_ L: BurrowLayout, t: TimeInterval) -> some View {
         ZStack(alignment: .topLeading) {
+            specimenShelf(L.sideR, from: 0, L)
+            specimenShelf(L.sideL, from: L.shelfSlots(L.sideR), L)
             ForEach(0..<BurrowRules.decorSlots, id: \.self) { i in decorSlot(i, L, t) }
             ForEach(model.buried, id: \.spot) { f in
                 marker(spot: f.spot, L, t)
@@ -265,36 +267,34 @@ struct BurrowHomeView: View {
         let p = BurrowSpots.resolve(spot, L)
         let find = model.buried.first { $0.spot == spot }
         let phase = Double((spot * 7) % 10) / 10
-        let bob = Int(t / 0.45 + phase * 2) % 2
         let hinted = t - model.digHintAt < 1.6
         let hot = hinted && Int(t / 0.14) % 2 == 0
-        let twinkle = Int(t / 0.3 + phase * 3) % 3 != 0
-        let cx = L.point(Double(p.x) + 0.5, 0).x
+        let cx = L.point(BurrowSpots.markerCentre(spot, L, width: MarkerArt.mound.width), 0).x
         // A glinting spot starts with one tile already broken, so counting broken tiles alone
         // would advertise the condition before the player has ever been there.
         let freebie = find?.condition == .glinting ? 1 : 0
-        let showCrack = (find?.visited ?? false)
+        let opened = (find?.visited ?? false)
             && (find?.tiles.filter { $0 == .broken }.count ?? 0) > freebie
+        let mound = opened ? MarkerArt.moundOpen : MarkerArt.mound
+        // The mound is ground, so it does not bob — that is the point of it. Only the tell
+        // on top moves, which is what carries the eye without unmooring the site.
+        let tell = hot ? Self.bangHot : MarkerArt.tell(food: find?.kind.isFood ?? true)
+        let bob = Int(t / 0.45 + phase * 2) % 2
 
-        PixelImage(buffer: hot ? Self.bangHot : (find?.kind.isFood ?? true ? MarkerArt.sprout : MarkerArt.glint),
-                   cell: L.cell)
-            .position(x: cx, y: (CGFloat(p.y - 6 - bob) + 0.5) * L.cell)
+        // Rows p.y-4 … p.y+1, so the mound's last row — its cast shadow — lands on the soil
+        // at the spot itself. `.position` centres, hence the half-height offsets.
+        PixelImage(buffer: mound, cell: L.cell)
+            .position(x: cx, y: (CGFloat(p.y) - 4 + CGFloat(mound.height) / 2) * L.cell)
+        PixelImage(buffer: tell, cell: L.cell)
+            .position(x: cx, y: (CGFloat(p.y) - 4 - CGFloat(bob) - CGFloat(tell.height) / 2) * L.cell)
         if let c = find?.condition, find?.visited == true {
             PixelImage(buffer: MarkerArt.badge(c), cell: L.cell)
-                .position(x: cx + 4 * L.cell, y: (CGFloat(p.y - 5 - bob) + 0.5) * L.cell)
-        }
-        if showCrack {
-            PixelImage(buffer: MarkerArt.crack, cell: L.cell)
-                .position(x: cx - 4 * L.cell, y: (CGFloat(p.y - 4) + 0.5) * L.cell)
-        }
-        if twinkle {
-            PixelImage(buffer: IconArt.sparkle, cell: L.cell)
-                .position(x: cx, y: (CGFloat(p.y) + 0.5) * L.cell)
+                .position(x: cx + 6 * L.cell, y: (CGFloat(p.y) - 3) * L.cell)
         }
         Color.clear
-            .frame(width: 48, height: 64)
+            .frame(width: 56, height: 64)
             .contentShape(Rectangle())
-            .position(x: cx, y: CGFloat(p.y - 3) * L.cell)
+            .position(x: cx, y: CGFloat(p.y - 2) * L.cell)
             .onTapGesture { model.startTrip(spot: spot) }
             .accessibilityElement()
             .accessibilityLabel(markerLabel(spot: spot, find: find))
@@ -308,9 +308,27 @@ struct BurrowHomeView: View {
             let kind = model.placed[i]
             let lit = model.placing != nil && kind == nil && Int(t / 0.3) % 2 == 0
             let selected = model.selectedSlot == i
+            let shelf = L.decorIsShelf(i)
+            let plinth = shelf ? (lit ? IconArt.shelfLit : IconArt.shelfDim)
+                               : (lit ? IconArt.pedestalLit : IconArt.pedestalDim)
             let base = L.point(Double(p.x - 3), Double(p.y))
-            PixelImage(buffer: lit ? IconArt.pedestalLit : IconArt.pedestalDim, cell: L.cell)
-                .position(x: base.x + 3 * L.cell, y: base.y + L.cell)
+            let cx = L.point(Double(p.x) + 0.5, 0).x
+            // A back wall behind each slot, so the plinth sits in a recess carved out of the
+            // chamber instead of floating in the dark. Without it an empty slot reads as a
+            // gap in the art — which is exactly how the old 6×2 bar read.
+            Rectangle()
+                .fill(Color(ink: lit ? BurrowInk.soil1 : BurrowInk.soil2))
+                .frame(width: 10 * L.cell, height: 9 * L.cell)
+                .position(x: cx, y: (CGFloat(p.y) + CGFloat(plinth.height) - 4.5) * L.cell)
+            PixelImage(buffer: plinth, cell: L.cell)
+                .position(x: base.x + 3 * L.cell,
+                          y: base.y + CGFloat(plinth.height) * L.cell / 2)
+            if kind == nil {
+                let o = IconArt.slotEmpty
+                PixelImage(buffer: o, cell: L.cell)
+                    .position(x: cx, y: (CGFloat(p.y) - CGFloat(o.height) / 2) * L.cell)
+                    .opacity(lit ? 1 : 0.5)
+            }
             if let kind {
                 let spr = kind.sprite
                 let bob = selected && Int(t / 0.25) % 2 == 0 ? 1 : 0
@@ -336,6 +354,54 @@ struct BurrowHomeView: View {
                     .accessibilityAddTraits(.isButton)
             }
         }
+    }
+
+    /// The specimen shelf — the newest pinned adults standing on a ledge in a side room.
+    ///
+    /// The rooms used to hold two decor slots and nothing else, which is what made them read
+    /// as wasted space: four slots that fill up once and then never change again. The
+    /// collection grows every time an adult is pinned, so it earns the spare room, and the
+    /// reason to look gets better the longer the game is played. Tapping a room opens the
+    /// full list — the shelf shows only what fits.
+    @ViewBuilder
+    private func specimenShelf(_ room: CellRect, from: Int, _ L: BurrowLayout) -> some View {
+        let s = L.shelf(room)
+        let shown = Array(model.specimens.reversed().dropFirst(from).prefix(L.shelfSlots(room)))
+        // The ledge is drawn whether or not anything stands on it, so an empty room reads as
+        // a shelf waiting to be filled rather than as a hole in the ground.
+        Rectangle()
+            .fill(Color(ink: BurrowInk.root))
+            .frame(width: CGFloat(s.width) * L.cell, height: L.cell)
+            .position(x: L.point(Double(s.x0) + Double(s.width) / 2, 0).x,
+                      y: (CGFloat(s.y) + 0.5) * L.cell)
+        ForEach(Array(shown.enumerated()), id: \.offset) { k, sp in
+            let spr = IconArt.specimen(sp.species)
+            let o = L.point(Double(s.x0 + k * 6), Double(s.y - spr.height))
+            PixelImage(buffer: spr, cell: L.cell)
+                .position(x: o.x + CGFloat(spr.width) * L.cell / 2,
+                          y: o.y + CGFloat(spr.height) * L.cell / 2)
+        }
+        // Before the first molt there is nothing to show, so the first place says what it is
+        // for. Only on the room that holds the newest specimens.
+        if from == 0 && shown.isEmpty {
+            let o = IconArt.slotEmpty
+            PixelImage(buffer: o, cell: L.cell)
+                .position(x: L.point(Double(s.x0) + 3, 0).x,
+                          y: (CGFloat(s.y) - 1 - CGFloat(o.height) / 2) * L.cell)
+                .opacity(0.5)
+        }
+        Color.clear
+            .frame(width: CGFloat(room.w) * L.cell, height: CGFloat(room.h) * L.cell)
+            .contentShape(Rectangle())
+            .position(x: L.point(Double(room.x) + Double(room.w) / 2, 0).x,
+                      y: (CGFloat(room.y) + CGFloat(room.h) / 2) * L.cell)
+            .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { model.showBox = true } }
+            .accessibilityElement()
+            .accessibilityLabel(model.specimens.isEmpty
+                                ? "Specimen shelf, empty"
+                                : "Specimen shelf, \(model.specimens.count) pinned")
+            .accessibilityHint("Open the specimen box")
+            .accessibilityAddTraits(.isButton)
     }
 
     private func grub(_ L: BurrowLayout, _ t: TimeInterval) -> some View {

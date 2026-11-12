@@ -41,6 +41,18 @@ enum BurrowSpots {
     /// computes `originX + (x0 + dx) * cell`, and `backdrop`'s `r()` helper fills at
     /// `L.x0 + x`. Returning bitmap coordinates would shift every marker and hole right by
     /// `x0` — which is 0 on most sizes and 2 on the SE, so it would survive a casual look.
+    /// Centre column of the dig mound drawn at `spot`, in design space.
+    ///
+    /// Spots 5 and 6 sit within half a mound of the screen edge, and a mound sliced by the
+    /// bezel stops reading as a mound at all — the cast shadow and the dome are the whole
+    /// affordance. The art clamps; the spot itself does not move, so nothing in the save or
+    /// the dig rules changes.
+    static func markerCentre(_ spot: Int, _ L: BurrowLayout, width: Int) -> Double {
+        let half = Double(width) / 2
+        return min(Double(BurrowLayout.designCols) - half,
+                   max(half, Double(resolve(spot, L).x) + 0.5))
+    }
+
     static func resolve(_ spot: Int, _ L: BurrowLayout) -> (x: Int, y: Int) {
         let s = spots[spot]
         let band = L.rows(for: s.layer)
