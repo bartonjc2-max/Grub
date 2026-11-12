@@ -243,7 +243,10 @@ enum BurrowArt {
         c.r(44, S + 1, 1, 7, I.root); c.r(45, S + 8, 1, 3, I.root); c.r(2, S + 1, 1, 4, I.root)
 
         // The way in, from the surface. The den's own exits are drawn with it.
-        c.r(6, S, 4, 14, I.hollow)                                   // entrance, breaks the surface
+        // The shaft stops level with the crawl's floor. One row deeper, it hung below the
+        // crawl at the left end and the stroke lit that step, putting an extra lip under the
+        // horizontal run that matched nothing else in the tunnel.
+        c.r(6, S, 4, 13, I.hollow)                                   // entrance, breaks the surface
         c.r(6, S + 9, 28, 4, I.hollow)                               // crawl
         c.r(30, S + 9, 4, max(0, C.y - (S + 9)), I.hollow)           // drop into the ceiling
         den(&c, C)
@@ -280,19 +283,19 @@ enum BurrowArt {
 
         // One way in through the ceiling, one way out at floor level. The way out turns down
         // after a few cells and leaves the frame, so it is a passage rather than a stub.
-        let mouthY = C.maxY - 5, rows = c.L.rows
-        c.r(3, mouthY, C.x + 6, 4, I.hollow)
-        c.r(3, mouthY, 4, rows - mouthY, I.hollow)
+        let mouthY = C.maxY - 5, rows = c.L.rows, shaft = 3
+        c.r(shaft, mouthY, C.x + 6 - shaft, 4, I.hollow)
+        c.r(shaft, mouthY, 4, rows - mouthY, I.hollow)
 
         // The floor, laid inside the cavity so the stroke finds its top edge and lights it
         // for free. Its top row is `C.maxY - 1`, which is where `grub()` stands the animal.
         c.r(C.x + 1, C.maxY - 1, C.w - 2, 1, I.soil1)
         c.r(C.x, C.maxY, C.w, 3, I.soil2)
-        c.r(3, C.maxY - 1, C.x + 6, 1, I.soil1)        // and out through the mouth
-        c.r(3, C.maxY, 7, 2, I.soil2)
-
-        // Roots through the ceiling, where the arch is narrow.
-        for (x, len) in [(25, 4), (39, 3)] { c.r(x, C.y + 2, 1, len, I.root) }
+        // Out through the mouth, stopping at the shaft. Carried across it, the floor filled
+        // in the very hole the shaft was supposed to be, which is why the corner of the
+        // passage looked disconnected: the two legs were there, the turn was plugged.
+        c.r(shaft + 4, C.maxY - 1, C.x - 3 - shaft, 1, I.soil1)
+        c.r(shaft + 4, C.maxY, C.x - 3 - shaft, 2, I.soil2)
     }
 
     // MARK: DIG — the soil face
