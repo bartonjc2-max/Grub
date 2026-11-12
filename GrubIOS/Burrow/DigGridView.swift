@@ -89,7 +89,7 @@ struct DigGridView: View {
                 .font(GrubFont.size(12))
                 .foregroundColor(Color(ink: BurrowInk.amberHi))
             HStack(spacing: px * 2) {
-                PixelImage(buffer: prize.sprite, cell: px)
+                PixelImage(buffer: prize.sprite(tier: model.tier(prize)), cell: px)
                 Text("+" + prize.label)
                     .font(GrubFont.size(9))
                     .foregroundColor(Color(ink: BurrowInk.teal))

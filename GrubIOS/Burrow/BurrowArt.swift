@@ -335,6 +335,26 @@ extension GrubArt {
 // MARK: - Finds + UI icons
 
 extension FindKind {
+    /// The same find, in the condition it came out of the ground in. A tier is a treatment
+    /// over the one sprite rather than three drawings of it: chipped takes a bite out of the
+    /// corner, fine is the thing as drawn, and pristine adds a glint. Twelve recognisable
+    /// objects, four sprites.
+    func sprite(tier: Int) -> PixelBuffer {
+        guard isDecor else { return sprite }
+        var b = sprite
+        switch max(1, min(FindKind.maxTier, tier)) {
+        case 1:
+            b.clear(b.width - 1, b.height - 2, 1, 2)
+            b.clear(0, b.height - 1, 1, 1)
+        case 2:
+            break
+        default:
+            b.fill(1, 0, 1, 1, BurrowInk.white)
+            b.fill(b.width - 2, 1, 1, 1, BurrowInk.white)
+        }
+        return b
+    }
+
     var sprite: PixelBuffer {
         typealias I = BurrowInk
         switch self {
@@ -606,6 +626,22 @@ enum IconArt {
     static let pedestalLit = pedestal(lit: true)
     static let shelfDim = pedestal(lit: false, shelf: true)
     static let shelfLit = pedestal(lit: true, shelf: true)
+
+    /// Tier pips under a furnished slot: filled for the condition you hold, hollow for what
+    /// is still out there. Three of them, so "there is a better one of these in the ground"
+    /// is visible without a word of UI — and the next pip fills from the bottom as duplicates
+    /// bank into it, which is what stops a surplus find feeling like nothing happened.
+    static func pips(tier: Int, bank: Int) -> PixelBuffer {
+        var b = PixelBuffer(width: FindKind.maxTier * 2 - 1, height: 2)
+        for i in 0..<FindKind.maxTier {
+            b.fill(i * 2, 0, 1, 2, i < tier ? BurrowInk.tellGold : BurrowInk.root)
+        }
+        if tier < FindKind.maxTier, bank > 0 {
+            let h = bank * 2 >= BurrowRules.bankPerTier ? 2 : 1
+            b.fill(tier * 2, 2 - h, 1, h, BurrowInk.tellGoldLo)
+        }
+        return b
+    }
 
     /// A free slot's "put something here" mark, shown faintly on the plinth. It stays small
     /// and quiet on purpose: a full dashed box on every empty slot turned the chamber into

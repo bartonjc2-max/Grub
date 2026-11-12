@@ -38,6 +38,10 @@ enum DigCondition: String, Codable, CaseIterable, Equatable {
 enum SoilLayer: String, CaseIterable, Equatable {
     case loose, clay, deep
 
+    /// How far down this layer is, 0…2. Decor quality leans on it, so "dig deeper for better
+    /// things" is a rule rather than a feeling.
+    var depth: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+
     /// Strikes a trip to this layer grants, before conditions and mood.
     ///
     /// Clay and deep were 5 and 4 until the pacing was re-measured against the mini-game

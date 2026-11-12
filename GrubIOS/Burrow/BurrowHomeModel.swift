@@ -122,6 +122,13 @@ final class BurrowHomeModel: ObservableObject {
     var isHappy: Bool { BurrowRules.isHappy(save) }
     var isSulking: Bool { BurrowRules.isSulking(save) }
     var placed: [Int: FindKind] { save.placed }
+    /// The condition of each decor kind the player holds, and how far the next one is along.
+    func tier(_ k: FindKind) -> Int { save.tier(k) }
+    func bank(_ k: FindKind) -> Int { save.bank[k] ?? 0 }
+    var tiers: [FindKind: Int] {
+        Dictionary(uniqueKeysWithValues: FindKind.allCases.map { ($0, save.tier($0)) })
+    }
+    var banks: [FindKind: Int] { save.bank }
     var freeSlots: [Int] { (0..<BurrowRules.decorSlots).filter { save.placed[$0] == nil } }
     var canAct: Bool { save.stage == .larva }
     var stage: GrubStage { save.stage }
@@ -343,6 +350,12 @@ final class BurrowHomeModel: ObservableObject {
             add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: home + 0.45, life: 1.2))
             add(.init(kind: .text("CLEAN DIG!\n+" + kind.label, BurrowInk.teal),
                       x: Double(p.x), y: Double(p.y - 11), born: home + 0.5, life: 1.6))
+        // The payoff for digging deep and digging well. It fires on the way home with the
+        // other dig effects, so it lands on the burrow the player is looking at rather than
+        // flashing behind the grid overlay.
+        case .upgraded(let kind, let tier):
+            Haptics.thud()
+            say("\(FindKind.tierName(tier))\n\(kind.label)!")
         case .tileBroken(_, let heat):
             // No particle here: the burrow FX layer draws under the grid overlay, so anything
             // added would be invisible. The tile art changing is the feedback; this is the feel.

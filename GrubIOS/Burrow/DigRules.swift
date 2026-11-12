@@ -38,6 +38,29 @@ extension BurrowRules {
     /// Derived rather than stored: seeded from the spot *and* the find's position, so it is
     /// stable for a given burial, different the next time that spot is filled, and needs no
     /// new save field (which migrated v1 finds would not have had).
+    /// What condition a find comes out of the ground in — 1 chipped, 2 fine, 3 pristine.
+    ///
+    /// Deeper soil, a glinting spot and a clean dig each push it up, which is the point:
+    /// before tiers, decor was four objects you owned by about day six, after which roughly a
+    /// third of everything dug could not be eaten or placed and sat in the bag for good.
+    /// Making the *quality* the reward ties the shelves back to digging deep and digging well,
+    /// and unlike a longer list of kinds it does not run out.
+    ///
+    /// Measured over 200 runs (docs/burrow): 74 / 20 / 4 % chipped / fine / pristine, every
+    /// kind pristine around day 37 at three digs a day (90th percentile day 50), day 111 once
+    /// a day. Deterministic per find, so the same pocket always holds the same thing.
+    static func tier(for find: BuriedFind, cleanDig: Bool) -> Int {
+        var rng = BurrowRNG(seed: BuriedFind.seed(for: find.spot)
+                            &+ UInt64(find.findTile) &* 1_099_511_628_211
+                            &+ (cleanDig ? 7 : 0))
+        let score = BurrowSpots.layer(find.spot).depth
+            + (find.condition == .glinting ? 1 : 0)
+            + (cleanDig ? 1 : 0)
+        if score >= 3, Int.random(in: 0..<100, using: &rng) < 18 { return FindKind.maxTier }
+        if score >= 2, Int.random(in: 0..<100, using: &rng) < 35 { return 2 }
+        return 1
+    }
+
     static func bonusKind(for find: BuriedFind) -> FindKind {
         var rng = BurrowRNG(seed: BuriedFind.seed(for: find.spot)
                             &+ UInt64(find.findTile) &* 2_654_435_761)
@@ -70,15 +93,22 @@ extension BurrowRules {
             if tile == find.findTile {
                 s.buried.remove(at: i)
                 s.holes.append(spot)
-                s.bag[find.kind, default: 0] += 1
+                let clean = strikesLeft - 1 >= cleanDigStrikes
                 events.append(.dugUp(spot: spot, kind: find.kind))
+                if let up = BurrowRules.collect(&s, kind: find.kind,
+                                                tier: tier(for: find, cleanDig: clean)) {
+                    events.append(up)
+                }
                 // Finding it with strikes to spare pays out whatever else was in the pocket.
                 // This is the whole reason to read the grid rather than tap it flat: the win
                 // itself is nearly certain, the margin is not.
-                if strikesLeft - 1 >= cleanDigStrikes {
+                if clean {
                     let extra = bonusKind(for: find)
-                    s.bag[extra, default: 0] += 1
                     events.append(.cleanDig(spot: spot, kind: extra))
+                    if let up = BurrowRules.collect(&s, kind: extra,
+                                                    tier: tier(for: find, cleanDig: true)) {
+                        events.append(up)
+                    }
                 }
             }
             return BurrowResult(save: s, events: events)

@@ -42,7 +42,8 @@ struct BurrowHomeView: View {
         .overlay(alignment: .top) { modeBar }
         .overlay {
             if model.showBag {
-                FindsBagView(bag: model.bag, canAct: model.canAct, freeSlots: model.freeSlots.count,
+                FindsBagView(bag: model.bag, tiers: model.tiers, banks: model.banks,
+                             canAct: model.canAct, freeSlots: model.freeSlots.count,
                              onEat: { k in closeBag(); model.feed(kind: k) },
                              onPlace: { k in closeBag(); model.startPlacing(k) },
                              close: closeBag)
@@ -330,7 +331,9 @@ struct BurrowHomeView: View {
                     .opacity(lit ? 1 : 0.5)
             }
             if let kind {
-                let spr = kind.sprite
+                // The slot shows the best one of this kind the player owns, so a furnished
+                // burrow quietly improves as they dig rather than freezing after week one.
+                let spr = kind.sprite(tier: model.tier(kind))
                 let bob = selected && Int(t / 0.25) % 2 == 0 ? 1 : 0
                 // Whole-cell top-left so 5-wide sprites stay on the pixel grid: centred on the
                 // 6-wide pedestal (x-3…x+2), bottom row just above the pedestal top (row p.y).
@@ -340,6 +343,9 @@ struct BurrowHomeView: View {
                 PixelImage(buffer: spr, cell: L.cell)
                     .position(x: o.x + CGFloat(spr.width) * L.cell / 2,
                               y: o.y + CGFloat(spr.height) * L.cell / 2)
+                let pips = IconArt.pips(tier: model.tier(kind), bank: model.bank(kind))
+                PixelImage(buffer: pips, cell: L.cell)
+                    .position(x: cx, y: (CGFloat(p.y) + CGFloat(plinth.height) + 1) * L.cell)
             }
             let tappable = (model.placing != nil && kind == nil) || (model.placing == nil && kind != nil)
             if tappable {
@@ -478,7 +484,7 @@ struct BurrowHomeView: View {
                         .position(c)
                 }
             case .reveal(let kind):
-                let spr = kind.sprite
+                let spr = kind.sprite(tier: model.tier(kind))
                 let rise = (min(age / 0.3, 1) * 7).rounded()
                 let c = L.point(e.x + 0.5, e.y - rise - Double(spr.height) / 2)
                 PixelImage(buffer: spr, cell: L.cell)
@@ -717,6 +723,8 @@ struct PixelPressStyle: ButtonStyle {
 /// What the grub has dug up (spec §3). Pick a find, then EAT it (food) or PLACE it (decor).
 struct FindsBagView: View {
     let bag: [FindKind: Int]
+    let tiers: [FindKind: Int]
+    let banks: [FindKind: Int]
     let canAct: Bool
     let freeSlots: Int
     let onEat: (FindKind) -> Void
@@ -760,7 +768,8 @@ struct FindsBagView: View {
         let isPicked = picked == k
         return Button { picked = isPicked ? nil : k } label: {
             VStack(spacing: 6) {
-                PixelImage(buffer: n > 0 ? k.sprite : k.sprite.silhouette(BurrowInk.root), cell: 6)
+                PixelImage(buffer: n > 0 ? k.sprite(tier: tiers[k] ?? 1)
+                                         : k.sprite.silhouette(BurrowInk.root), cell: 6)
                     .frame(width: 60, height: 60)
                     // Dark soil behind found items so every sprite reads (the bone is cream).
                     .background(Color(ink: n > 0 ? BurrowInk.soil2 : BurrowInk.soil4))
@@ -769,13 +778,24 @@ struct FindsBagView: View {
                         lineWidth: 3))
                 Text(n > 0 ? k.label : "???").font(GrubFont.size(6))
                     .foregroundColor(Color(ink: BurrowInk.cream))
-                Text(n > 0 ? "x\(n)" : " ").font(GrubFont.size(8))
-                    .foregroundColor(Color(ink: BurrowInk.amber))
+                // Decor says what condition yours is in and how close the next one is, so a
+                // duplicate reads as progress rather than as another dead copy.
+                if n > 0, k.isDecor {
+                    let tier = tiers[k] ?? 1
+                    PixelImage(buffer: IconArt.pips(tier: tier, bank: banks[k] ?? 0), cell: 3)
+                    Text(FindKind.tierName(tier)).font(GrubFont.size(6))
+                        .foregroundColor(Color(ink: BurrowInk.tellGold))
+                } else {
+                    Text(n > 0 ? "x\(n)" : " ").font(GrubFont.size(8))
+                        .foregroundColor(Color(ink: BurrowInk.amber))
+                }
             }
         }
         .buttonStyle(PixelPressStyle())
         .disabled(n == 0)
-        .accessibilityLabel(n > 0 ? "\(k.label.capitalized), \(n)" : "Not found yet")
+        .accessibilityLabel(n == 0 ? "Not found yet"
+                            : k.isDecor ? "\(FindKind.tierName(tiers[k] ?? 1).capitalized) \(k.label.capitalized), \(n)"
+                                        : "\(k.label.capitalized), \(n)")
     }
 
     @ViewBuilder

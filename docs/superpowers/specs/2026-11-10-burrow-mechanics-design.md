@@ -375,6 +375,46 @@ the screen was **anchored**, so everything read as scatter.
   - Adult sprites are ~21 cells wide and the rooms are 12 and 14, so the shelf shows a
     species-tinted bust (`IconArt.specimen`) rather than the adult itself.
 
+## Decor tiers and the dig cut-scene (2026-11-12)
+
+Jesse, on the home-screen build: "we need a lot of decor variety — 'I found the 4 things and
+then displayed them' isn't exactly repeatable engagement," and "when it's dig time you get an
+animation of grub coming out of his tunnel, getting smaller to imply going into the
+background, then digging into something and disappearing."
+
+**The decor dead end, measured.** Four decor kinds against four slots. 32.5 % of every dig
+yields decor (loose 20 %, clay 30 %, deep 55 %, across 3 loose / 3 clay / 2 deep spots). Over
+300 simulated runs all four kinds are owned by day 6 at three digs a day, day 12 at the 90th
+percentile, day 18 once a day. After that decor cannot be eaten and PLACE is disabled with the
+slots full, so it lands in the bag forever: ~30 % of everything dug, dead, from week one.
+
+**Tiers, not more kinds.** A longer list only moves the wall. Each decor kind now has three
+conditions — chipped, fine, pristine — rolled at dig time from soil depth + a glinting spot + a
+clean dig, so the shelves are tied back to digging deep and digging well. Measured: 74 / 20 /
+4 %, every kind pristine around day 37 at three digs a day (90th percentile day 50), day 111
+once a day. Tiers are a treatment over the four existing sprites (a bite out of the corner, the
+thing as drawn, a glint), so twelve recognisable objects cost four drawings.
+
+- `bestTier` and `bank` are keyed by **kind**, not per item. `placed` stores only the kind, so a
+  furnished slot shows the best one owned and improves the moment a better one is dug.
+- Surplus banks: 12 duplicates buy the next tier of that kind, or — once it is pristine — of
+  whichever kind is furthest behind. Nothing is wasted until the whole set is pristine.
+- **Save safety.** Swift's synthesized `Decodable` ignores property defaults, and
+  `BurrowStore.load` treats a decode failure as corruption, so adding a field to `BurrowSave`
+  the obvious way would have deleted every save. It now has a lenient `init(from:)`, and `load`
+  reads a missing `version` as 1 instead of as corruption. `BurrowStoreTests` guards both.
+
+**The trip is a cut-scene.** It was a cut pretending to be one: the grub walked at constant
+size, then vanished mid-stride while the grid appeared. Now it shrinks to `farScale` 0.45 as it
+travels (the burrow is side-on, so the ramp *is* the depth cue), digs into the mound in a
+`burrowingIn` phase, throws dirt and sinks out of sight, and the grid blooms from that same
+hole — the zoom anchor moved to the mound crown. `surfacing` mirrors it on the way back. An egg
+ends its trip at the zoom-out; it never travelled. Tap-to-skip still covers every beat.
+
+Interpretation flagged to Jesse: "into the top of the game area" is built as receding **toward
+the mound**, not flying up and off, because flying up severs the grub↔mound link and the
+continuous hand-off into the grid. Swapping the shrink vector is cheap if he wants the other.
+
 ## Out of scope
 
 Local notifications ("digs are back"), sound, multiple burrows, cloud sync, migrating

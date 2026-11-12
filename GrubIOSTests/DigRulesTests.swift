@@ -194,4 +194,81 @@ final class DigRulesTests: XCTestCase {
         XCTAssertEqual(r.save.buried[0].tiles[11], .broken)
         XCTAssertEqual(r.save.buried[0].findTile, 12, "the find has not moved")
     }
+
+    // MARK: decor tiers
+
+    /// Loose soil with a plain condition can never score 2, so the shallow spots pay chipped
+    /// things whatever you do. That is the rule that makes depth worth digging for.
+    func test_shallow_plain_soil_only_ever_pays_chipped() {
+        for tile in 0..<DigGrid.tileCount {
+            let f = BuriedFind(spot: 1, kind: .shell, condition: nil, findTile: tile, tiles: [])
+            XCTAssertEqual(BurrowRules.tier(for: f, cleanDig: false), 1, "tile \(tile)")
+        }
+    }
+
+    /// And the deep, glinting, cleanly-dug pocket is the only place pristine comes from.
+    func test_only_a_deep_clean_dig_can_pay_pristine() {
+        var deepClean = 0, shallowClean = 0
+        for tile in 0..<DigGrid.tileCount {
+            let deep = BuriedFind(spot: 3, kind: .crystal, condition: .glinting,
+                                  findTile: tile, tiles: [])
+            let loose = BuriedFind(spot: 1, kind: .shell, condition: .glinting,
+                                   findTile: tile, tiles: [])
+            if BurrowRules.tier(for: deep, cleanDig: true) == FindKind.maxTier { deepClean += 1 }
+            if BurrowRules.tier(for: loose, cleanDig: true) == FindKind.maxTier { shallowClean += 1 }
+        }
+        XCTAssertGreaterThan(deepClean, 0, "a deep glinting clean dig can pay pristine")
+        XCTAssertEqual(shallowClean, 0, "loose soil cannot, however cleanly it is dug")
+    }
+
+    func test_a_better_find_upgrades_the_kind_on_the_shelf() {
+        var s = BurrowSave.fresh(now: Date())
+        XCTAssertEqual(s.tier(.crystal), 1, "absent reads as chipped")
+        let e = BurrowRules.collect(&s, kind: .crystal, tier: 3)
+        XCTAssertEqual(e, .upgraded(kind: .crystal, tier: 3))
+        XCTAssertEqual(s.tier(.crystal), 3)
+        // And a worse one afterwards never downgrades what is already on display.
+        _ = BurrowRules.collect(&s, kind: .crystal, tier: 1)
+        XCTAssertEqual(s.tier(.crystal), 3)
+    }
+
+    /// The floor. Before tiers, a decor find with the slots full could not be eaten or placed
+    /// and simply sat in the bag — about 30 % of everything dug from week one.
+    func test_surplus_banks_until_it_buys_the_next_tier() {
+        var s = BurrowSave.fresh(now: Date())
+        for i in 1..<BurrowRules.bankPerTier {
+            XCTAssertNil(BurrowRules.collect(&s, kind: .amber, tier: 1), "bank step \(i)")
+            XCTAssertEqual(s.bank[.amber], i, "every duplicate moved it along")
+        }
+        XCTAssertEqual(BurrowRules.collect(&s, kind: .amber, tier: 1),
+                       .upgraded(kind: .amber, tier: 2))
+        XCTAssertEqual(s.tier(.amber), 2)
+        XCTAssertEqual(s.bank[.amber], 0, "the bank resets for the next tier")
+    }
+
+    /// Once a kind is pristine its duplicates push whichever kind is furthest behind, so the
+    /// loop keeps paying until the whole set is done rather than dead-ending per kind.
+    func test_a_maxed_kinds_duplicates_feed_the_kind_furthest_behind() {
+        var s = BurrowSave.fresh(now: Date())
+        s.bestTier = [.amber: FindKind.maxTier, .bone: 2, .crystal: 2, .shell: 2]
+        _ = BurrowRules.collect(&s, kind: .amber, tier: 1)
+        XCTAssertEqual(s.bank[.amber] ?? 0, 0, "a pristine kind banks nothing for itself")
+        XCTAssertEqual([.bone, .crystal, .shell].compactMap { s.bank[$0] }.reduce(0, +), 1,
+                       "it went to one of the kinds still behind")
+    }
+
+    func test_nothing_banks_once_the_whole_set_is_pristine() {
+        var s = BurrowSave.fresh(now: Date())
+        for k in FindKind.allCases where k.isDecor { s.bestTier[k] = FindKind.maxTier }
+        XCTAssertNil(BurrowRules.collect(&s, kind: .amber, tier: 1))
+        XCTAssertTrue(s.bank.values.allSatisfy { $0 == 0 }, "there is nothing left to buy")
+        XCTAssertEqual(s.bag[.amber], 1, "but it is still a find, and still goes in the bag")
+    }
+
+    func test_food_has_no_tier_and_never_banks() {
+        var s = BurrowSave.fresh(now: Date())
+        XCTAssertNil(BurrowRules.collect(&s, kind: .berry, tier: 3))
+        XCTAssertTrue(s.bestTier.isEmpty && s.bank.isEmpty, "food is eaten, not displayed")
+        XCTAssertEqual(s.bag[.berry], 2, "fresh starts with one")
+    }
 }

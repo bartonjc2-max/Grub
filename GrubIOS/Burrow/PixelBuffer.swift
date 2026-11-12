@@ -88,6 +88,16 @@ struct PixelBuffer {
         data = [UInt8](repeating: 0, count: self.width * self.height * 4)
     }
 
+    /// Punch a rect back to transparent. `fill` blends source-over, so it cannot un-draw.
+    mutating func clear(_ x: Int, _ y: Int, _ w: Int, _ h: Int) {
+        for yy in max(0, y)..<min(height, y + h) {
+            for xx in max(0, x)..<min(width, x + w) {
+                let i = (yy * width + xx) * 4
+                data[i] = 0; data[i + 1] = 0; data[i + 2] = 0; data[i + 3] = 0
+            }
+        }
+    }
+
     /// Build a sprite from ASCII rows; characters not in `palette` are transparent.
     init(art: [String], palette: [Character: UInt32]) {
         self.init(width: art.map(\.count).max() ?? 1, height: art.count)

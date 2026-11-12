@@ -15,6 +15,7 @@ enum BurrowEvent: Equatable {
     case molted(Species), pinned(Specimen), named(String), eggCracked(stage: Int), hatched
     case tripStarted(spot: Int, strikes: Int)
     case cleanDig(spot: Int, kind: FindKind)
+    case upgraded(kind: FindKind, tier: Int)
     case tileBroken(tile: Int, heat: Heat)
     case rockChipped(tile: Int)
     case refused(Refusal)
@@ -40,6 +41,38 @@ enum BurrowRules {
     /// and 12 % for 4. It replaces the old hidden 35 % bonus-find roll with the same rate,
     /// earned rather than rolled.
     static let cleanDigStrikes = 3
+
+    /// Duplicate decor finds that bank into the next tier of something. 12 is tuned, not
+    /// guessed: it puts every kind pristine around day 37 at three digs a day and day 111 at
+    /// one, which is the long tail the four-kinds-four-slots design never had.
+    static let bankPerTier = 12
+
+    /// Put a dug-up find in the bag, and for decor decide what it *does*.
+    ///
+    /// Before tiers, a decor find past the fourth was dead on arrival — it could not be eaten
+    /// and PLACE was disabled with the slots full, so it sat in the bag forever. Measured, that
+    /// was about 30 % of everything dug from week one. Now a better one upgrades the kind
+    /// outright (and because `placed` stores only the kind, the furnished slot improves the
+    /// moment you get home), and anything else banks toward the next tier — of that kind, or
+    /// once that kind is pristine, of whichever kind is furthest behind. Nothing is wasted
+    /// until the whole set is pristine, which is months away.
+    static func collect(_ s: inout BurrowSave, kind: FindKind, tier: Int) -> BurrowEvent? {
+        s.bag[kind, default: 0] += 1
+        guard kind.isDecor else { return nil }
+        if tier > s.tier(kind) {
+            s.bestTier[kind] = tier
+            return .upgraded(kind: kind, tier: tier)
+        }
+        let behind = FindKind.allCases
+            .filter { $0.isDecor && s.tier($0) < FindKind.maxTier }
+            .min { (s.tier($0), s.bank[$0, default: 0]) < (s.tier($1), s.bank[$1, default: 0]) }
+        guard let target = s.tier(kind) < FindKind.maxTier ? kind : behind else { return nil }
+        let next = s.bank[target, default: 0] + 1
+        guard next >= bankPerTier else { s.bank[target] = next; return nil }
+        s.bank[target] = 0
+        s.bestTier[target] = s.tier(target) + 1
+        return .upgraded(kind: target, tier: s.tier(target))
+    }
 
     static let digPeriod: TimeInterval = 3 * 3600
     static let buryPeriod: TimeInterval = 2 * 3600
