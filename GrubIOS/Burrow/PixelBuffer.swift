@@ -88,6 +88,16 @@ struct PixelBuffer {
         data = [UInt8](repeating: 0, count: self.width * self.height * 4)
     }
 
+    /// The colour at a cell, or 0 where nothing has been drawn. Reading the bitmap back is
+    /// what lets an edge be found rather than predicted — a hand-written outline has a gap
+    /// wherever two shapes meet in a way nobody thought of.
+    func color(_ x: Int, _ y: Int) -> UInt32 {
+        guard x >= 0, y >= 0, x < width, y < height else { return 0 }
+        let i = (y * width + x) * 4
+        guard data[i + 3] > 0 else { return 0 }
+        return UInt32(data[i]) << 16 | UInt32(data[i + 1]) << 8 | UInt32(data[i + 2])
+    }
+
     /// Punch a rect back to transparent. `fill` blends source-over, so it cannot un-draw.
     mutating func clear(_ x: Int, _ y: Int, _ w: Int, _ h: Int) {
         for yy in max(0, y)..<min(height, y + h) {

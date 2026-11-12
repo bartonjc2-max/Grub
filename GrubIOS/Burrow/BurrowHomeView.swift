@@ -129,7 +129,7 @@ struct BurrowHomeView: View {
     }
 
     private func place(_ L: BurrowLayout) {
-        model.grubTop = (L.chamber.midX, L.chamber.maxY - GrubArt.height)
+        model.grubTop = (L.chamber.midX, L.chamber.maxY - 1 - GrubArt.height)
         model.layout = L
     }
 
@@ -474,7 +474,7 @@ struct BurrowHomeView: View {
         let shaking = model.stage == .egg && t - model.crackAt < 0.3
         let wobble = inCocoon ? Int((sin(t * 9) * 1.4).rounded()) : (shaking ? (Int(t / 0.05) % 2 == 0 ? 1 : -1) : 0)
         let gx = L.chamber.midX - sprite.width / 2 + wobble
-        let gy = L.chamber.maxY - sprite.height - ((inCocoon || model.stage == .egg) ? 0 : bounce + hop)
+        let gy = L.chamber.maxY - 1 - sprite.height - ((inCocoon || model.stage == .egg) ? 0 : bounce + hop)
         let origin = L.point(Double(gx), Double(gy))
         let glowing = model.isMoltReady && !inCocoon && Int(t / 0.4) % 2 == 0
 
