@@ -145,12 +145,20 @@ enum BurrowRules {
         return BurrowResult(save: s, events: events)
     }
 
-    /// Bury one weighted-random find in a random free spot; clears that spot's hole.
+    /// Bury one weighted-random find in a random free spot; clears that spot's hole, and
+    /// **moves the spot** before using it.
+    ///
+    /// The eight sites used to be a frozen table, so the dig face was the same picture every
+    /// session however long the game was played. A site is re-placed each time it comes back
+    /// into play — new column, new band, new depth within the band — which is what makes the
+    /// soil read as somewhere being worked rather than a backdrop.
     static func bury(_ s: inout BurrowSave, rng: inout some RandomNumberGenerator) -> BuriedFind? {
         let taken = Set(s.buried.map(\.spot))
         guard let spot = (0..<spotCount).filter({ !taken.contains($0) }).randomElement(using: &rng) else { return nil }
-        // Draw order is part of the contract: spot -> kind -> condition -> grid.
-        let layer = BurrowSpots.layer(spot)
+        if s.spots.count != spotCount { s.spots = BurrowSpots.fallback }
+        BurrowSpots.reroll(spot, in: &s.spots, rng: &rng)
+        // Draw order is part of the contract: spot -> placement -> kind -> condition -> grid.
+        let layer = s.layer(spot)
         let kind = DigGen.rollKind(layer: layer, rng: &rng)
         let condition = DigGen.rollCondition(rng: &rng)
         let g = DigGen.make(layer: layer, condition: condition, rng: &rng)

@@ -191,7 +191,8 @@ final class BurrowRulesTests: XCTestCase {
     }
 
     func test_spot_table_matches_rules() {
-        XCTAssertEqual(BurrowSpots.spots.count, BurrowRules.spotCount)
+        XCTAssertEqual(BurrowSpots.fallback.count, BurrowRules.spotCount)
+        XCTAssertEqual(BurrowSpots.perLayer.reduce(0) { $0 + $1.1 }, BurrowRules.spotCount)
     }
 
     // MARK: finds (phase 2)
@@ -203,9 +204,12 @@ final class BurrowRulesTests: XCTestCase {
         // Burial odds are per soil layer now (DigGen.kindWeights), not one global table.
         // Food share is 80 / 70 / 45 by layer; over the 8 spots (3 loose, 3 clay, 2 deep)
         // that averages 67.5 %, close to the 70 % the stat pacing was tuned against.
-        let perSpot = (0..<BurrowRules.spotCount).map { spot -> Double in
-            let table = DigGen.kindWeights(BurrowSpots.layer(spot))
-            return Double(table.filter { $0.0.isFood }.reduce(0) { $0 + $1.1 }) / 100
+        // The sites move now, so the mix comes from the generator's per-layer counts rather
+        // than from a fixed table — same 3 / 3 / 2, so the same 67.5 %.
+        let perSpot = BurrowSpots.perLayer.flatMap { layer, count -> [Double] in
+            let table = DigGen.kindWeights(layer)
+            let share = Double(table.filter { $0.0.isFood }.reduce(0) { $0 + $1.1 }) / 100
+            return Array(repeating: share, count: count)
         }
         XCTAssertEqual(perSpot.reduce(0, +) / Double(perSpot.count), 0.675, accuracy: 0.001)
         XCTAssertEqual(FindKind.root.leansTo, .claws)

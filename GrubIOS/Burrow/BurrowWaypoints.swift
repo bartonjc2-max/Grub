@@ -18,8 +18,8 @@ enum BurrowWaypoints {
     /// this, so the animation can walk the list at a steady pace without lurching.
     static let maxStep = 10
 
-    static func path(to spot: Int, _ L: BurrowLayout) -> [Waypoint] {
-        let p = BurrowSpots.resolve(spot, L)
+    static func path(to at: SpotPlacement, _ L: BurrowLayout) -> [Waypoint] {
+        let p = BurrowSpots.resolve(at, L)
         let target = Waypoint(x: p.x, y: p.y)
 
         // Walk every route and keep the prefix whose last node is nearest the spot. A spot
@@ -46,8 +46,8 @@ enum BurrowWaypoints {
     /// is, and the grid now blooms from where the grub vanished rather than from the mound on
     /// the home screen. The exit column leans toward the spot so a left-hand dig still reads
     /// as heading left, which is as much of that link as this shape can keep.
-    static func exit(_ L: BurrowLayout, towards spot: Int) -> [Waypoint] {
-        let x = min(56, max(8, BurrowSpots.resolve(spot, L).x))
+    static func exit(_ L: BurrowLayout, towards at: SpotPlacement) -> [Waypoint] {
+        let x = min(56, max(8, BurrowSpots.resolve(at, L).x))
         return subdivide([home(L),
                           Waypoint(x: 32, y: L.chamber.y + 1),     // up the drop shaft
                           Waypoint(x: 32, y: L.surface + 11),      // into the crawl tunnel

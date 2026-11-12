@@ -42,7 +42,7 @@ struct DigGridView: View {
 
     private var header: some View {
         VStack(spacing: px * 2) {
-            Text(BurrowSpots.layer(trip.spot).label)
+            Text(model.save.layer(trip.spot).label)
                 .font(GrubFont.size(10))
                 .foregroundColor(Color(ink: BurrowInk.cream))
             if let c = find.condition {

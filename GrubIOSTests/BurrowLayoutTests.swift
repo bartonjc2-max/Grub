@@ -83,15 +83,16 @@ final class BurrowLayoutTests: XCTestCase {
                      CGSize(width: 430, height: 932),
                      CGSize(width: 834, height: 1194)] {
             let L = BurrowLayout(size: size, displayScale: 2)
-            let w = MarkerArt.mound.width
+            let w = MarkerArt.siteWidth
             for spot in 0..<BurrowRules.spotCount {
-                let c = BurrowSpots.markerCentre(spot, L, width: w)
+                let at = BurrowSpots.fallback[spot]
+                let c = BurrowSpots.markerCentre(at, L, width: w)
                 XCTAssertGreaterThanOrEqual(c - Double(w) / 2, 0, "\(size) spot \(spot): mound off the left")
                 XCTAssertLessThanOrEqual(c + Double(w) / 2, Double(BurrowLayout.designCols),
                                          "\(size) spot \(spot): mound off the right")
                 // The clamp is art-only: it never drags a mound off its own spot by more than
                 // half its width, or the marker would stop pointing at the thing it digs.
-                let dx = abs(c - (Double(BurrowSpots.resolve(spot, L).x) + 0.5))
+                let dx = abs(c - (Double(BurrowSpots.resolve(at, L).x) + 0.5))
                 XCTAssertLessThanOrEqual(dx, Double(w) / 2, "\(size) spot \(spot): mound drifted off its spot")
             }
         }

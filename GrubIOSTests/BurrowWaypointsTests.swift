@@ -6,9 +6,10 @@ final class BurrowWaypointsTests: XCTestCase {
         for (name, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let path = BurrowWaypoints.path(to: spot, L)
+                let at = BurrowSpots.fallback[spot]
+                let path = BurrowWaypoints.path(to: at, L)
                 XCTAssertGreaterThanOrEqual(path.count, 2, "\(name): spot \(spot) has no path")
-                let end = BurrowSpots.resolve(spot, L)
+                let end = BurrowSpots.resolve(at, L)
                 XCTAssertEqual(path.last!, Waypoint(x: end.x, y: end.y),
                                "\(name): the path ends at the spot")
             }
@@ -19,7 +20,8 @@ final class BurrowWaypointsTests: XCTestCase {
         for (name, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let start = BurrowWaypoints.path(to: spot, L)[0]
+                let at = BurrowSpots.fallback[spot]
+                let start = BurrowWaypoints.path(to: at, L)[0]
                 XCTAssertTrue(L.chamber.contains(x: start.x, y: start.y),
                               "\(name): spot \(spot) starts outside the chamber")
             }
@@ -30,7 +32,8 @@ final class BurrowWaypointsTests: XCTestCase {
         for (_, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let p = BurrowWaypoints.path(to: spot, L)
+                let at = BurrowSpots.fallback[spot]
+                let p = BurrowWaypoints.path(to: at, L)
                 for i in 1..<p.count {
                     let d = abs(p[i].x - p[i-1].x) + abs(p[i].y - p[i-1].y)
                     XCTAssertLessThanOrEqual(d, 30, "spot \(spot): step \(i) jumps \(d) cells")
@@ -46,7 +49,8 @@ final class BurrowWaypointsTests: XCTestCase {
         for (name, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let p = BurrowWaypoints.exit(L, towards: spot)
+                let at = BurrowSpots.fallback[spot]
+                let p = BurrowWaypoints.exit(L, towards: at)
                 XCTAssertTrue(L.chamber.contains(x: p[0].x, y: p[0].y),
                               "\(name): spot \(spot) starts outside the chamber")
                 let end = p.last!
@@ -62,8 +66,8 @@ final class BurrowWaypointsTests: XCTestCase {
     /// still leaves to the left.
     func test_the_exit_leans_toward_the_spot() {
         let L = BurrowLayout(size: CGSize(width: 390, height: 844), displayScale: 3)
-        let left = BurrowWaypoints.exit(L, towards: 5).last!      // design column 5
-        let right = BurrowWaypoints.exit(L, towards: 6).last!     // design column 62
+        let left = BurrowWaypoints.exit(L, towards: BurrowSpots.fallback[5]).last!   // column 5
+        let right = BurrowWaypoints.exit(L, towards: BurrowSpots.fallback[6]).last!  // column 62
         XCTAssertLessThan(left.x, right.x, "a far-left spot exits left of a far-right one")
     }
 
@@ -71,7 +75,8 @@ final class BurrowWaypointsTests: XCTestCase {
         for (_, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let p = BurrowWaypoints.exit(L, towards: spot)
+                let at = BurrowSpots.fallback[spot]
+                let p = BurrowWaypoints.exit(L, towards: at)
                 for i in 1..<p.count {
                     let d = abs(p[i].x - p[i-1].x) + abs(p[i].y - p[i-1].y)
                     XCTAssertLessThanOrEqual(d, BurrowWaypoints.maxStep,
@@ -87,8 +92,9 @@ final class BurrowWaypointsTests: XCTestCase {
         for (name, size) in BurrowSpotsTests.sizes {
             let L = BurrowLayout(size: size, displayScale: 2)
             for spot in 0..<BurrowRules.spotCount {
-                let p = BurrowWaypoints.path(to: spot, L)
-                let end = BurrowSpots.resolve(spot, L)
+                let at = BurrowSpots.fallback[spot]
+                let p = BurrowWaypoints.path(to: at, L)
+                let end = BurrowSpots.resolve(at, L)
                 // The burrowing leg runs from the last tunnel node to the spot; everything
                 // before that node should be within the chamber or a tunnel corridor.
                 let tunnelEnd = p.firstIndex { abs($0.x - end.x) + abs($0.y - end.y) <= BurrowWaypoints.maxStep } ?? p.count - 1

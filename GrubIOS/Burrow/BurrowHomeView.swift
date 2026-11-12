@@ -177,7 +177,7 @@ struct BurrowHomeView: View {
         guard let find = model.buried.first(where: { $0.spot == 0 }) else {
             assertionFailure("the dig demo expects a find at spot 0"); return
         }
-        assert(BurrowSpots.layer(0) == .clay, "the dig demo assumes spot 0 is clay")
+        
         assert(find.tiles.indices.contains { find.tiles[$0].isRock && DigGrid.distance($0, find.findTile) <= 2 },
                "the fresh seed no longer puts a rock near the find; rescript the demo")
 
@@ -265,7 +265,8 @@ struct BurrowHomeView: View {
     @ViewBuilder
     private func world(_ p: BurrowPage, _ L: BurrowLayout, size: CGSize) -> some View {
         ZStack(alignment: .topLeading) {
-            BurrowBackdrop(page: p, layout: L, holes: model.holes, spurs: model.spurs).equatable()
+            BurrowBackdrop(page: p, layout: L, holes: model.holes, spurs: model.spurs,
+                               spots: model.save.spots).equatable()
             // The title is an identity beat for a new egg, not a permanent fixture, and it
             // belongs to the page the egg is on.
             if p == .burrow, model.stage == .egg {
@@ -305,29 +306,30 @@ struct BurrowHomeView: View {
 
     @ViewBuilder
     private func marker(spot: Int, _ L: BurrowLayout, _ t: TimeInterval) -> some View {
-        let p = BurrowSpots.resolve(spot, L)
+        let p = BurrowSpots.resolve(model.save.placement(spot), L)
         let find = model.buried.first { $0.spot == spot }
-        let phase = Double((spot * 7) % 10) / 10
         let hinted = t - model.digHintAt < 1.6
         let hot = hinted && Int(t / 0.14) % 2 == 0
-        let cx = L.point(BurrowSpots.markerCentre(spot, L, width: MarkerArt.mound.width), 0).x
+        let cx = L.point(BurrowSpots.markerCentre(model.save.placement(spot), L,
+                                                  width: MarkerArt.siteWidth), 0).x
         // A glinting spot starts with one tile already broken, so counting broken tiles alone
         // would advertise the condition before the player has ever been there.
         let freebie = find?.condition == .glinting ? 1 : 0
         let opened = (find?.visited ?? false)
             && (find?.tiles.filter { $0 == .broken }.count ?? 0) > freebie
-        let mound = opened ? MarkerArt.moundOpen : MarkerArt.mound
-        // The mound is ground, so it does not bob — that is the point of it. Only the tell
-        // on top moves, which is what carries the eye without unmooring the site.
-        let tell = hot ? Self.bangHot : MarkerArt.tell(food: find?.kind.isFood ?? true)
-        let bob = Int(t / 0.45 + phase * 2) % 2
+        // Mound and tell are one sprite now. They were two, and the tell bobbed above the
+        // crown with a gap under it — which is what made it read as falling rather than as
+        // something growing out of the ground.
+        let site = MarkerArt.site(food: find?.kind.isFood ?? true, opened: opened)
 
-        // Rows p.y-4 … p.y+1, so the mound's last row — its cast shadow — lands on the soil
-        // at the spot itself. `.position` centres, hence the half-height offsets.
-        PixelImage(buffer: mound, cell: L.cell)
-            .position(x: cx, y: (CGFloat(p.y) - 4 + CGFloat(mound.height) / 2) * L.cell)
-        PixelImage(buffer: tell, cell: L.cell)
-            .position(x: cx, y: (CGFloat(p.y) - 4 - CGFloat(bob) - CGFloat(tell.height) / 2) * L.cell)
+        // The sprite's last row — its cast shadow — lands on the soil at the spot itself.
+        // `.position` centres, hence the half-height offset.
+        PixelImage(buffer: site, cell: L.cell)
+            .position(x: cx, y: (CGFloat(p.y) + 2 - CGFloat(site.height) / 2) * L.cell)
+        if hot {
+            PixelImage(buffer: Self.bangHot, cell: L.cell)
+                .position(x: cx, y: (CGFloat(p.y) - 9) * L.cell)
+        }
         if let c = find?.condition, find?.visited == true {
             PixelImage(buffer: MarkerArt.badge(c), cell: L.cell)
                 .position(x: cx + 6 * L.cell, y: (CGFloat(p.y) - 3) * L.cell)
@@ -578,7 +580,7 @@ struct BurrowHomeView: View {
 
     /// Says what the marker's art says: the soil, and whether this dig has been started.
     private func markerLabel(spot: Int, find: BuriedFind?) -> String {
-        var parts = ["Buried find", BurrowSpots.layer(spot).label.lowercased()]
+        var parts = ["Buried find", model.save.layer(spot).label.lowercased()]
         if find?.visited == true {
             if let c = find?.condition { parts.append(c.label.lowercased()) }
             parts.append("started")
@@ -793,9 +795,12 @@ struct BurrowBackdrop: View, Equatable {
     /// `.equatable()` over what it stores, so a backdrop input kept anywhere else would not
     /// redraw until the layout happened to change.
     let spurs: [Int]
+    /// Where the eight dig sites are right now. They move, so this is drawn state too.
+    let spots: [SpotPlacement]
 
     var body: some View {
-        PixelImage(buffer: BurrowArt.backdrop(page, layout, holes: holes, spurs: spurs),
+        PixelImage(buffer: BurrowArt.backdrop(page, layout, holes: holes, spurs: spurs,
+                                                  spots: spots),
                    cell: layout.cell)
             .offset(x: layout.originX)
             .accessibilityHidden(true)

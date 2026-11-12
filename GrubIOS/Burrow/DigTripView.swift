@@ -30,7 +30,7 @@ struct DigTripView: View {
 
     /// Up out of the burrow and along under the surface — not toward the mound. See
     /// `BurrowWaypoints.exit` for what that choice costs.
-    private var path: [Waypoint] { BurrowWaypoints.exit(layout, towards: trip.spot) }
+    private var path: [Waypoint] { BurrowWaypoints.exit(layout, towards: model.save.placement(trip.spot)) }
 
     private var duration: TimeInterval {
         switch trip.phase {

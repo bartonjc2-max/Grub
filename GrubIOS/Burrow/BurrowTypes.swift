@@ -93,10 +93,11 @@ struct BuriedFind: Codable, Equatable {
     }
 
     /// Convenience used by `fresh` and the tests: builds a grid from a seed derived from the
-    /// spot, so the same spot always gets the same grid.
-    init(spot: Int, kind: FindKind, condition: DigCondition? = nil) {
+    /// spot, so the same spot always gets the same grid. The layer is passed in rather than
+    /// looked up, because a site's layer lives in the save now and can change between digs.
+    init(spot: Int, kind: FindKind, layer: SoilLayer = .loose, condition: DigCondition? = nil) {
         var rng = BurrowRNG(seed: BuriedFind.seed(for: spot))
-        let g = DigGen.make(layer: BurrowSpots.layer(spot), condition: condition, rng: &rng)
+        let g = DigGen.make(layer: layer, condition: condition, rng: &rng)
         self.init(spot: spot, kind: kind, condition: condition,
                   findTile: g.findTile, tiles: g.tiles)
     }

@@ -6,7 +6,7 @@ extension BurrowRules {
 
     /// Strikes a trip to `spot` would grant right now.
     static func tripStrikes(_ s: BurrowSave, spot: Int) -> Int {
-        let layer = BurrowSpots.layer(spot)
+        let layer = s.layer(spot)
         let condition = s.buried.first { $0.spot == spot }?.condition
         // Rooty costs tiles, not strikes. It used to also take a strike, which made deep
         // rooty spots a 3-strike search of 25 tiles — winnable about half the time. Measured
@@ -49,11 +49,11 @@ extension BurrowRules {
     /// Measured over 200 runs (docs/burrow): 74 / 20 / 4 % chipped / fine / pristine, every
     /// kind pristine around day 37 at three digs a day (90th percentile day 50), day 111 once
     /// a day. Deterministic per find, so the same pocket always holds the same thing.
-    static func tier(for find: BuriedFind, cleanDig: Bool) -> Int {
+    static func tier(for find: BuriedFind, layer: SoilLayer, cleanDig: Bool) -> Int {
         var rng = BurrowRNG(seed: BuriedFind.seed(for: find.spot)
                             &+ UInt64(find.findTile) &* 1_099_511_628_211
                             &+ (cleanDig ? 7 : 0))
-        let score = BurrowSpots.layer(find.spot).depth
+        let score = layer.depth
             + (find.condition == .glinting ? 1 : 0)
             + (cleanDig ? 1 : 0)
         if score >= 3, Int.random(in: 0..<100, using: &rng) < 18 { return FindKind.maxTier }
@@ -61,10 +61,10 @@ extension BurrowRules {
         return 1
     }
 
-    static func bonusKind(for find: BuriedFind) -> FindKind {
+    static func bonusKind(for find: BuriedFind, layer: SoilLayer) -> FindKind {
         var rng = BurrowRNG(seed: BuriedFind.seed(for: find.spot)
                             &+ UInt64(find.findTile) &* 2_654_435_761)
-        return DigGen.rollKind(layer: BurrowSpots.layer(find.spot), rng: &rng)
+        return DigGen.rollKind(layer: layer, rng: &rng)
     }
 
     /// One shovel strike at `tile`. `strikesLeft` is passed in only so the rules can refuse;
@@ -91,22 +91,23 @@ extension BurrowRules {
                 .tileBroken(tile: tile, heat: DigGrid.heat(distance: d, wet: find.condition == .wet))
             ]
             if tile == find.findTile {
+                let layer = s0.layer(spot)
                 s.buried.remove(at: i)
                 s.holes.append(spot)
                 let clean = strikesLeft - 1 >= cleanDigStrikes
                 events.append(.dugUp(spot: spot, kind: find.kind))
                 if let up = BurrowRules.collect(&s, kind: find.kind,
-                                                tier: tier(for: find, cleanDig: clean)) {
+                                                tier: tier(for: find, layer: layer, cleanDig: clean)) {
                     events.append(up)
                 }
                 // Finding it with strikes to spare pays out whatever else was in the pocket.
                 // This is the whole reason to read the grid rather than tap it flat: the win
                 // itself is nearly certain, the margin is not.
                 if clean {
-                    let extra = bonusKind(for: find)
+                    let extra = bonusKind(for: find, layer: layer)
                     events.append(.cleanDig(spot: spot, kind: extra))
                     if let up = BurrowRules.collect(&s, kind: extra,
-                                                    tier: tier(for: find, cleanDig: true)) {
+                                                    tier: tier(for: find, layer: layer, cleanDig: true)) {
                         events.append(up)
                     }
                 }

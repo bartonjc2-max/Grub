@@ -8,9 +8,13 @@ final class DigRulesTests: XCTestCase {
     func save(spot: Int = 0, belly: Int = 6, joy: Int = 6, digs: Int = 3,
               stage: GrubStage = .larva, condition: DigCondition? = nil) -> BurrowSave {
         var s = BurrowSave.fresh(now: t0)
+        // Sites move now, so a fresh save's map is generated. Pin it: these tests are about
+        // what a LAYER grants, not about which index happens to be deep on a given run.
+        s.spots = BurrowSpots.fallback
         s.stage = stage; s.name = "GRUB"
         s.belly = belly; s.joy = joy; s.digs = digs
-        s.buried = [BuriedFind(spot: spot, kind: .berry, condition: condition)]
+        s.buried = [BuriedFind(spot: spot, kind: .berry,
+                               layer: BurrowSpots.fallback[spot].layer, condition: condition)]
         return s
     }
 
@@ -167,22 +171,22 @@ final class DigRulesTests: XCTestCase {
 
     func test_the_bonus_is_stable_for_a_burial_but_not_across_them() {
         let find = BuriedFind(spot: 0, kind: .berry, condition: nil, findTile: 12, tiles: [])
-        XCTAssertEqual(BurrowRules.bonusKind(for: find), BurrowRules.bonusKind(for: find),
+        XCTAssertEqual(BurrowRules.bonusKind(for: find, layer: .clay), BurrowRules.bonusKind(for: find, layer: .clay),
                        "the same pocket holds the same thing")
         var moved = find
         moved.findTile = 7
         let kinds = (0..<25).map { tile -> FindKind in
             var f = find; f.findTile = tile
-            return BurrowRules.bonusKind(for: f)
+            return BurrowRules.bonusKind(for: f, layer: .clay)
         }
         XCTAssertGreaterThan(Set(kinds).count, 1, "a re-buried spot does not always pay the same")
     }
 
     func test_the_bonus_comes_from_the_spots_own_soil() {
-        // Spot 1 is loose, whose table holds no crystals or amber at any weight.
+        // Loose soil's table holds no crystals or amber at any weight.
         for tile in 0..<DigGrid.tileCount {
             let f = BuriedFind(spot: 1, kind: .berry, condition: nil, findTile: tile, tiles: [])
-            let bonus = BurrowRules.bonusKind(for: f)
+            let bonus = BurrowRules.bonusKind(for: f, layer: .loose)
             XCTAssertFalse([.crystal, .amber].contains(bonus),
                            "loose soil paid out \(bonus) at tile \(tile)")
         }
@@ -202,7 +206,7 @@ final class DigRulesTests: XCTestCase {
     func test_shallow_plain_soil_only_ever_pays_chipped() {
         for tile in 0..<DigGrid.tileCount {
             let f = BuriedFind(spot: 1, kind: .shell, condition: nil, findTile: tile, tiles: [])
-            XCTAssertEqual(BurrowRules.tier(for: f, cleanDig: false), 1, "tile \(tile)")
+            XCTAssertEqual(BurrowRules.tier(for: f, layer: BurrowSpots.fallback[f.spot].layer, cleanDig: false), 1, "tile \(tile)")
         }
     }
 
@@ -214,8 +218,8 @@ final class DigRulesTests: XCTestCase {
                                   findTile: tile, tiles: [])
             let loose = BuriedFind(spot: 1, kind: .shell, condition: .glinting,
                                    findTile: tile, tiles: [])
-            if BurrowRules.tier(for: deep, cleanDig: true) == FindKind.maxTier { deepClean += 1 }
-            if BurrowRules.tier(for: loose, cleanDig: true) == FindKind.maxTier { shallowClean += 1 }
+            if BurrowRules.tier(for: deep, layer: .deep, cleanDig: true) == FindKind.maxTier { deepClean += 1 }
+            if BurrowRules.tier(for: loose, layer: .loose, cleanDig: true) == FindKind.maxTier { shallowClean += 1 }
         }
         XCTAssertGreaterThan(deepClean, 0, "a deep glinting clean dig can pay pristine")
         XCTAssertEqual(shallowClean, 0, "loose soil cannot, however cleanly it is dug")

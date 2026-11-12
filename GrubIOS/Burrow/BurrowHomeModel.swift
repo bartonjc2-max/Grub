@@ -330,8 +330,8 @@ final class BurrowHomeModel: ObservableObject {
         let t = now
         switch e {
         case .dugUp(let spot, let kind):
-            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
-            let p = BurrowSpots.resolve(spot, L)
+            guard let L = layout, (0..<BurrowRules.spotCount).contains(spot) else { break }
+            let p = BurrowSpots.resolve(save.placement(spot), L)
             // Held back until the grub is home. These draw in the burrow's effects layer,
             // which sits *under* the trip overlay — played at once they spend their whole
             // life behind the grid and the zoom-out, and the player never sees the payoff.
@@ -344,8 +344,8 @@ final class BurrowHomeModel: ObservableObject {
         case .cleanDig(let spot, let kind):
             cleanDigPrize = kind          // the grid says it immediately; the burrow echoes it
             Haptics.soft()
-            guard let L = layout, BurrowSpots.spots.indices.contains(spot) else { break }
-            let p = BurrowSpots.resolve(spot, L)
+            guard let L = layout, (0..<BurrowRules.spotCount).contains(spot) else { break }
+            let p = BurrowSpots.resolve(save.placement(spot), L)
             let home = t + Self.returnDelay
             add(.init(kind: .reveal(kind), x: Double(p.x + 6), y: Double(p.y), born: home + 0.45, life: 1.2))
             add(.init(kind: .text("CLEAN DIG!\n+" + kind.label, BurrowInk.teal),

@@ -34,8 +34,9 @@ enum DigCondition: String, Codable, CaseIterable, Equatable {
     case wet, rocky, rooty, glinting
 }
 
-/// How deep the spot is. Fixed per spot; never saved (it comes from `BurrowSpots`).
-enum SoilLayer: String, CaseIterable, Equatable {
+/// How deep a site is. Saved now, as part of `SpotPlacement` — a site can change band when
+/// it moves, so this is no longer a constant of the spot index.
+enum SoilLayer: String, Codable, CaseIterable, Equatable {
     case loose, clay, deep
 
     /// How far down this layer is, 0…2. Decor quality leans on it, so "dig deeper for better

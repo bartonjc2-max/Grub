@@ -1,10 +1,11 @@
 import Foundation
 
 /// All burrow game state. Pure data — the rules live in `BurrowRules`.
-/// Version 2 added the dig grid to `BuriedFind`; version 3 added decor tiers.
+/// Version 2 added the dig grid to `BuriedFind`; version 3 added decor tiers; version 4
+/// moved the dig sites out of a frozen table and into the save, so they can move.
 /// See `BurrowStore.migrate` and the lenient `init(from:)` below.
 struct BurrowSave: Codable, Equatable {
-    static let currentVersion = 3
+    static let currentVersion = 4
 
     var version = BurrowSave.currentVersion
     var stage: GrubStage
@@ -29,12 +30,23 @@ struct BurrowSave: Codable, Equatable {
     /// slot shows whatever the best one you own looks like and improves the moment this ticks.
     var bestTier: [FindKind: Int] = [:]
     var bank: [FindKind: Int] = [:]
+    /// Where the eight dig sites currently are. Empty means a save from before they could
+    /// move, which reads as the old fixed map; `migrate` fills it in.
+    var spots: [SpotPlacement] = []
     var lastTick: Date
     var digTimer: TimeInterval = 0
     var buryTimer: TimeInterval = 0
     var bellyTimer: TimeInterval = 0
     var joyTimer: TimeInterval = 0
     var lastPetAt: Date
+
+    /// Where a dig site is now. Out-of-range or an empty map falls back to the fixed table
+    /// the game shipped with, so nothing can read a position that does not exist.
+    func placement(_ spot: Int) -> SpotPlacement {
+        let map = spots.isEmpty ? BurrowSpots.fallback : spots
+        return map.indices.contains(spot) ? map[spot] : BurrowSpots.fallback[0]
+    }
+    func layer(_ spot: Int) -> SoilLayer { placement(spot).layer }
 
     /// The tier of `kind` the player holds. Absent means 1 — a save written before tiers
     /// existed holds plain things, and plain is exactly tier 1, so nothing needs migrating.
@@ -44,12 +56,14 @@ struct BurrowSave: Codable, Equatable {
     /// The three starter finds are deliberately plain (`condition: nil`) so a first dig is
     /// simple; each still gets a grid, from its spot's seed.
     static func fresh(now: Date) -> BurrowSave {
-        BurrowSave(stage: .egg, name: "",
+        var rng = BurrowRNG(seed: 0x5EED_0F15)
+        return BurrowSave(stage: .egg, name: "",
                    belly: 6, joy: 6, molt: 0, digs: 3,
                    buried: [BuriedFind(spot: 0, kind: .berry),
                             BuriedFind(spot: 1, kind: .root),
                             BuriedFind(spot: 2, kind: .crystal)],
                    bag: [.berry: 1],
+                   spots: BurrowSpots.generate(rng: &rng),
                    lastTick: now,
                    lastPetAt: now.addingTimeInterval(-86_400))
     }
@@ -60,7 +74,7 @@ struct BurrowSave: Codable, Equatable {
 extension BurrowSave {
     enum CodingKeys: String, CodingKey {
         case version, stage, name, eggCracks, belly, joy, molt, digs, buried, holes, bag,
-             placed, eaten, lastMeal, lineage, tint, adult, specimens, bestTier, bank,
+             placed, eaten, lastMeal, lineage, tint, adult, specimens, bestTier, bank, spots,
              lastTick, digTimer, buryTimer, bellyTimer, joyTimer, lastPetAt
     }
 
@@ -102,6 +116,7 @@ extension BurrowSave {
         specimens = try opt(.specimens, [])
         bestTier  = try opt(.bestTier, [:])
         bank      = try opt(.bank, [:])
+        spots     = try opt(.spots, [])
         lastTick  = try c.decode(Date.self, forKey: .lastTick)
         digTimer  = try opt(.digTimer, 0)
         buryTimer = try opt(.buryTimer, 0)
@@ -158,10 +173,16 @@ struct BurrowStore {
             let f = s.buried[i]
             var rng = BurrowRNG(seed: BuriedFind.seed(for: f.spot))
             let condition = DigGen.rollCondition(rng: &rng)
-            let g = DigGen.make(layer: BurrowSpots.layer(f.spot), condition: condition, rng: &rng)
+            let g = DigGen.make(layer: s.layer(f.spot), condition: condition, rng: &rng)
             // `kind` is kept exactly as it was, even where it falls outside the layer's table.
             s.buried[i] = BuriedFind(spot: f.spot, kind: f.kind, condition: condition,
                                      findTile: g.findTile, tiles: g.tiles, visited: f.visited)
+            changed = true
+        }
+        // A save from before the sites could move keeps the map it has been looking at; it
+        // starts changing only as spots are used, so the update itself is not a shuffle.
+        if s.spots.count != BurrowRules.spotCount {
+            s.spots = BurrowSpots.fallback
             changed = true
         }
         s.version = BurrowSave.currentVersion

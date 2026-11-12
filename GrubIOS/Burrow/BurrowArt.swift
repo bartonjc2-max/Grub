@@ -120,11 +120,12 @@ enum BurrowArt {
     /// was still there on every page and only the foreground moved. These share helpers —
     /// sky, grit, carving — but never a composition. BURROW is a room at night, DIG is a
     /// soil face with no sky at all, COLLECTION is an interior you are standing in.
-    static func backdrop(_ page: BurrowPage, _ L: BurrowLayout,
-                         holes: [Int], spurs: [Int] = []) -> PixelBuffer {
+    static func backdrop(_ page: BurrowPage, _ L: BurrowLayout, holes: [Int],
+                         spurs: [Int] = [], spots: [SpotPlacement] = []) -> PixelBuffer {
         switch page {
         case .burrow:     return home(L)
-        case .dig:        return strata(L, holes: holes, spurs: spurs)
+        case .dig:        return strata(L, holes: holes, spurs: spurs,
+                                        spots: spots.isEmpty ? BurrowSpots.fallback : spots)
         case .collection: return gallery(L)
         }
     }
@@ -306,7 +307,8 @@ enum BurrowArt {
     ///
     /// The band rows are `L.soilBands` untouched, because `BurrowSpots.resolve` places every
     /// mound against them — a prettier spacing here would put the markers in the wrong layer.
-    private static func strata(_ L: BurrowLayout, holes: [Int], spurs: [Int]) -> PixelBuffer {
+    private static func strata(_ L: BurrowLayout, holes: [Int], spurs: [Int],
+                               spots: [SpotPlacement]) -> PixelBuffer {
         typealias I = BurrowInk
         var c = Canvas(L)
         let (b1, b2, b3) = L.soilBands
@@ -345,15 +347,15 @@ enum BurrowArt {
         c.r(53, fy - 1, 1, 3, I.creamDim)
 
         // The channel the grub dug on its way to a spot it has visited, capped at 8 cells.
-        for spot in Set(spurs) where BurrowSpots.spots.indices.contains(spot) {
-            let p = BurrowSpots.resolve(spot, L)
+        for spot in Set(spurs) where spots.indices.contains(spot) {
+            let p = BurrowSpots.resolve(spots[spot], L)
             for step in 0...8 {
                 c.r(p.x - 1, max(0, p.y - 4 - step), 2, 2, I.hollow)
             }
         }
         // Pockets left by digging.
-        for spot in holes where BurrowSpots.spots.indices.contains(spot) {
-            let p = BurrowSpots.resolve(spot, L)
+        for spot in holes where spots.indices.contains(spot) {
+            let p = BurrowSpots.resolve(spots[spot], L)
             c.r(p.x - 2, p.y - 1, 5, 3, I.hollow)
             c.r(p.x - 1, p.y - 2, 3, 1, I.hollow)
             c.r(p.x - 1, p.y + 2, 3, 1, I.hollow)
@@ -592,46 +594,45 @@ extension FindKind {
 /// "!" for every spot; these say what is down there, how deep, what the soil is like, and
 /// whether the grub has started on it.
 enum MarkerArt {
-    /// A dig site, sitting **on** the soil instead of floating over it. One vocabulary: a
-    /// mound always means "dig here". The old marker was a 3×3 icon hovering six rows above
-    /// untouched ground, which read as scenery rather than as a place — and the food one wore
-    /// the grub's own teal, so it read as another grub.
+    /// Every dig site is this wide, so the clamp that keeps one off the bezel does not have
+    /// to build a sprite to measure it.
+    static let siteWidth = 11
+
+    /// A dig site: the mound, and what the mound itself says is buried under it.
     ///
-    /// 11×6. The last row is the shadow it casts, and that cast shadow is the whole
-    /// difference between a glint and a place.
-    static let mound = PixelBuffer(art: ["....HHD....",
-                                         "..HHDDDDD..",
-                                         ".HDDDDDDDD.",
-                                         "HDDDDDDDDDD",
-                                         "DDDDDDDDDDD",
-                                         "SSSSSSSSSSS"],
-                                   palette: ["H": BurrowInk.dirtHi, "D": BurrowInk.dirt,
-                                             "S": BurrowInk.shade])
-
-    /// The same mound once the player has broken tiles here: the crown has caved in and the
-    /// hole they started shows through, so a half-finished dig is legible from the burrow.
-    static let moundOpen = PixelBuffer(art: ["...D.K.D...",
-                                             "..DDKKKDD..",
-                                             ".DDKKKKKDD.",
-                                             "DDDKKKKKDDD",
-                                             "DDDDKKKDDDD",
-                                             "SSSSSSSSSSS"],
-                                       palette: ["D": BurrowInk.dirt, "K": BurrowInk.hollow,
-                                                 "S": BurrowInk.shade])
-
-    /// What kind of find is down there. This stays — with three digs a day, choosing what to
-    /// go after is most of the daily decision — but it is demoted to a tell sitting on the
-    /// mound, and it never uses the grub's teal.
-    static func tell(food: Bool) -> PixelBuffer {
-        food ? PixelBuffer(art: [".G.",
-                                 "GGG",
-                                 ".G.",
-                                 ".R."],
-                           palette: ["G": BurrowInk.sprig, "R": BurrowInk.root])
-             : PixelBuffer(art: [".A.",
-                                 "AHA",
-                                 ".A."],
-                           palette: ["A": BurrowInk.tellGoldLo, "H": BurrowInk.tellGold])
+    /// 11 wide, 9 tall. The last row is the shadow it casts, which is what anchors the whole
+    /// thing to the soil. Mound and tell are ONE sprite — they used to be two, with the tell
+    /// bobbing above the crown and a gap underneath, which is exactly why it read as falling.
+    ///
+    /// The language is the mound's own outline: weeds growing out of it mean food, a shard
+    /// breaking its surface means decor. Before this, four of the six marks a site could show
+    /// were the same 3×3 plus in different colours — two orthogonal axes (what is buried,
+    /// what the soil is like) fused into one glyph and separated only by hue, which at three
+    /// pixels square is not a language.
+    static func site(food: Bool, opened: Bool) -> PixelBuffer {
+        let body = opened ? ["...D.K.D...",
+                             "..DDKKKDD..",
+                             ".DDKKKKKDD.",
+                             "DDDKKKKKDDD",
+                             "DDDDKKKDDDD",
+                             "SSSSSSSSSSS"]
+                          : ["....HHD....",
+                             "..HHDDDDD..",
+                             ".HDDDDDDDD.",
+                             "HDDDDDDDDDD",
+                             "DDDDDDDDDDD",
+                             "SSSSSSSSSSS"]
+        let top = food ? ["..G..G.G...",     // weeds, growing out of the mound
+                          "..G.GG.G...",
+                          "...GGGG...."]
+                       : ["......A....",     // a shard, breaking its surface
+                          ".....AA....",
+                          "....AWA...."]
+        return PixelBuffer(art: top + body,
+                           palette: ["W": BurrowInk.tellGold, "A": BurrowInk.tellGoldLo,
+                                     "G": BurrowInk.sprig,
+                                     "H": BurrowInk.dirtHi, "D": BurrowInk.dirt,
+                                     "K": BurrowInk.hollow, "S": BurrowInk.shade])
     }
 
     /// The condition badge, shown only once the spot has been visited — before that, what the

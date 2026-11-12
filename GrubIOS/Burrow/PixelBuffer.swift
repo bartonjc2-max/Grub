@@ -39,6 +39,7 @@ enum BurrowInk {
     /// grub (162), so a buried trinket out-shouted the pet. These sit at 146/115, bracketing
     /// the food tell's `sprig` (152) so gold and green read at the same weight and both stay
     /// under the grub.
+    static let sprigLo: UInt32      = 0x5a8a30
     static let tellGold: UInt32     = 0xcf8a1e
     static let tellGoldLo: UInt32   = 0xa8691a
     static let teal: UInt32         = 0x4ecca3
