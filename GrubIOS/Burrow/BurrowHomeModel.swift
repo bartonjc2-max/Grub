@@ -382,6 +382,13 @@ final class BurrowHomeModel: ObservableObject {
                 add(.init(kind: .text(kind.label, BurrowInk.amberHi), x: Double(p.x), y: Double(p.y - 9), born: t + 0.1, life: 1.2))
             }
             Haptics.thud()
+            // The day-six moment. With four kinds and four slots, filling the last one used
+            // to be the end of furnishing — and a player who reads "done" here churns whether
+            // or not the tiers exist behind it. Say out loud that the slots keep improving.
+            if freeSlots.isEmpty,
+               FindKind.allCases.contains(where: { $0.isDecor && save.tier($0) < FindKind.maxTier }) {
+                say("ALL FOUR!\nNOW FIND BETTER ONES")
+            }
         case .removed(_, let kind):
             say("\(kind.label)\nBACK IN BAG")
             Haptics.soft()
