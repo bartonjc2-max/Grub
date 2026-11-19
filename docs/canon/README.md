@@ -1,5 +1,10 @@
 # Canon art
 
+> **2026-11-19 — new project direction, clean slate.** Grub is now a 3D pet in a
+> Tamagotchi-style game (full-screen room scenes, stat bars, Feed / Play / Sleep / Clean).
+> The earlier 2D / cave / burrow direction is not carried forward. The room has **no ceiling
+> light**: the light in the concept screen is dropped.
+
 ## 2026-11-19 — 3D pet direction
 
 - `2026-11-19-livingroom-screen.png` — **canon gameplay screen.** Full-screen living room,
