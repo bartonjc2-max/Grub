@@ -221,7 +221,7 @@ He is 1.85 m in world units (1.37 local, scale 1.35); `bodyHeight` is used for t
 - His on-device feel of the touches (hold time, shake strength, glass size).
 - His OK on the notification copy.
 - His read of `beats_readability.png` and `need_asks.png`.
-- Frame rate: iOS runs at **30 fps** because `targetFrameRate` is unset. Going to 60 is smoother but uses more battery; this needs a decision.
+- Frame rate (**decided 2026-11-23, Jesse: "60 when interacting"**, build 50): `GrubFrameRate` runs **60 fps** while a finger is on the screen, he's carried or in the air, or the phone is tilted or shaken, and for 8 s after; otherwise **30 fps** (idle, asleep). The `GRUB_FPS` env var overrides it for measurements. The dev panel's Performance section shows the current target.
   - **Measured at 60 fps** on an iPhone 13 Pro Max (build 49, `GRUB_PERF=120 GRUB_FPS=60`, 2 min of normal arcs):
     - 7200/7200 frames on time (interval p99 17.2 ms, max 18.2);
     - CPU main thread p50 3.3 / p95 3.7 ms;
