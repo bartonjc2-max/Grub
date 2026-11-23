@@ -1,0 +1,8 @@
+{
+ "rug": {"id": "rug_terracotta", "shape": "ellipse", "centre": [2.9, 3.3], "radii": [2.2, 1.5]},
+ "plant": {"id": "plant_canon", "height": 2.268, "leafY": 1.792, "leafTop": 2.268, "bendable": true, "bendFrom": 0.49, "potRadius": 0.525, "potTop": 0.762, "base": [1.25, 0.8]},
+ "couch": {"id": "couch_canon", "seatTop": 0.72, "backTop": 1.328, "width": 3.18},
+ "picL": {"id": "pic_canon_l"},
+ "picR": {"id": "pic_canon_r"},
+ "obstacles": []
+}

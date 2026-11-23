@@ -1,0 +1,59 @@
+{
+ "id": "pic_moon",
+ "category": "pictures",
+ "name": "Crescent Moon",
+ "description": "Cream crescent moon and stars over soft clouds on dusk blue, cream frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Canvas",
+  "PicL_Cloud",
+  "PicL_Frame",
+  "PicL_Moon",
+  "PicL_MoonBite",
+  "PicL_Star0",
+  "PicL_Star1",
+  "PicL_Star2",
+  "PicL_Star3",
+  "PicL_Star4",
+  "PicL_Star5"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.082,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "game": {
+  "picL": {
+   "id": "pic_moon"
+  },
+  "picR": {
+   "id": "pic_moon"
+  }
+ },
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.5,
+  "mask_seconds": 4.4
+ }
+}

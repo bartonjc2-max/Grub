@@ -1,0 +1,60 @@
+{
+ "id": "pic_flower",
+ "category": "pictures",
+ "name": "Little Flower",
+ "description": "A pink six-petal flower on cream, sage frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Canvas",
+  "PicL_Centre",
+  "PicL_Frame",
+  "PicL_Leaf0",
+  "PicL_Leaf1",
+  "PicL_Petal0",
+  "PicL_Petal1",
+  "PicL_Petal2",
+  "PicL_Petal3",
+  "PicL_Petal4",
+  "PicL_Petal5",
+  "PicL_Stem"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.082,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.8,
+ "mask_seconds": 4.6,
+ "game": {
+  "picL": {
+   "id": "pic_flower"
+  },
+  "picR": {
+   "id": "pic_flower"
+  }
+ },
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.9,
+  "mask_seconds": 4.5
+ }
+}

@@ -1,0 +1,62 @@
+{
+ "id": "plant_tulips",
+ "category": "plants",
+ "name": "Tulip Pot",
+ "description": "Three tulips (coral, yellow, lilac) in a dusty-blue pot.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf00",
+  "Leaf01",
+  "Leaf10",
+  "Leaf11",
+  "Leaf20",
+  "Leaf21",
+  "Leaf_Stem0",
+  "Leaf_Stem1",
+  "Leaf_Stem2",
+  "Leaf_Tulip0",
+  "Leaf_Tulip1",
+  "Leaf_Tulip2",
+  "Pot",
+  "Pot_Rim",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.695,
+  -1.245,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.805,
+  -0.355,
+  1.942
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.3,
+ "batch": 2,
+ "height_m": 1.942,
+ "canon_height_m": 2.28,
+ "grabbable_leaf": false,
+ "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+ "grab_leaves": [],
+ "game": {
+  "plant": {
+   "id": "plant_tulips",
+   "height": 1.942,
+   "leafY": 1.564,
+   "leafTop": 1.942,
+   "bendable": true,
+   "bendFrom": 0.46,
+   "potRadius": 0.445,
+   "potTop": 0.565,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

@@ -1,0 +1,60 @@
+{
+ "id": "pic_cactus",
+ "category": "pictures",
+ "name": "Potted Cactus",
+ "description": "A drawn two-armed cactus in a terracotta pot, dusty-blue frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_ArmL0",
+  "PicL_ArmL1",
+  "PicL_ArmR0",
+  "PicL_ArmR1",
+  "PicL_Body",
+  "PicL_Canvas",
+  "PicL_Flower",
+  "PicL_Frame",
+  "PicL_Halo",
+  "PicL_Pot",
+  "PicL_PotRim"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.083,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "batch": 2,
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.6,
+  "mask_seconds": 4.5
+ },
+ "game": {
+  "picL": {
+   "id": "pic_cactus"
+  },
+  "picR": {
+   "id": "pic_cactus"
+  }
+ }
+}

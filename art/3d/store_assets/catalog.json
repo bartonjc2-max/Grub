@@ -1,0 +1,2630 @@
+{
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "bbox_note": "plate pixels, origin top-left, from mask.png alpha > 8/255",
+ "variants": [
+  {
+   "id": "rug_checker",
+   "category": "rugs",
+   "name": "Checker Rug",
+   "description": "Cream rug with a dusty-blue checkerboard.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_checker/render.png",
+    "mask": "rugs/rug_checker/mask.png",
+    "blend": "rugs/rug_checker/rug_checker.blend",
+    "game_rug": "rugs/rug_checker/game/room_rug.png",
+    "game_item": "rugs/rug_checker/game/item.json"
+   },
+   "bbox": {
+    "x": 45,
+    "y": 1675,
+    "w": 1239,
+    "h": 455
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 370058,
+   "objects": [
+    "Rug",
+    "Rug_Checks"
+   ],
+   "world_bbox_min": [
+    -4.9,
+    -4.7,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.9,
+    -1.9,
+    0.011
+   ],
+   "game": {
+    "rug": {
+     "id": "rug_checker",
+     "shape": "rect",
+     "centre": [
+      2.9,
+      3.3
+     ],
+     "radii": [
+      2.0,
+      1.4
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_sage_round",
+   "category": "rugs",
+   "name": "Sage Round Rug",
+   "description": "Round sage-green rug with two cream rings.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_sage_round/render.png",
+    "mask": "rugs/rug_sage_round/mask.png",
+    "blend": "rugs/rug_sage_round/rug_sage_round.blend"
+   },
+   "bbox": {
+    "x": 212,
+    "y": 1701,
+    "w": 834,
+    "h": 351
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 229085,
+   "objects": [
+    "Rug",
+    "Rug_Border",
+    "Rug_Border2"
+   ],
+   "world_bbox_min": [
+    -4.4,
+    -4.8,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.4,
+    -1.8,
+    0.011
+   ],
+   "game": {
+    "rug": {
+     "id": "rug_sage_round",
+     "shape": "ellipse",
+     "centre": [
+      2.9,
+      3.3
+     ],
+     "radii": [
+      1.5,
+      1.5
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_scalloped",
+   "category": "rugs",
+   "name": "Scalloped Rug",
+   "description": "Blush oval rug with a scalloped edge and a cream inset ring.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_scalloped/render.png",
+    "mask": "rugs/rug_scalloped/mask.png",
+    "blend": "rugs/rug_scalloped/rug_scalloped.blend"
+   },
+   "bbox": {
+    "x": 34,
+    "y": 1701,
+    "w": 1134,
+    "h": 351
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 289650,
+   "objects": [
+    "Rug",
+    "Rug_Border"
+   ],
+   "world_bbox_min": [
+    -4.973,
+    -4.73,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.827,
+    -1.87,
+    0.011
+   ],
+   "game": {
+    "rug": {
+     "id": "rug_scalloped",
+     "shape": "ellipse",
+     "centre": [
+      2.9,
+      3.3
+     ],
+     "radii": [
+      2.073,
+      1.43
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_striped_rect",
+   "category": "rugs",
+   "name": "Striped Rug",
+   "description": "Cream rounded-rectangle rug with terracotta and mustard stripes.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_striped_rect/render.png",
+    "mask": "rugs/rug_striped_rect/mask.png",
+    "blend": "rugs/rug_striped_rect/rug_striped_rect.blend"
+   },
+   "bbox": {
+    "x": 6,
+    "y": 1673,
+    "w": 1278,
+    "h": 462
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 387667,
+   "objects": [
+    "Rug",
+    "Rug_StripesA",
+    "Rug_StripesB"
+   ],
+   "world_bbox_min": [
+    -5.0,
+    -4.7,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.8,
+    -1.9,
+    0.011
+   ],
+   "game": {
+    "rug": {
+     "id": "rug_striped_rect",
+     "shape": "rect",
+     "centre": [
+      2.9,
+      3.3
+     ],
+     "radii": [
+      2.1,
+      1.4
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_cloud",
+   "category": "rugs",
+   "name": "Cloud Rug",
+   "description": "Cloud-shaped pale-blue rug with a cream inset line.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_cloud/render.png",
+    "mask": "rugs/rug_cloud/mask.png",
+    "blend": "rugs/rug_cloud/rug_cloud.blend"
+   },
+   "bbox": {
+    "x": 174,
+    "y": 1710,
+    "w": 893,
+    "h": 326
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 191044,
+   "objects": [
+    "Rug",
+    "Rug_Border"
+   ],
+   "world_bbox_min": [
+    -4.539,
+    -4.411,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.461,
+    -1.989,
+    0.011
+   ],
+   "batch": 2,
+   "plate_margin_px": 174,
+   "game": {
+    "rug": {
+     "id": "rug_cloud",
+     "shape": "ellipse",
+     "centre": [
+      3.0,
+      3.2
+     ],
+     "radii": [
+      1.539,
+      1.211
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_daisy",
+   "category": "rugs",
+   "name": "Daisy Rug",
+   "description": "Round dusty-blue rug with a big cream daisy and a mustard centre.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_daisy/render.png",
+    "mask": "rugs/rug_daisy/mask.png",
+    "blend": "rugs/rug_daisy/rug_daisy.blend",
+    "game_rug": "rugs/rug_daisy/game/room_rug.png",
+    "game_item": "rugs/rug_daisy/game/item.json"
+   },
+   "bbox": {
+    "x": 197,
+    "y": 1706,
+    "w": 809,
+    "h": 343
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 216016,
+   "objects": [
+    "Rug",
+    "Rug_Centre",
+    "Rug_Petal0",
+    "Rug_Petal1",
+    "Rug_Petal2",
+    "Rug_Petal3",
+    "Rug_Petal4",
+    "Rug_Petal5",
+    "Rug_Petal6",
+    "Rug_Petal7"
+   ],
+   "world_bbox_min": [
+    -4.45,
+    -4.75,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.55,
+    -1.85,
+    0.012
+   ],
+   "batch": 2,
+   "plate_margin_px": 197,
+   "game": {
+    "rug": {
+     "id": "rug_daisy",
+     "shape": "ellipse",
+     "centre": [
+      3.0,
+      3.3
+     ],
+     "radii": [
+      1.45,
+      1.45
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_hex_patchwork",
+   "category": "rugs",
+   "name": "Hexagon Patchwork Rug",
+   "description": "Seven pastel hexagons on a cream honeycomb base.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_hex_patchwork/render.png",
+    "mask": "rugs/rug_hex_patchwork/mask.png",
+    "blend": "rugs/rug_hex_patchwork/rug_hex_patchwork.blend"
+   },
+   "bbox": {
+    "x": 193,
+    "y": 1704,
+    "w": 801,
+    "h": 350
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 185164,
+   "objects": [
+    "Rug",
+    "Rug_Hex0",
+    "Rug_Hex1",
+    "Rug_Hex2",
+    "Rug_Hex3",
+    "Rug_Hex4",
+    "Rug_Hex5",
+    "Rug_Hex6"
+   ],
+   "world_bbox_min": [
+    -4.455,
+    -4.699,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.545,
+    -1.901,
+    0.011
+   ],
+   "batch": 2,
+   "plate_margin_px": 193,
+   "game": {
+    "rug": {
+     "id": "rug_hex_patchwork",
+     "shape": "ellipse",
+     "centre": [
+      3.0,
+      3.3
+     ],
+     "radii": [
+      1.455,
+      1.399
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_rainbow_arch",
+   "category": "rugs",
+   "name": "Rainbow Arch Rug",
+   "description": "Half-round cream rug with four rainbow bands, flat edge toward the camera.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_rainbow_arch/render.png",
+    "mask": "rugs/rug_rainbow_arch/mask.png",
+    "blend": "rugs/rug_rainbow_arch/rug_rainbow_arch.blend"
+   },
+   "bbox": {
+    "x": 176,
+    "y": 1772,
+    "w": 939,
+    "h": 260
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 135794,
+   "objects": [
+    "Rug",
+    "Rug_Band0",
+    "Rug_Band1",
+    "Rug_Band2",
+    "Rug_Band3"
+   ],
+   "world_bbox_min": [
+    -4.55,
+    -4.25,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.45,
+    -2.7,
+    0.011
+   ],
+   "batch": 2,
+   "plate_margin_px": 169,
+   "game": {
+    "rug": {
+     "id": "rug_rainbow_arch",
+     "shape": "ellipse",
+     "centre": [
+      3.0,
+      3.475
+     ],
+     "radii": [
+      1.55,
+      0.775
+     ]
+    }
+   }
+  },
+  {
+   "id": "rug_zigzag_runner",
+   "category": "rugs",
+   "name": "Zigzag Runner",
+   "description": "Long cream runner with terracotta, sage and mustard zigzags and blue end bands.",
+   "replaces": "rug",
+   "files": {
+    "render": "rugs/rug_zigzag_runner/render.png",
+    "mask": "rugs/rug_zigzag_runner/mask.png",
+    "blend": "rugs/rug_zigzag_runner/rug_zigzag_runner.blend"
+   },
+   "bbox": {
+    "x": 163,
+    "y": 1725,
+    "w": 886,
+    "h": 249
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 134946,
+   "objects": [
+    "Rug",
+    "Rug_Ends",
+    "Rug_ZigA",
+    "Rug_ZigB",
+    "Rug_ZigC"
+   ],
+   "world_bbox_min": [
+    -4.55,
+    -3.93,
+    0.0
+   ],
+   "world_bbox_max": [
+    -1.45,
+    -2.47,
+    0.011
+   ],
+   "batch": 2,
+   "plate_margin_px": 163,
+   "game": {
+    "rug": {
+     "id": "rug_zigzag_runner",
+     "shape": "rect",
+     "centre": [
+      3.0,
+      3.2
+     ],
+     "radii": [
+      1.55,
+      0.73
+     ]
+    }
+   }
+  },
+  {
+   "id": "pic_abstract",
+   "category": "pictures",
+   "name": "Shapes",
+   "description": "Abstract arch, circle, bar and dot in the room's palette, dark wood frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_abstract/render.png",
+    "mask": "pictures/pic_abstract/mask.png",
+    "blend": "pictures/pic_abstract/pic_abstract.blend",
+    "render_picR": "pictures/pic_abstract/render_picR.png",
+    "mask_picR": "pictures/pic_abstract/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Arch",
+    "PicL_Bar",
+    "PicL_Canvas",
+    "PicL_Circle",
+    "PicL_Dot",
+    "PicL_Frame"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.079,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "game": {
+    "picL": {
+     "id": "pic_abstract"
+    },
+    "picR": {
+     "id": "pic_abstract"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 5.3,
+    "mask_seconds": 4.8
+   }
+  },
+  {
+   "id": "pic_flower",
+   "category": "pictures",
+   "name": "Little Flower",
+   "description": "A pink six-petal flower on cream, sage frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_flower/render.png",
+    "mask": "pictures/pic_flower/mask.png",
+    "blend": "pictures/pic_flower/pic_flower.blend",
+    "render_picR": "pictures/pic_flower/render_picR.png",
+    "mask_picR": "pictures/pic_flower/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Canvas",
+    "PicL_Centre",
+    "PicL_Frame",
+    "PicL_Leaf0",
+    "PicL_Leaf1",
+    "PicL_Petal0",
+    "PicL_Petal1",
+    "PicL_Petal2",
+    "PicL_Petal3",
+    "PicL_Petal4",
+    "PicL_Petal5",
+    "PicL_Stem"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.082,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "game": {
+    "picL": {
+     "id": "pic_flower"
+    },
+    "picR": {
+     "id": "pic_flower"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.9,
+    "mask_seconds": 4.5
+   }
+  },
+  {
+   "id": "pic_moon",
+   "category": "pictures",
+   "name": "Crescent Moon",
+   "description": "Cream crescent moon and stars over soft clouds on dusk blue, cream frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_moon/render.png",
+    "mask": "pictures/pic_moon/mask.png",
+    "blend": "pictures/pic_moon/pic_moon.blend",
+    "render_picR": "pictures/pic_moon/render_picR.png",
+    "mask_picR": "pictures/pic_moon/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Canvas",
+    "PicL_Cloud",
+    "PicL_Frame",
+    "PicL_Moon",
+    "PicL_MoonBite",
+    "PicL_Star0",
+    "PicL_Star1",
+    "PicL_Star2",
+    "PicL_Star3",
+    "PicL_Star4",
+    "PicL_Star5"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.082,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "game": {
+    "picL": {
+     "id": "pic_moon"
+    },
+    "picR": {
+     "id": "pic_moon"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.5,
+    "mask_seconds": 4.4
+   }
+  },
+  {
+   "id": "pic_sunset_hills",
+   "category": "pictures",
+   "name": "Sunset Hills",
+   "description": "Orange sun setting behind mauve and sage hills, light wood frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_sunset_hills/render.png",
+    "mask": "pictures/pic_sunset_hills/mask.png",
+    "blend": "pictures/pic_sunset_hills/pic_sunset_hills.blend",
+    "render_picR": "pictures/pic_sunset_hills/render_picR.png",
+    "mask_picR": "pictures/pic_sunset_hills/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Canvas",
+    "PicL_Frame",
+    "PicL_HillBack",
+    "PicL_HillFront",
+    "PicL_Sun"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.082,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "game": {
+    "picL": {
+     "id": "pic_sunset_hills"
+    },
+    "picR": {
+     "id": "pic_sunset_hills"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.6,
+    "mask_seconds": 4.4
+   }
+  },
+  {
+   "id": "pic_cactus",
+   "category": "pictures",
+   "name": "Potted Cactus",
+   "description": "A drawn two-armed cactus in a terracotta pot, dusty-blue frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_cactus/render.png",
+    "mask": "pictures/pic_cactus/mask.png",
+    "blend": "pictures/pic_cactus/pic_cactus.blend",
+    "render_picR": "pictures/pic_cactus/render_picR.png",
+    "mask_picR": "pictures/pic_cactus/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_ArmL0",
+    "PicL_ArmL1",
+    "PicL_ArmR0",
+    "PicL_ArmR1",
+    "PicL_Body",
+    "PicL_Canvas",
+    "PicL_Flower",
+    "PicL_Frame",
+    "PicL_Halo",
+    "PicL_Pot",
+    "PicL_PotRim"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.083,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "batch": 2,
+   "plate_margin_px": 173,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.6,
+    "mask_seconds": 4.5
+   },
+   "game": {
+    "picL": {
+     "id": "pic_cactus"
+    },
+    "picR": {
+     "id": "pic_cactus"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919
+  },
+  {
+   "id": "pic_fruit_bowl",
+   "category": "pictures",
+   "name": "Fruit Bowl",
+   "description": "Round frame: a blue bowl with an orange, an apple and a pear, blush frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_fruit_bowl/render.png",
+    "mask": "pictures/pic_fruit_bowl/mask.png",
+    "blend": "pictures/pic_fruit_bowl/pic_fruit_bowl.blend",
+    "render_picR": "pictures/pic_fruit_bowl/render_picR.png",
+    "mask_picR": "pictures/pic_fruit_bowl/mask_picR.png"
+   },
+   "bbox": {
+    "x": 168,
+    "y": 1165,
+    "w": 152,
+    "h": 148
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 17397,
+   "objects": [
+    "PicL_Apple",
+    "PicL_Bowl",
+    "PicL_BowlFoot",
+    "PicL_Canvas",
+    "PicL_Frame",
+    "PicL_Leaf",
+    "PicL_Orange",
+    "PicL_Pear",
+    "PicL_Table"
+   ],
+   "world_bbox_min": [
+    -4.38,
+    -0.086,
+    1.67
+   ],
+   "world_bbox_max": [
+    -3.62,
+    0.0,
+    2.43
+   ],
+   "batch": 2,
+   "plate_margin_px": 168,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.5,
+    "mask_seconds": 4.3
+   },
+   "game": {
+    "picL": {
+     "id": "pic_fruit_bowl"
+    },
+    "picR": {
+     "id": "pic_fruit_bowl"
+    }
+   },
+   "bbox_picR": {
+    "x": 400,
+    "y": 1180,
+    "w": 128,
+    "h": 129
+   },
+   "mask_coverage_px_picR": 12632
+  },
+  {
+   "id": "pic_house",
+   "category": "pictures",
+   "name": "Little House",
+   "description": "A cream house with a terracotta roof under a sun and cloud, light wood frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_house/render.png",
+    "mask": "pictures/pic_house/mask.png",
+    "blend": "pictures/pic_house/pic_house.blend",
+    "render_picR": "pictures/pic_house/render_picR.png",
+    "mask_picR": "pictures/pic_house/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Canvas",
+    "PicL_Chimney",
+    "PicL_Cloud0",
+    "PicL_Cloud1",
+    "PicL_Cloud2",
+    "PicL_Door",
+    "PicL_Frame",
+    "PicL_Grass",
+    "PicL_Roof",
+    "PicL_Sun",
+    "PicL_Wall",
+    "PicL_Window"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.083,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "batch": 2,
+   "plate_margin_px": 173,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.7,
+    "mask_seconds": 4.5
+   },
+   "game": {
+    "picL": {
+     "id": "pic_house"
+    },
+    "picR": {
+     "id": "pic_house"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919
+  },
+  {
+   "id": "pic_mountain_sun",
+   "category": "pictures",
+   "name": "Mountain Sun",
+   "description": "Landscape frame: snow-capped blue peak, mauve ridge and an orange sun, dark wood frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_mountain_sun/render.png",
+    "mask": "pictures/pic_mountain_sun/mask.png",
+    "blend": "pictures/pic_mountain_sun/pic_mountain_sun.blend",
+    "render_picR": "pictures/pic_mountain_sun/render_picR.png",
+    "mask_picR": "pictures/pic_mountain_sun/mask_picR.png"
+   },
+   "bbox": {
+    "x": 158,
+    "y": 1178,
+    "w": 171,
+    "h": 124
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 19981,
+   "objects": [
+    "PicL_Canvas",
+    "PicL_Frame",
+    "PicL_Meadow",
+    "PicL_PeakBack",
+    "PicL_PeakFront",
+    "PicL_Snow",
+    "PicL_Sun"
+   ],
+   "world_bbox_min": [
+    -4.42,
+    -0.086,
+    1.74
+   ],
+   "world_bbox_max": [
+    -3.58,
+    0.0,
+    2.36
+   ],
+   "batch": 2,
+   "plate_margin_px": 158,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.6,
+    "mask_seconds": 4.6
+   },
+   "game": {
+    "picL": {
+     "id": "pic_mountain_sun"
+    },
+    "picR": {
+     "id": "pic_mountain_sun"
+    }
+   },
+   "bbox_picR": {
+    "x": 392,
+    "y": 1192,
+    "w": 142,
+    "h": 108
+   },
+   "mask_coverage_px_picR": 14482
+  },
+  {
+   "id": "pic_rainbow",
+   "category": "pictures",
+   "name": "Rainbow",
+   "description": "A four-band rainbow with a cloud at each foot, mustard frame.",
+   "replaces": "picL",
+   "files": {
+    "render": "pictures/pic_rainbow/render.png",
+    "mask": "pictures/pic_rainbow/mask.png",
+    "blend": "pictures/pic_rainbow/pic_rainbow.blend",
+    "render_picR": "pictures/pic_rainbow/render_picR.png",
+    "mask_picR": "pictures/pic_rainbow/mask_picR.png"
+   },
+   "bbox": {
+    "x": 173,
+    "y": 1157,
+    "w": 142,
+    "h": 166
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 21883,
+   "objects": [
+    "PicL_Arc0",
+    "PicL_Arc1",
+    "PicL_Arc2",
+    "PicL_Arc3",
+    "PicL_Arc4",
+    "PicL_Canvas",
+    "PicL_Cloud-10",
+    "PicL_Cloud-11",
+    "PicL_Cloud-12",
+    "PicL_Cloud10",
+    "PicL_Cloud11",
+    "PicL_Cloud12",
+    "PicL_Frame"
+   ],
+   "world_bbox_min": [
+    -4.34,
+    -0.087,
+    1.63
+   ],
+   "world_bbox_max": [
+    -3.66,
+    0.0,
+    2.47
+   ],
+   "batch": 2,
+   "plate_margin_px": 173,
+   "picR": {
+    "offset": [
+     1.15,
+     0.0,
+     -0.05
+    ],
+    "scale_xz": 0.9,
+    "about": [
+     -4.0,
+     -0.03,
+     2.05
+    ],
+    "render_seconds": 4.7,
+    "mask_seconds": 4.5
+   },
+   "game": {
+    "picL": {
+     "id": "pic_rainbow"
+    },
+    "picR": {
+     "id": "pic_rainbow"
+    }
+   },
+   "bbox_picR": {
+    "x": 405,
+    "y": 1173,
+    "w": 117,
+    "h": 145
+   },
+   "mask_coverage_px_picR": 15919
+  },
+  {
+   "id": "plant_bushy",
+   "category": "plants",
+   "name": "Round Bush",
+   "description": "A round bushy ball of leaves on a short trunk, dusty-blue pot.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_bushy/render.png",
+    "mask": "plants/plant_bushy/mask.png",
+    "blend": "plants/plant_bushy/plant_bushy.blend"
+   },
+   "bbox": {
+    "x": 682,
+    "y": 1300,
+    "w": 234,
+    "h": 336
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 52663,
+   "objects": [
+    "Leaf0",
+    "Leaf1",
+    "Leaf10",
+    "Leaf11",
+    "Leaf12",
+    "Leaf13",
+    "Leaf14",
+    "Leaf15",
+    "Leaf2",
+    "Leaf3",
+    "Leaf4",
+    "Leaf5",
+    "Leaf6",
+    "Leaf7",
+    "Leaf8",
+    "Leaf9",
+    "Leaf_Core",
+    "Pot",
+    "Pot_Rim",
+    "Soil",
+    "Stem"
+   ],
+   "world_bbox_min": [
+    -1.836,
+    -1.386,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.611,
+    -0.188,
+    1.721
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_bushy",
+     "height": 1.721,
+     "leafY": 1.124,
+     "leafTop": 1.721,
+     "bendable": true,
+     "bendFrom": 0.37,
+     "potRadius": 0.465,
+     "potTop": 0.545,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_cactus",
+   "category": "plants",
+   "name": "Little Cactus",
+   "description": "Two-armed cactus with pink flowers in a terracotta-striped pot.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_cactus/render.png",
+    "mask": "plants/plant_cactus/mask.png",
+    "blend": "plants/plant_cactus/plant_cactus.blend"
+   },
+   "bbox": {
+    "x": 717,
+    "y": 1333,
+    "w": 155,
+    "h": 302
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 32588,
+   "objects": [
+    "Leaf_Arm0",
+    "Leaf_Arm1",
+    "Leaf_Body",
+    "Leaf_Elbow0",
+    "Leaf_Elbow1",
+    "Leaf_Flower",
+    "Leaf_Flower2",
+    "Pot",
+    "Pot_Rim",
+    "Pot_Stripe0",
+    "Pot_Stripe1",
+    "Pot_Stripe2",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.675,
+    -1.225,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.825,
+    -0.375,
+    1.553
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_cactus",
+     "height": 1.553,
+     "leafY": 0.953,
+     "leafTop": 1.553,
+     "bendable": false,
+     "bendFrom": 0.46,
+     "potRadius": 0.425,
+     "potTop": 0.545,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_snake",
+   "category": "plants",
+   "name": "Snake Plant",
+   "description": "Tall upright two-tone blades in a cream pot.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_snake/render.png",
+    "mask": "plants/plant_snake/mask.png",
+    "blend": "plants/plant_snake/plant_snake.blend"
+   },
+   "bbox": {
+    "x": 709,
+    "y": 1224,
+    "w": 171,
+    "h": 411
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 44129,
+   "objects": [
+    "Leaf0",
+    "Leaf1",
+    "Leaf2",
+    "Leaf3",
+    "Leaf4",
+    "Leaf5",
+    "Leaf6",
+    "Leaf7",
+    "Leaf8",
+    "Pot",
+    "Pot_Rim",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.717,
+    -1.266,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.764,
+    -0.355,
+    2.127
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_snake",
+     "height": 2.124,
+     "leafY": 1.524,
+     "leafTop": 2.124,
+     "bendable": false,
+     "bendFrom": 0.5,
+     "potRadius": 0.445,
+     "potTop": 0.645,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_trailing",
+   "category": "plants",
+   "name": "Trailing Vine",
+   "description": "Mustard pot on a three-legged wooden stand with vines trailing down.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_trailing/render.png",
+    "mask": "plants/plant_trailing/mask.png",
+    "blend": "plants/plant_trailing/plant_trailing.blend"
+   },
+   "bbox": {
+    "x": 713,
+    "y": 1310,
+    "w": 159,
+    "h": 324
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 26605,
+   "objects": [
+    "Leaf_Top0",
+    "Leaf_Top1",
+    "Leaf_Top2",
+    "Leaf_Top3",
+    "Leaf_Top4",
+    "Leaf_Top5",
+    "Leaf_TopC",
+    "Leaf_Vine0",
+    "Leaf_Vine1",
+    "Leaf_Vine10",
+    "Leaf_Vine11",
+    "Leaf_Vine12",
+    "Leaf_Vine13",
+    "Leaf_Vine14",
+    "Leaf_Vine15",
+    "Leaf_Vine16",
+    "Leaf_Vine17",
+    "Leaf_Vine18",
+    "Leaf_Vine19",
+    "Leaf_Vine2",
+    "Leaf_Vine20",
+    "Leaf_Vine21",
+    "Leaf_Vine22",
+    "Leaf_Vine23",
+    "Leaf_Vine24",
+    "Leaf_Vine25",
+    "Leaf_Vine26",
+    "Leaf_Vine27",
+    "Leaf_Vine28",
+    "Leaf_Vine29",
+    "Leaf_Vine3",
+    "Leaf_Vine30",
+    "Leaf_Vine31",
+    "Leaf_Vine32",
+    "Leaf_Vine33",
+    "Leaf_Vine34",
+    "Leaf_Vine35",
+    "Leaf_Vine36",
+    "Leaf_Vine37",
+    "Leaf_Vine38",
+    "Leaf_Vine4",
+    "Leaf_Vine5",
+    "Leaf_Vine6",
+    "Leaf_Vine7",
+    "Leaf_Vine8",
+    "Leaf_Vine9",
+    "Pot",
+    "Pot_Rim",
+    "Pot_StandLeg0",
+    "Pot_StandLeg1",
+    "Pot_StandLeg2",
+    "Pot_StandTop",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.745,
+    -1.305,
+    -0.005
+   ],
+   "world_bbox_max": [
+    -0.773,
+    -0.355,
+    1.67
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_trailing",
+     "height": 1.67,
+     "leafY": 1.37,
+     "leafTop": 1.67,
+     "bendable": false,
+     "bendFrom": 0.5,
+     "potRadius": 0.315,
+     "potTop": 1.385,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_bamboo",
+   "category": "plants",
+   "name": "Bamboo",
+   "description": "A cluster of five bamboo canes with leaf tufts in a cream planter; as tall as the canon plant.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_bamboo/render.png",
+    "mask": "plants/plant_bamboo/mask.png",
+    "blend": "plants/plant_bamboo/plant_bamboo.blend"
+   },
+   "bbox": {
+    "x": 715,
+    "y": 1193,
+    "w": 166,
+    "h": 446
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 38966,
+   "objects": [
+    "Leaf0",
+    "Leaf1",
+    "Leaf10",
+    "Leaf11",
+    "Leaf12",
+    "Leaf13",
+    "Leaf14",
+    "Leaf15",
+    "Leaf16",
+    "Leaf17",
+    "Leaf18",
+    "Leaf19",
+    "Leaf2",
+    "Leaf20",
+    "Leaf21",
+    "Leaf22",
+    "Leaf23",
+    "Leaf24",
+    "Leaf25",
+    "Leaf3",
+    "Leaf4",
+    "Leaf5",
+    "Leaf6",
+    "Leaf7",
+    "Leaf8",
+    "Leaf9",
+    "Leaf_Cane0",
+    "Leaf_Cane1",
+    "Leaf_Cane2",
+    "Leaf_Cane3",
+    "Leaf_Cane4",
+    "Leaf_Nodes0",
+    "Leaf_Nodes1",
+    "Leaf_Nodes2",
+    "Leaf_Nodes3",
+    "Leaf_Nodes4",
+    "Pot",
+    "Pot_Rim",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.725,
+    -1.275,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.775,
+    -0.325,
+    2.285
+   ],
+   "batch": 2,
+   "plate_margin_px": 403,
+   "height_m": 2.282,
+   "canon_height_m": 2.28,
+   "grabbable_leaf": true,
+   "grab_note": "leaf objects reaching 2.0 m or more (canon grab leaves span 1.78-2.28 m)",
+   "grab_leaves": [
+    {
+     "object": "Leaf0",
+     "z_min": 1.946,
+     "z_max": 2.214
+    },
+    {
+     "object": "Leaf1",
+     "z_min": 1.946,
+     "z_max": 2.214
+    },
+    {
+     "object": "Leaf2",
+     "z_min": 1.946,
+     "z_max": 2.214
+    },
+    {
+     "object": "Leaf3",
+     "z_min": 1.95,
+     "z_max": 2.282
+    },
+    {
+     "object": "Leaf6",
+     "z_min": 1.756,
+     "z_max": 2.024
+    },
+    {
+     "object": "Leaf7",
+     "z_min": 1.756,
+     "z_max": 2.024
+    },
+    {
+     "object": "Leaf8",
+     "z_min": 1.756,
+     "z_max": 2.024
+    },
+    {
+     "object": "Leaf9",
+     "z_min": 1.76,
+     "z_max": 2.092
+    }
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_bamboo",
+     "height": 2.282,
+     "leafY": 1.946,
+     "leafTop": 2.282,
+     "bendable": true,
+     "bendFrom": 0.3,
+     "potRadius": 0.475,
+     "potTop": 0.465,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_bonsai",
+   "category": "plants",
+   "name": "Bonsai",
+   "description": "A small S-curved bonsai with three leaf pads in a teal tray on a low wooden stand.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_bonsai/render.png",
+    "mask": "plants/plant_bonsai/mask.png",
+    "blend": "plants/plant_bonsai/plant_bonsai.blend"
+   },
+   "bbox": {
+    "x": 677,
+    "y": 1308,
+    "w": 239,
+    "h": 331
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 30537,
+   "objects": [
+    "Leaf_BranchL",
+    "Leaf_BranchR",
+    "Leaf_Moss",
+    "Leaf_PadLA",
+    "Leaf_PadLB",
+    "Leaf_PadRA",
+    "Leaf_PadRB",
+    "Leaf_PadTopA",
+    "Leaf_PadTopB",
+    "Leaf_Trunk",
+    "Pot",
+    "Pot_Rim",
+    "Pot_Stand",
+    "Pot_StandLeg-1-1",
+    "Pot_StandLeg-11",
+    "Pot_StandLeg1-1",
+    "Pot_StandLeg11",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.904,
+    -1.11,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.586,
+    -0.49,
+    1.689
+   ],
+   "batch": 2,
+   "plate_margin_px": 368,
+   "height_m": 1.689,
+   "canon_height_m": 2.28,
+   "grabbable_leaf": false,
+   "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+   "grab_leaves": [],
+   "game": {
+    "plant": {
+     "id": "plant_bonsai",
+     "height": 1.689,
+     "leafY": 1.35,
+     "leafTop": 1.689,
+     "bendable": false,
+     "bendFrom": 0.53,
+     "potRadius": 0.38,
+     "potTop": 0.672,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_monstera",
+   "category": "plants",
+   "name": "Monstera",
+   "description": "Five big split leaves on arching stalks in a soft terracotta pot; as tall as the canon plant.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_monstera/render.png",
+    "mask": "plants/plant_monstera/mask.png",
+    "blend": "plants/plant_monstera/plant_monstera.blend"
+   },
+   "bbox": {
+    "x": 672,
+    "y": 1194,
+    "w": 249,
+    "h": 444
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 60882,
+   "objects": [
+    "Leaf0",
+    "Leaf1",
+    "Leaf2",
+    "Leaf3",
+    "Leaf4",
+    "Leaf_Stem0",
+    "Leaf_Stem1",
+    "Leaf_Stem2",
+    "Leaf_Stem3",
+    "Leaf_Stem4",
+    "Pot",
+    "Pot_Rim",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -2.039,
+    -1.537,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.486,
+    -0.295,
+    2.365
+   ],
+   "batch": 2,
+   "plate_margin_px": 363,
+   "height_m": 2.274,
+   "canon_height_m": 2.28,
+   "grabbable_leaf": true,
+   "grab_note": "leaf objects reaching 2.0 m or more (canon grab leaves span 1.78-2.28 m)",
+   "grab_leaves": [
+    {
+     "object": "Leaf0",
+     "z_min": 1.682,
+     "z_max": 2.274
+    },
+    {
+     "object": "Leaf4",
+     "z_min": 1.561,
+     "z_max": 2.019
+    }
+   ],
+   "game": {
+    "plant": {
+     "id": "plant_monstera",
+     "height": 2.274,
+     "leafY": 1.682,
+     "leafTop": 2.274,
+     "bendable": true,
+     "bendFrom": 0.35,
+     "potRadius": 0.505,
+     "potTop": 0.665,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_succulent_bowl",
+   "category": "plants",
+   "name": "Succulent Bowl",
+   "description": "A blush bowl of succulents on a low three-legged stand.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_succulent_bowl/render.png",
+    "mask": "plants/plant_succulent_bowl/mask.png",
+    "blend": "plants/plant_succulent_bowl/plant_succulent_bowl.blend"
+   },
+   "bbox": {
+    "x": 711,
+    "y": 1420,
+    "w": 175,
+    "h": 214
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 18511,
+   "objects": [
+    "Leaf_Ball",
+    "Leaf_BallFlower",
+    "Leaf_Fingers",
+    "Leaf_Pebbles",
+    "Leaf_Rosette0",
+    "Leaf_Rosette1",
+    "Leaf_Rosette10",
+    "Leaf_Rosette11",
+    "Leaf_Rosette12",
+    "Leaf_Rosette13",
+    "Leaf_Rosette14",
+    "Leaf_Rosette15",
+    "Leaf_Rosette16",
+    "Leaf_Rosette17",
+    "Leaf_Rosette18",
+    "Leaf_Rosette19",
+    "Leaf_Rosette2",
+    "Leaf_Rosette3",
+    "Leaf_Rosette4",
+    "Leaf_Rosette5",
+    "Leaf_Rosette6",
+    "Leaf_Rosette7",
+    "Leaf_Rosette8",
+    "Leaf_Rosette9",
+    "Pot",
+    "Pot_Rim",
+    "Pot_StandLeg0",
+    "Pot_StandLeg1",
+    "Pot_StandLeg2",
+    "Pot_StandTop",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.745,
+    -1.295,
+    -0.01
+   ],
+   "world_bbox_max": [
+    -0.755,
+    -0.305,
+    1.045
+   ],
+   "batch": 2,
+   "plate_margin_px": 398,
+   "height_m": 1.045,
+   "canon_height_m": 2.28,
+   "grabbable_leaf": false,
+   "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+   "grab_leaves": [],
+   "game": {
+    "plant": {
+     "id": "plant_succulent_bowl",
+     "height": 1.045,
+     "leafY": 0.725,
+     "leafTop": 1.045,
+     "bendable": false,
+     "bendFrom": 0.79,
+     "potRadius": 0.495,
+     "potTop": 0.737,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "plant_tulips",
+   "category": "plants",
+   "name": "Tulip Pot",
+   "description": "Three tulips (coral, yellow, lilac) in a dusty-blue pot.",
+   "replaces": "plant",
+   "files": {
+    "render": "plants/plant_tulips/render.png",
+    "mask": "plants/plant_tulips/mask.png",
+    "blend": "plants/plant_tulips/plant_tulips.blend"
+   },
+   "bbox": {
+    "x": 717,
+    "y": 1258,
+    "w": 159,
+    "h": 377
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 34190,
+   "objects": [
+    "Leaf00",
+    "Leaf01",
+    "Leaf10",
+    "Leaf11",
+    "Leaf20",
+    "Leaf21",
+    "Leaf_Stem0",
+    "Leaf_Stem1",
+    "Leaf_Stem2",
+    "Leaf_Tulip0",
+    "Leaf_Tulip1",
+    "Leaf_Tulip2",
+    "Pot",
+    "Pot_Rim",
+    "Soil"
+   ],
+   "world_bbox_min": [
+    -1.695,
+    -1.245,
+    0.0
+   ],
+   "world_bbox_max": [
+    -0.805,
+    -0.355,
+    1.942
+   ],
+   "batch": 2,
+   "plate_margin_px": 408,
+   "height_m": 1.942,
+   "canon_height_m": 2.28,
+   "grabbable_leaf": false,
+   "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+   "grab_leaves": [],
+   "game": {
+    "plant": {
+     "id": "plant_tulips",
+     "height": 1.942,
+     "leafY": 1.564,
+     "leafTop": 1.942,
+     "bendable": true,
+     "bendFrom": 0.46,
+     "potRadius": 0.445,
+     "potTop": 0.565,
+     "base": [
+      1.25,
+      0.8
+     ]
+    }
+   }
+  },
+  {
+   "id": "couch_low_bench",
+   "category": "couches",
+   "name": "Low Bench Sofa",
+   "description": "Low wooden bench sofa with a dusty-blue seat, cream back cushions and terracotta bolsters.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_low_bench/render.png",
+    "mask": "couches/couch_low_bench/mask.png",
+    "blend": "couches/couch_low_bench/couch_low_bench.blend"
+   },
+   "bbox": {
+    "x": 37,
+    "y": 1405,
+    "w": 687,
+    "h": 317
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 152344,
+   "objects": [
+    "Sofa_Back-1",
+    "Sofa_Back0",
+    "Sofa_Back1",
+    "Sofa_BackFrame",
+    "Sofa_Body",
+    "Sofa_Bolster-1",
+    "Sofa_Bolster1",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat0"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.36,
+    1.202
+   ],
+   "game": {
+    "couch": {
+     "id": "couch_low_bench",
+     "seatTop": 0.72,
+     "backTop": 1.187,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_mustard_loveseat",
+   "category": "couches",
+   "name": "Mustard Loveseat",
+   "description": "Mustard loveseat with rolled round arms and a one-piece back.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_mustard_loveseat/render.png",
+    "mask": "couches/couch_mustard_loveseat/mask.png",
+    "blend": "couches/couch_mustard_loveseat/couch_mustard_loveseat.blend"
+   },
+   "bbox": {
+    "x": 33,
+    "y": 1386,
+    "w": 688,
+    "h": 337
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 162944,
+   "objects": [
+    "Sofa_Arm-1",
+    "Sofa_Arm1",
+    "Sofa_ArmBase-1",
+    "Sofa_ArmBase1",
+    "Sofa_ArmButton-1",
+    "Sofa_ArmButton1",
+    "Sofa_Back0",
+    "Sofa_BackFrame",
+    "Sofa_Body",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat0"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.48,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.36,
+    1.381
+   ],
+   "game": {
+    "couch": {
+     "id": "couch_mustard_loveseat",
+     "seatTop": 0.72,
+     "backTop": 1.333,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_teal_two_seater",
+   "category": "couches",
+   "name": "Teal Two-Seater",
+   "description": "Teal two-seater with square arms and a mustard round cushion.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_teal_two_seater/render.png",
+    "mask": "couches/couch_teal_two_seater/mask.png",
+    "blend": "couches/couch_teal_two_seater/couch_teal_two_seater.blend"
+   },
+   "bbox": {
+    "x": 32,
+    "y": 1384,
+    "w": 689,
+    "h": 339
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 172566,
+   "objects": [
+    "Sofa_Arm-1",
+    "Sofa_Arm1",
+    "Sofa_Back-1",
+    "Sofa_Back1",
+    "Sofa_BackFrame",
+    "Sofa_Body",
+    "Sofa_Cushion",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat-1",
+    "Sofa_Seat1"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.36,
+    1.34
+   ],
+   "game": {
+    "couch": {
+     "id": "couch_teal_two_seater",
+     "seatTop": 0.72,
+     "backTop": 1.327,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_cream_cushions",
+   "category": "couches",
+   "name": "Cream Sofa",
+   "description": "Cream three-seater with a terracotta square cushion and a blue round one.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_cream_cushions/render.png",
+    "mask": "couches/couch_cream_cushions/mask.png",
+    "blend": "couches/couch_cream_cushions/couch_cream_cushions.blend"
+   },
+   "bbox": {
+    "x": 31,
+    "y": 1390,
+    "w": 693,
+    "h": 333
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 174415,
+   "objects": [
+    "Sofa_Arm-1",
+    "Sofa_Arm1",
+    "Sofa_Back-1",
+    "Sofa_Back0",
+    "Sofa_Back1",
+    "Sofa_BackFrame",
+    "Sofa_Body",
+    "Sofa_CushionA",
+    "Sofa_CushionB",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat-1",
+    "Sofa_Seat0",
+    "Sofa_Seat1"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.36,
+    1.299
+   ],
+   "batch": 2,
+   "plate_margin_px": 31,
+   "seat_top_m": 0.72,
+   "back_top_m": 1.286,
+   "top_m": 1.286,
+   "width_m": 3.18,
+   "canon": {
+    "seat_top_m": 0.72,
+    "back_top_m": 1.34,
+    "width_m": 3.18
+   },
+   "game": {
+    "couch": {
+     "id": "couch_cream_cushions",
+     "seatTop": 0.72,
+     "backTop": 1.286,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_futon",
+   "category": "couches",
+   "name": "Futon",
+   "description": "Coral buttoned futon mattress on a slatted wooden frame, no arms.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_futon/render.png",
+    "mask": "couches/couch_futon/mask.png",
+    "blend": "couches/couch_futon/couch_futon.blend"
+   },
+   "bbox": {
+    "x": 36,
+    "y": 1366,
+    "w": 689,
+    "h": 355
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 164613,
+   "objects": [
+    "Sofa_Back0",
+    "Sofa_BackRail",
+    "Sofa_BackSlat0",
+    "Sofa_BackSlat1",
+    "Sofa_BackSlat2",
+    "Sofa_BackSlat3",
+    "Sofa_BackSlat4",
+    "Sofa_Body",
+    "Sofa_Buttons",
+    "Sofa_Cushion",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat0"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.024
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.318,
+    1.409
+   ],
+   "batch": 2,
+   "plate_margin_px": 36,
+   "seat_top_m": 0.72,
+   "back_top_m": 1.398,
+   "top_m": 1.398,
+   "width_m": 3.18,
+   "canon": {
+    "seat_top_m": 0.72,
+    "back_top_m": 1.34,
+    "width_m": 3.18
+   },
+   "game": {
+    "couch": {
+     "id": "couch_futon",
+     "seatTop": 0.72,
+     "backTop": 1.398,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_green_corduroy",
+   "category": "couches",
+   "name": "Corduroy Sofa",
+   "description": "Sage-green sofa with ribbed seat, back and arm tops (ribs are geometry).",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_green_corduroy/render.png",
+    "mask": "couches/couch_green_corduroy/mask.png",
+    "blend": "couches/couch_green_corduroy/couch_green_corduroy.blend"
+   },
+   "bbox": {
+    "x": 31,
+    "y": 1374,
+    "w": 692,
+    "h": 349
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 176783,
+   "objects": [
+    "Sofa_Arm-1",
+    "Sofa_Arm1",
+    "Sofa_ArmRib-10",
+    "Sofa_ArmRib-11",
+    "Sofa_ArmRib-12",
+    "Sofa_ArmRib-13",
+    "Sofa_ArmRib10",
+    "Sofa_ArmRib11",
+    "Sofa_ArmRib12",
+    "Sofa_ArmRib13",
+    "Sofa_Back0",
+    "Sofa_Back1",
+    "Sofa_Back2",
+    "Sofa_Back3",
+    "Sofa_Back4",
+    "Sofa_Back5",
+    "Sofa_Back6",
+    "Sofa_Back7",
+    "Sofa_BackFrame",
+    "Sofa_Body",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat0",
+    "Sofa_Seat1",
+    "Sofa_Seat2",
+    "Sofa_Seat3",
+    "Sofa_Seat4",
+    "Sofa_Seat5",
+    "Sofa_Seat6",
+    "Sofa_Seat7",
+    "Sofa_SeatBase"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.86,
+    -0.36,
+    1.38
+   ],
+   "batch": 2,
+   "plate_margin_px": 31,
+   "seat_top_m": 0.72,
+   "back_top_m": 1.361,
+   "top_m": 1.361,
+   "width_m": 3.18,
+   "canon": {
+    "seat_top_m": 0.72,
+    "back_top_m": 1.34,
+    "width_m": 3.18
+   },
+   "game": {
+    "couch": {
+     "id": "couch_green_corduroy",
+     "seatTop": 0.72,
+     "backTop": 1.361,
+     "width": 3.18
+    }
+   }
+  },
+  {
+   "id": "couch_lilac_blanket",
+   "category": "couches",
+   "name": "Lilac Sofa",
+   "description": "Rounded lilac sofa with a striped cream blanket over the right arm.",
+   "replaces": "couch",
+   "files": {
+    "render": "couches/couch_lilac_blanket/render.png",
+    "mask": "couches/couch_lilac_blanket/mask.png",
+    "blend": "couches/couch_lilac_blanket/couch_lilac_blanket.blend"
+   },
+   "bbox": {
+    "x": 38,
+    "y": 1378,
+    "w": 686,
+    "h": 345
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 167632,
+   "objects": [
+    "Sofa_Arm-1",
+    "Sofa_Arm1",
+    "Sofa_Back-1",
+    "Sofa_Back0",
+    "Sofa_Back1",
+    "Sofa_BackFrame",
+    "Sofa_Blanket",
+    "Sofa_BlanketStripe0",
+    "Sofa_BlanketStripe1",
+    "Sofa_Body",
+    "Sofa_Leg-1-1",
+    "Sofa_Leg-11",
+    "Sofa_Leg1-1",
+    "Sofa_Leg11",
+    "Sofa_Seat0"
+   ],
+   "world_bbox_min": [
+    -5.04,
+    -1.46,
+    -0.025
+   ],
+   "world_bbox_max": [
+    -1.822,
+    -0.36,
+    1.401
+   ],
+   "batch": 2,
+   "plate_margin_px": 38,
+   "seat_top_m": 0.72,
+   "back_top_m": 1.348,
+   "top_m": 1.348,
+   "width_m": 3.218,
+   "canon": {
+    "seat_top_m": 0.72,
+    "back_top_m": 1.34,
+    "width_m": 3.18
+   },
+   "game": {
+    "couch": {
+     "id": "couch_lilac_blanket",
+     "seatTop": 0.72,
+     "backTop": 1.348,
+     "width": 3.214
+    }
+   }
+  },
+  {
+   "id": "extra_floor_cushion",
+   "category": "extras",
+   "name": "Floor Cushions",
+   "description": "Two stacked round floor cushions, sage and blush.",
+   "replaces": null,
+   "files": {
+    "render": "extras/extra_floor_cushion/render.png",
+    "mask": "extras/extra_floor_cushion/mask.png",
+    "blend": "extras/extra_floor_cushion/extra_floor_cushion.blend"
+   },
+   "bbox": {
+    "x": 996,
+    "y": 1600,
+    "w": 222,
+    "h": 124
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 20362,
+   "objects": [
+    "Extra_CushionBase",
+    "Extra_CushionButton",
+    "Extra_CushionKnots",
+    "Extra_CushionTop"
+   ],
+   "world_bbox_min": [
+    -0.903,
+    -3.011,
+    -0.003
+   ],
+   "world_bbox_max": [
+    0.063,
+    -2.089,
+    0.475
+   ],
+   "batch": 2,
+   "plate_margin_px": 66,
+   "position_xy": [
+    -0.42,
+    -2.55
+   ],
+   "height_m": 0.475,
+   "footprint_m": [
+    0.966,
+    0.922
+   ],
+   "placement_note": "open floor right of the rug, about 2 m out from the door; shares its slot with the toy box",
+   "game": {
+    "obstacles": [
+     {
+      "id": "extra_floor_cushion",
+      "centre": [
+       0.42,
+       2.55
+      ],
+      "radius": 0.483
+     }
+    ]
+   }
+  },
+  {
+   "id": "extra_side_table",
+   "category": "extras",
+   "name": "Side Table",
+   "description": "Small round three-legged table with a cup and two books.",
+   "replaces": null,
+   "files": {
+    "render": "extras/extra_side_table/render.png",
+    "mask": "extras/extra_side_table/mask.png",
+    "blend": "extras/extra_side_table/extra_side_table.blend"
+   },
+   "bbox": {
+    "x": 895,
+    "y": 1466,
+    "w": 90,
+    "h": 134
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 4969,
+   "objects": [
+    "Extra_BookA",
+    "Extra_BookB",
+    "Extra_Cup",
+    "Extra_TableLeg0",
+    "Extra_TableLeg1",
+    "Extra_TableLeg2",
+    "Extra_TableShelf",
+    "Extra_TableTop"
+   ],
+   "world_bbox_min": [
+    -0.47,
+    -0.75,
+    -0.003
+   ],
+   "world_bbox_max": [
+    0.03,
+    -0.25,
+    0.725
+   ],
+   "batch": 2,
+   "plate_margin_px": 299,
+   "position_xy": [
+    -0.22,
+    -0.5
+   ],
+   "height_m": 0.725,
+   "footprint_m": [
+    0.5,
+    0.5
+   ],
+   "placement_note": "corner gap between the plant and the door frame, 0.5 m from the back wall",
+   "game": {
+    "obstacles": [
+     {
+      "id": "extra_side_table",
+      "centre": [
+       0.22,
+       0.5
+      ],
+      "radius": 0.25
+     }
+    ]
+   }
+  },
+  {
+   "id": "extra_toy_box",
+   "category": "extras",
+   "name": "Toy Box",
+   "description": "Open dusty-blue toy box with a ball and blocks, and a ring stacker beside it.",
+   "replaces": null,
+   "files": {
+    "render": "extras/extra_toy_box/render.png",
+    "mask": "extras/extra_toy_box/mask.png",
+    "blend": "extras/extra_toy_box/extra_toy_box.blend"
+   },
+   "bbox": {
+    "x": 1018,
+    "y": 1595,
+    "w": 181,
+    "h": 148
+   },
+   "plate_size": [
+    1284,
+    2778
+   ],
+   "mask_coverage_px": 19239,
+   "objects": [
+    "Extra_BoxBand",
+    "Extra_BoxFace-1",
+    "Extra_BoxFace1",
+    "Extra_BoxFloor",
+    "Extra_BoxSide-1",
+    "Extra_BoxSide1",
+    "Extra_ToyBall",
+    "Extra_ToyBlockA",
+    "Extra_ToyBlockB",
+    "Extra_ToyRing0",
+    "Extra_ToyRing1",
+    "Extra_ToyRing2",
+    "Extra_ToyRingTop",
+    "Extra_ToyStar"
+   ],
+   "world_bbox_min": [
+    -0.808,
+    -3.0,
+    0.003
+   ],
+   "world_bbox_max": [
+    -0.042,
+    -2.249,
+    0.515
+   ],
+   "batch": 2,
+   "plate_margin_px": 85,
+   "position_xy": [
+    -0.42,
+    -2.55
+   ],
+   "height_m": 0.515,
+   "footprint_m": [
+    0.766,
+    0.751
+   ],
+   "placement_note": "open floor right of the rug, about 2 m out from the door; shares its slot with the floor cushion",
+   "game": {
+    "obstacles": [
+     {
+      "id": "extra_toy_box",
+      "centre": [
+       0.426,
+       2.626
+      ],
+      "radius": 0.381
+     }
+    ]
+   }
+  }
+ ]
+}

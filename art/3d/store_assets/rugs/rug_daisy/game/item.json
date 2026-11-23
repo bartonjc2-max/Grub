@@ -1,0 +1,21 @@
+{
+ "rug": {
+  "id": "rug_daisy",
+  "shape": "ellipse",
+  "centre": [
+   3.0,
+   3.3
+  ],
+  "radii": [
+   1.45,
+   1.45
+  ]
+ },
+ "file": "room_rug.png",
+ "bbox": [
+  198,
+  1707,
+  1004,
+  2047
+ ]
+}

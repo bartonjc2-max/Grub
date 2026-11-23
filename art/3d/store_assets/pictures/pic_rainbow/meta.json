@@ -1,0 +1,62 @@
+{
+ "id": "pic_rainbow",
+ "category": "pictures",
+ "name": "Rainbow",
+ "description": "A four-band rainbow with a cloud at each foot, mustard frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Arc0",
+  "PicL_Arc1",
+  "PicL_Arc2",
+  "PicL_Arc3",
+  "PicL_Arc4",
+  "PicL_Canvas",
+  "PicL_Cloud-10",
+  "PicL_Cloud-11",
+  "PicL_Cloud-12",
+  "PicL_Cloud10",
+  "PicL_Cloud11",
+  "PicL_Cloud12",
+  "PicL_Frame"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.087,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.6,
+ "batch": 2,
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.7,
+  "mask_seconds": 4.5
+ },
+ "game": {
+  "picL": {
+   "id": "pic_rainbow"
+  },
+  "picR": {
+   "id": "pic_rainbow"
+  }
+ }
+}

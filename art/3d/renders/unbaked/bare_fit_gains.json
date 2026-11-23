@@ -1,0 +1,17 @@
+{
+ "gains": [
+  [
+   1.035653379397841,
+   -10.184834373872425
+  ],
+  [
+   0.8684268859866955,
+   20.24396658479366
+  ],
+  [
+   0.8868442273587224,
+   16.58160878886307
+  ]
+ ],
+ "note": "per channel (gain, offset) on 0..255 painted values: painted bare -> approved plate colours"
+}

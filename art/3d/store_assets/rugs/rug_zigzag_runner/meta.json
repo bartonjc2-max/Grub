@@ -1,0 +1,45 @@
+{
+ "id": "rug_zigzag_runner",
+ "category": "rugs",
+ "name": "Zigzag Runner",
+ "description": "Long cream runner with terracotta, sage and mustard zigzags and blue end bands.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Ends",
+  "Rug_ZigA",
+  "Rug_ZigB",
+  "Rug_ZigC"
+ ],
+ "world_bbox_min": [
+  -4.55,
+  -3.93,
+  0.0
+ ],
+ "world_bbox_max": [
+  -1.45,
+  -2.47,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "batch": 2,
+ "game": {
+  "rug": {
+   "id": "rug_zigzag_runner",
+   "shape": "rect",
+   "centre": [
+    3.0,
+    3.2
+   ],
+   "radii": [
+    1.55,
+    0.73
+   ]
+  }
+ }
+}

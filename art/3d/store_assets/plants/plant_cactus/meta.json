@@ -1,0 +1,54 @@
+{
+ "id": "plant_cactus",
+ "category": "plants",
+ "name": "Little Cactus",
+ "description": "Two-armed cactus with pink flowers in a terracotta-striped pot.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf_Arm0",
+  "Leaf_Arm1",
+  "Leaf_Body",
+  "Leaf_Elbow0",
+  "Leaf_Elbow1",
+  "Leaf_Flower",
+  "Leaf_Flower2",
+  "Pot",
+  "Pot_Rim",
+  "Pot_Stripe0",
+  "Pot_Stripe1",
+  "Pot_Stripe2",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.675,
+  -1.225,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.825,
+  -0.375,
+  1.553
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.7,
+ "mask_seconds": 4.6,
+ "game": {
+  "plant": {
+   "id": "plant_cactus",
+   "height": 1.553,
+   "leafY": 0.953,
+   "leafTop": 1.553,
+   "bendable": false,
+   "bendFrom": 0.46,
+   "potRadius": 0.425,
+   "potTop": 0.545,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

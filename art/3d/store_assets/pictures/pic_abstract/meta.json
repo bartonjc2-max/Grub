@@ -1,0 +1,54 @@
+{
+ "id": "pic_abstract",
+ "category": "pictures",
+ "name": "Shapes",
+ "description": "Abstract arch, circle, bar and dot in the room's palette, dark wood frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Arch",
+  "PicL_Bar",
+  "PicL_Canvas",
+  "PicL_Circle",
+  "PicL_Dot",
+  "PicL_Frame"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.079,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.7,
+ "mask_seconds": 4.6,
+ "game": {
+  "picL": {
+   "id": "pic_abstract"
+  },
+  "picR": {
+   "id": "pic_abstract"
+  }
+ },
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 5.3,
+  "mask_seconds": 4.8
+ }
+}

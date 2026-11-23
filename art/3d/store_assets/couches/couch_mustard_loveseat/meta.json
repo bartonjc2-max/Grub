@@ -1,0 +1,47 @@
+{
+ "id": "couch_mustard_loveseat",
+ "category": "couches",
+ "name": "Mustard Loveseat",
+ "description": "Mustard loveseat with rolled round arms and a one-piece back.",
+ "replaces": "couch",
+ "objects": [
+  "Sofa_Arm-1",
+  "Sofa_Arm1",
+  "Sofa_ArmBase-1",
+  "Sofa_ArmBase1",
+  "Sofa_ArmButton-1",
+  "Sofa_ArmButton1",
+  "Sofa_Back0",
+  "Sofa_BackFrame",
+  "Sofa_Body",
+  "Sofa_Leg-1-1",
+  "Sofa_Leg-11",
+  "Sofa_Leg1-1",
+  "Sofa_Leg11",
+  "Sofa_Seat0"
+ ],
+ "world_bbox_min": [
+  -5.04,
+  -1.48,
+  -0.025
+ ],
+ "world_bbox_max": [
+  -1.86,
+  -0.36,
+  1.381
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.8,
+ "mask_seconds": 4.7,
+ "game": {
+  "couch": {
+   "id": "couch_mustard_loveseat",
+   "seatTop": 0.72,
+   "backTop": 1.333,
+   "width": 3.18
+  }
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "id": "couch_futon",
+ "category": "couches",
+ "name": "Futon",
+ "description": "Coral buttoned futon mattress on a slatted wooden frame, no arms.",
+ "replaces": "couch",
+ "objects": [
+  "Sofa_Back0",
+  "Sofa_BackRail",
+  "Sofa_BackSlat0",
+  "Sofa_BackSlat1",
+  "Sofa_BackSlat2",
+  "Sofa_BackSlat3",
+  "Sofa_BackSlat4",
+  "Sofa_Body",
+  "Sofa_Buttons",
+  "Sofa_Cushion",
+  "Sofa_Leg-1-1",
+  "Sofa_Leg-11",
+  "Sofa_Leg1-1",
+  "Sofa_Leg11",
+  "Sofa_Seat0"
+ ],
+ "world_bbox_min": [
+  -5.04,
+  -1.46,
+  -0.024
+ ],
+ "world_bbox_max": [
+  -1.86,
+  -0.318,
+  1.409
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.8,
+ "mask_seconds": 4.7,
+ "batch": 2,
+ "seat_top_m": 0.72,
+ "back_top_m": 1.398,
+ "top_m": 1.398,
+ "width_m": 3.18,
+ "canon": {
+  "seat_top_m": 0.72,
+  "back_top_m": 1.34,
+  "width_m": 3.18
+ },
+ "game": {
+  "couch": {
+   "id": "couch_futon",
+   "seatTop": 0.72,
+   "backTop": 1.398,
+   "width": 3.18
+  }
+ }
+}

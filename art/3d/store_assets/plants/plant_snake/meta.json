@@ -1,0 +1,53 @@
+{
+ "id": "plant_snake",
+ "category": "plants",
+ "name": "Snake Plant",
+ "description": "Tall upright two-tone blades in a cream pot.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf0",
+  "Leaf1",
+  "Leaf2",
+  "Leaf3",
+  "Leaf4",
+  "Leaf5",
+  "Leaf6",
+  "Leaf7",
+  "Leaf8",
+  "Pot",
+  "Pot_Rim",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.717,
+  -1.266,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.764,
+  -0.355,
+  2.127
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "game": {
+  "plant": {
+   "id": "plant_snake",
+   "height": 2.124,
+   "leafY": 1.524,
+   "leafTop": 2.124,
+   "bendable": false,
+   "bendFrom": 0.5,
+   "potRadius": 0.445,
+   "potTop": 0.645,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

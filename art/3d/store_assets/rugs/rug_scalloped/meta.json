@@ -1,0 +1,41 @@
+{
+ "id": "rug_scalloped",
+ "category": "rugs",
+ "name": "Scalloped Rug",
+ "description": "Blush oval rug with a scalloped edge and a cream inset ring.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Border"
+ ],
+ "world_bbox_min": [
+  -4.973,
+  -4.73,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.827,
+  -1.87,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "game": {
+  "rug": {
+   "id": "rug_scalloped",
+   "shape": "ellipse",
+   "centre": [
+    2.9,
+    3.3
+   ],
+   "radii": [
+    2.073,
+    1.43
+   ]
+  }
+ }
+}

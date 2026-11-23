@@ -1,0 +1,76 @@
+{
+ "id": "couch_green_corduroy",
+ "category": "couches",
+ "name": "Corduroy Sofa",
+ "description": "Sage-green sofa with ribbed seat, back and arm tops (ribs are geometry).",
+ "replaces": "couch",
+ "objects": [
+  "Sofa_Arm-1",
+  "Sofa_Arm1",
+  "Sofa_ArmRib-10",
+  "Sofa_ArmRib-11",
+  "Sofa_ArmRib-12",
+  "Sofa_ArmRib-13",
+  "Sofa_ArmRib10",
+  "Sofa_ArmRib11",
+  "Sofa_ArmRib12",
+  "Sofa_ArmRib13",
+  "Sofa_Back0",
+  "Sofa_Back1",
+  "Sofa_Back2",
+  "Sofa_Back3",
+  "Sofa_Back4",
+  "Sofa_Back5",
+  "Sofa_Back6",
+  "Sofa_Back7",
+  "Sofa_BackFrame",
+  "Sofa_Body",
+  "Sofa_Leg-1-1",
+  "Sofa_Leg-11",
+  "Sofa_Leg1-1",
+  "Sofa_Leg11",
+  "Sofa_Seat0",
+  "Sofa_Seat1",
+  "Sofa_Seat2",
+  "Sofa_Seat3",
+  "Sofa_Seat4",
+  "Sofa_Seat5",
+  "Sofa_Seat6",
+  "Sofa_Seat7",
+  "Sofa_SeatBase"
+ ],
+ "world_bbox_min": [
+  -5.04,
+  -1.46,
+  -0.025
+ ],
+ "world_bbox_max": [
+  -1.86,
+  -0.36,
+  1.38
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 5.4,
+ "mask_seconds": 5.1,
+ "batch": 2,
+ "seat_top_m": 0.72,
+ "back_top_m": 1.361,
+ "top_m": 1.361,
+ "width_m": 3.18,
+ "canon": {
+  "seat_top_m": 0.72,
+  "back_top_m": 1.34,
+  "width_m": 3.18
+ },
+ "game": {
+  "couch": {
+   "id": "couch_green_corduroy",
+   "seatTop": 0.72,
+   "backTop": 1.361,
+   "width": 3.18
+  }
+ }
+}

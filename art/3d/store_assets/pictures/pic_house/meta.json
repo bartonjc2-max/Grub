@@ -1,0 +1,61 @@
+{
+ "id": "pic_house",
+ "category": "pictures",
+ "name": "Little House",
+ "description": "A cream house with a terracotta roof under a sun and cloud, light wood frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Canvas",
+  "PicL_Chimney",
+  "PicL_Cloud0",
+  "PicL_Cloud1",
+  "PicL_Cloud2",
+  "PicL_Door",
+  "PicL_Frame",
+  "PicL_Grass",
+  "PicL_Roof",
+  "PicL_Sun",
+  "PicL_Wall",
+  "PicL_Window"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.083,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "batch": 2,
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.7,
+  "mask_seconds": 4.5
+ },
+ "game": {
+  "picL": {
+   "id": "pic_house"
+  },
+  "picR": {
+   "id": "pic_house"
+  }
+ }
+}

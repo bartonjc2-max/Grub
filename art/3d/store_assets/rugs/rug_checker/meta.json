@@ -1,0 +1,41 @@
+{
+ "id": "rug_checker",
+ "category": "rugs",
+ "name": "Checker Rug",
+ "description": "Cream rug with a dusty-blue checkerboard.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Checks"
+ ],
+ "world_bbox_min": [
+  -4.9,
+  -4.7,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.9,
+  -1.9,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "game": {
+  "rug": {
+   "id": "rug_checker",
+   "shape": "rect",
+   "centre": [
+    2.9,
+    3.3
+   ],
+   "radii": [
+    2.0,
+    1.4
+   ]
+  }
+ }
+}

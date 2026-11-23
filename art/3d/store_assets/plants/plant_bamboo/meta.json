@@ -1,0 +1,127 @@
+{
+ "id": "plant_bamboo",
+ "category": "plants",
+ "name": "Bamboo",
+ "description": "A cluster of five bamboo canes with leaf tufts in a cream planter; as tall as the canon plant.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf0",
+  "Leaf1",
+  "Leaf10",
+  "Leaf11",
+  "Leaf12",
+  "Leaf13",
+  "Leaf14",
+  "Leaf15",
+  "Leaf16",
+  "Leaf17",
+  "Leaf18",
+  "Leaf19",
+  "Leaf2",
+  "Leaf20",
+  "Leaf21",
+  "Leaf22",
+  "Leaf23",
+  "Leaf24",
+  "Leaf25",
+  "Leaf3",
+  "Leaf4",
+  "Leaf5",
+  "Leaf6",
+  "Leaf7",
+  "Leaf8",
+  "Leaf9",
+  "Leaf_Cane0",
+  "Leaf_Cane1",
+  "Leaf_Cane2",
+  "Leaf_Cane3",
+  "Leaf_Cane4",
+  "Leaf_Nodes0",
+  "Leaf_Nodes1",
+  "Leaf_Nodes2",
+  "Leaf_Nodes3",
+  "Leaf_Nodes4",
+  "Pot",
+  "Pot_Rim",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.725,
+  -1.275,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.775,
+  -0.325,
+  2.285
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.9,
+ "mask_seconds": 5.2,
+ "batch": 2,
+ "height_m": 2.282,
+ "canon_height_m": 2.28,
+ "grabbable_leaf": true,
+ "grab_note": "leaf objects reaching 2.0 m or more (canon grab leaves span 1.78-2.28 m)",
+ "grab_leaves": [
+  {
+   "object": "Leaf0",
+   "z_min": 1.946,
+   "z_max": 2.214
+  },
+  {
+   "object": "Leaf1",
+   "z_min": 1.946,
+   "z_max": 2.214
+  },
+  {
+   "object": "Leaf2",
+   "z_min": 1.946,
+   "z_max": 2.214
+  },
+  {
+   "object": "Leaf3",
+   "z_min": 1.95,
+   "z_max": 2.282
+  },
+  {
+   "object": "Leaf6",
+   "z_min": 1.756,
+   "z_max": 2.024
+  },
+  {
+   "object": "Leaf7",
+   "z_min": 1.756,
+   "z_max": 2.024
+  },
+  {
+   "object": "Leaf8",
+   "z_min": 1.756,
+   "z_max": 2.024
+  },
+  {
+   "object": "Leaf9",
+   "z_min": 1.76,
+   "z_max": 2.092
+  }
+ ],
+ "game": {
+  "plant": {
+   "id": "plant_bamboo",
+   "height": 2.282,
+   "leafY": 1.946,
+   "leafTop": 2.282,
+   "bendable": true,
+   "bendFrom": 0.3,
+   "potRadius": 0.475,
+   "potTop": 0.465,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

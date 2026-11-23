@@ -1,0 +1,50 @@
+{
+ "id": "rug_daisy",
+ "category": "rugs",
+ "name": "Daisy Rug",
+ "description": "Round dusty-blue rug with a big cream daisy and a mustard centre.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Centre",
+  "Rug_Petal0",
+  "Rug_Petal1",
+  "Rug_Petal2",
+  "Rug_Petal3",
+  "Rug_Petal4",
+  "Rug_Petal5",
+  "Rug_Petal6",
+  "Rug_Petal7"
+ ],
+ "world_bbox_min": [
+  -4.45,
+  -4.75,
+  0.0
+ ],
+ "world_bbox_max": [
+  -1.55,
+  -1.85,
+  0.012
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "batch": 2,
+ "game": {
+  "rug": {
+   "id": "rug_daisy",
+   "shape": "ellipse",
+   "centre": [
+    3.0,
+    3.3
+   ],
+   "radii": [
+    1.45,
+    1.45
+   ]
+  }
+ }
+}

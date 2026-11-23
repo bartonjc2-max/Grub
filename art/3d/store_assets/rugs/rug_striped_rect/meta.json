@@ -1,0 +1,42 @@
+{
+ "id": "rug_striped_rect",
+ "category": "rugs",
+ "name": "Striped Rug",
+ "description": "Cream rounded-rectangle rug with terracotta and mustard stripes.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_StripesA",
+  "Rug_StripesB"
+ ],
+ "world_bbox_min": [
+  -5.0,
+  -4.7,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.8,
+  -1.9,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "game": {
+  "rug": {
+   "id": "rug_striped_rect",
+   "shape": "rect",
+   "centre": [
+    2.9,
+    3.3
+   ],
+   "radii": [
+    2.1,
+    1.4
+   ]
+  }
+ }
+}

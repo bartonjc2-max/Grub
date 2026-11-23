@@ -13,3 +13,7 @@ build/
 # Claude
 .claude/
 GrubIOS.xcodeproj/
+
+# Blender autosave copies and pipeline scratch
+*.blend1
+art/3d/renders/unbaked/work/

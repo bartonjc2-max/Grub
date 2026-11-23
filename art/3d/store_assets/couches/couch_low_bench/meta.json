@@ -1,0 +1,45 @@
+{
+ "id": "couch_low_bench",
+ "category": "couches",
+ "name": "Low Bench Sofa",
+ "description": "Low wooden bench sofa with a dusty-blue seat, cream back cushions and terracotta bolsters.",
+ "replaces": "couch",
+ "objects": [
+  "Sofa_Back-1",
+  "Sofa_Back0",
+  "Sofa_Back1",
+  "Sofa_BackFrame",
+  "Sofa_Body",
+  "Sofa_Bolster-1",
+  "Sofa_Bolster1",
+  "Sofa_Leg-1-1",
+  "Sofa_Leg-11",
+  "Sofa_Leg1-1",
+  "Sofa_Leg11",
+  "Sofa_Seat0"
+ ],
+ "world_bbox_min": [
+  -5.04,
+  -1.46,
+  -0.025
+ ],
+ "world_bbox_max": [
+  -1.86,
+  -0.36,
+  1.202
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.6,
+ "mask_seconds": 4.5,
+ "game": {
+  "couch": {
+   "id": "couch_low_bench",
+   "seatTop": 0.72,
+   "backTop": 1.187,
+   "width": 3.18
+  }
+ }
+}

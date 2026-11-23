@@ -1,0 +1,42 @@
+{
+ "id": "rug_cloud",
+ "category": "rugs",
+ "name": "Cloud Rug",
+ "description": "Cloud-shaped pale-blue rug with a cream inset line.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Border"
+ ],
+ "world_bbox_min": [
+  -4.539,
+  -4.411,
+  0.0
+ ],
+ "world_bbox_max": [
+  -1.461,
+  -1.989,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.5,
+ "batch": 2,
+ "game": {
+  "rug": {
+   "id": "rug_cloud",
+   "shape": "ellipse",
+   "centre": [
+    3.0,
+    3.2
+   ],
+   "radii": [
+    1.539,
+    1.211
+   ]
+  }
+ }
+}

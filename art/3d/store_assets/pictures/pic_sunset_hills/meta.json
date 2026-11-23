@@ -1,0 +1,53 @@
+{
+ "id": "pic_sunset_hills",
+ "category": "pictures",
+ "name": "Sunset Hills",
+ "description": "Orange sun setting behind mauve and sage hills, light wood frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Canvas",
+  "PicL_Frame",
+  "PicL_HillBack",
+  "PicL_HillFront",
+  "PicL_Sun"
+ ],
+ "world_bbox_min": [
+  -4.34,
+  -0.082,
+  1.63
+ ],
+ "world_bbox_max": [
+  -3.66,
+  0.0,
+  2.47
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.5,
+ "game": {
+  "picL": {
+   "id": "pic_sunset_hills"
+  },
+  "picR": {
+   "id": "pic_sunset_hills"
+  }
+ },
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.6,
+  "mask_seconds": 4.4
+ }
+}

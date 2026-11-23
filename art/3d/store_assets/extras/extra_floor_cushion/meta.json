@@ -1,0 +1,52 @@
+{
+ "id": "extra_floor_cushion",
+ "category": "extras",
+ "name": "Floor Cushions",
+ "description": "Two stacked round floor cushions, sage and blush.",
+ "replaces": null,
+ "objects": [
+  "Extra_CushionBase",
+  "Extra_CushionButton",
+  "Extra_CushionKnots",
+  "Extra_CushionTop"
+ ],
+ "world_bbox_min": [
+  -0.903,
+  -3.011,
+  -0.003
+ ],
+ "world_bbox_max": [
+  0.063,
+  -2.089,
+  0.475
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.4,
+ "mask_seconds": 4.3,
+ "batch": 2,
+ "position_xy": [
+  -0.42,
+  -2.55
+ ],
+ "height_m": 0.475,
+ "footprint_m": [
+  0.966,
+  0.922
+ ],
+ "placement_note": "open floor right of the rug, about 2 m out from the door; shares its slot with the toy box",
+ "game": {
+  "obstacles": [
+   {
+    "id": "extra_floor_cushion",
+    "centre": [
+     0.42,
+     2.55
+    ],
+    "radius": 0.483
+   }
+  ]
+ }
+}

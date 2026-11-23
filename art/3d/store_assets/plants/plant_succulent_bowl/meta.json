@@ -1,0 +1,78 @@
+{
+ "id": "plant_succulent_bowl",
+ "category": "plants",
+ "name": "Succulent Bowl",
+ "description": "A blush bowl of succulents on a low three-legged stand.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf_Ball",
+  "Leaf_BallFlower",
+  "Leaf_Fingers",
+  "Leaf_Pebbles",
+  "Leaf_Rosette0",
+  "Leaf_Rosette1",
+  "Leaf_Rosette10",
+  "Leaf_Rosette11",
+  "Leaf_Rosette12",
+  "Leaf_Rosette13",
+  "Leaf_Rosette14",
+  "Leaf_Rosette15",
+  "Leaf_Rosette16",
+  "Leaf_Rosette17",
+  "Leaf_Rosette18",
+  "Leaf_Rosette19",
+  "Leaf_Rosette2",
+  "Leaf_Rosette3",
+  "Leaf_Rosette4",
+  "Leaf_Rosette5",
+  "Leaf_Rosette6",
+  "Leaf_Rosette7",
+  "Leaf_Rosette8",
+  "Leaf_Rosette9",
+  "Pot",
+  "Pot_Rim",
+  "Pot_StandLeg0",
+  "Pot_StandLeg1",
+  "Pot_StandLeg2",
+  "Pot_StandTop",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.745,
+  -1.295,
+  -0.01
+ ],
+ "world_bbox_max": [
+  -0.755,
+  -0.305,
+  1.045
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 5.2,
+ "mask_seconds": 5.0,
+ "batch": 2,
+ "height_m": 1.045,
+ "canon_height_m": 2.28,
+ "grabbable_leaf": false,
+ "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+ "grab_leaves": [],
+ "game": {
+  "plant": {
+   "id": "plant_succulent_bowl",
+   "height": 1.045,
+   "leafY": 0.725,
+   "leafTop": 1.045,
+   "bendable": false,
+   "bendFrom": 0.79,
+   "potRadius": 0.495,
+   "potTop": 0.737,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

@@ -1,0 +1,62 @@
+{
+ "id": "extra_toy_box",
+ "category": "extras",
+ "name": "Toy Box",
+ "description": "Open dusty-blue toy box with a ball and blocks, and a ring stacker beside it.",
+ "replaces": null,
+ "objects": [
+  "Extra_BoxBand",
+  "Extra_BoxFace-1",
+  "Extra_BoxFace1",
+  "Extra_BoxFloor",
+  "Extra_BoxSide-1",
+  "Extra_BoxSide1",
+  "Extra_ToyBall",
+  "Extra_ToyBlockA",
+  "Extra_ToyBlockB",
+  "Extra_ToyRing0",
+  "Extra_ToyRing1",
+  "Extra_ToyRing2",
+  "Extra_ToyRingTop",
+  "Extra_ToyStar"
+ ],
+ "world_bbox_min": [
+  -0.808,
+  -3.0,
+  0.003
+ ],
+ "world_bbox_max": [
+  -0.042,
+  -2.249,
+  0.515
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.3,
+ "batch": 2,
+ "position_xy": [
+  -0.42,
+  -2.55
+ ],
+ "height_m": 0.515,
+ "footprint_m": [
+  0.766,
+  0.751
+ ],
+ "placement_note": "open floor right of the rug, about 2 m out from the door; shares its slot with the floor cushion",
+ "game": {
+  "obstacles": [
+   {
+    "id": "extra_toy_box",
+    "centre": [
+     0.426,
+     2.626
+    ],
+    "radius": 0.381
+   }
+  ]
+ }
+}

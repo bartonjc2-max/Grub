@@ -1,0 +1,62 @@
+{
+ "id": "plant_bushy",
+ "category": "plants",
+ "name": "Round Bush",
+ "description": "A round bushy ball of leaves on a short trunk, dusty-blue pot.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf0",
+  "Leaf1",
+  "Leaf10",
+  "Leaf11",
+  "Leaf12",
+  "Leaf13",
+  "Leaf14",
+  "Leaf15",
+  "Leaf2",
+  "Leaf3",
+  "Leaf4",
+  "Leaf5",
+  "Leaf6",
+  "Leaf7",
+  "Leaf8",
+  "Leaf9",
+  "Leaf_Core",
+  "Pot",
+  "Pot_Rim",
+  "Soil",
+  "Stem"
+ ],
+ "world_bbox_min": [
+  -1.836,
+  -1.386,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.611,
+  -0.188,
+  1.721
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.8,
+ "mask_seconds": 4.5,
+ "game": {
+  "plant": {
+   "id": "plant_bushy",
+   "height": 1.721,
+   "leafY": 1.124,
+   "leafTop": 1.721,
+   "bendable": true,
+   "bendFrom": 0.37,
+   "potRadius": 0.465,
+   "potTop": 0.545,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

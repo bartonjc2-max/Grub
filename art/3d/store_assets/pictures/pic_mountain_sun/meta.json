@@ -1,0 +1,56 @@
+{
+ "id": "pic_mountain_sun",
+ "category": "pictures",
+ "name": "Mountain Sun",
+ "description": "Landscape frame: snow-capped blue peak, mauve ridge and an orange sun, dark wood frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Canvas",
+  "PicL_Frame",
+  "PicL_Meadow",
+  "PicL_PeakBack",
+  "PicL_PeakFront",
+  "PicL_Snow",
+  "PicL_Sun"
+ ],
+ "world_bbox_min": [
+  -4.42,
+  -0.086,
+  1.74
+ ],
+ "world_bbox_max": [
+  -3.58,
+  0.0,
+  2.36
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.7,
+ "mask_seconds": 4.5,
+ "batch": 2,
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.6,
+  "mask_seconds": 4.6
+ },
+ "game": {
+  "picL": {
+   "id": "pic_mountain_sun"
+  },
+  "picR": {
+   "id": "pic_mountain_sun"
+  }
+ }
+}

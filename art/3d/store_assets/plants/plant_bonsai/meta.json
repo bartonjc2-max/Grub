@@ -1,0 +1,65 @@
+{
+ "id": "plant_bonsai",
+ "category": "plants",
+ "name": "Bonsai",
+ "description": "A small S-curved bonsai with three leaf pads in a teal tray on a low wooden stand.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf_BranchL",
+  "Leaf_BranchR",
+  "Leaf_Moss",
+  "Leaf_PadLA",
+  "Leaf_PadLB",
+  "Leaf_PadRA",
+  "Leaf_PadRB",
+  "Leaf_PadTopA",
+  "Leaf_PadTopB",
+  "Leaf_Trunk",
+  "Pot",
+  "Pot_Rim",
+  "Pot_Stand",
+  "Pot_StandLeg-1-1",
+  "Pot_StandLeg-11",
+  "Pot_StandLeg1-1",
+  "Pot_StandLeg11",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -1.904,
+  -1.11,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.586,
+  -0.49,
+  1.689
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "batch": 2,
+ "height_m": 1.689,
+ "canon_height_m": 2.28,
+ "grabbable_leaf": false,
+ "grab_note": "no leaf near the canon grab height; the jump-and-grab would need a new target height",
+ "grab_leaves": [],
+ "game": {
+  "plant": {
+   "id": "plant_bonsai",
+   "height": 1.689,
+   "leafY": 1.35,
+   "leafTop": 1.689,
+   "bendable": false,
+   "bendFrom": 0.53,
+   "potRadius": 0.38,
+   "potTop": 0.672,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

@@ -1,0 +1,71 @@
+{
+ "id": "plant_monstera",
+ "category": "plants",
+ "name": "Monstera",
+ "description": "Five big split leaves on arching stalks in a soft terracotta pot; as tall as the canon plant.",
+ "replaces": "plant",
+ "objects": [
+  "Leaf0",
+  "Leaf1",
+  "Leaf2",
+  "Leaf3",
+  "Leaf4",
+  "Leaf_Stem0",
+  "Leaf_Stem1",
+  "Leaf_Stem2",
+  "Leaf_Stem3",
+  "Leaf_Stem4",
+  "Pot",
+  "Pot_Rim",
+  "Soil"
+ ],
+ "world_bbox_min": [
+  -2.039,
+  -1.537,
+  0.0
+ ],
+ "world_bbox_max": [
+  -0.486,
+  -0.295,
+  2.365
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "batch": 2,
+ "height_m": 2.274,
+ "canon_height_m": 2.28,
+ "grabbable_leaf": true,
+ "grab_note": "leaf objects reaching 2.0 m or more (canon grab leaves span 1.78-2.28 m)",
+ "grab_leaves": [
+  {
+   "object": "Leaf0",
+   "z_min": 1.682,
+   "z_max": 2.274
+  },
+  {
+   "object": "Leaf4",
+   "z_min": 1.561,
+   "z_max": 2.019
+  }
+ ],
+ "game": {
+  "plant": {
+   "id": "plant_monstera",
+   "height": 2.274,
+   "leafY": 1.682,
+   "leafTop": 2.274,
+   "bendable": true,
+   "bendFrom": 0.35,
+   "potRadius": 0.505,
+   "potTop": 0.665,
+   "base": [
+    1.25,
+    0.8
+   ]
+  }
+ }
+}

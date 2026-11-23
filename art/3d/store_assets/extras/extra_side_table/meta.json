@@ -1,0 +1,56 @@
+{
+ "id": "extra_side_table",
+ "category": "extras",
+ "name": "Side Table",
+ "description": "Small round three-legged table with a cup and two books.",
+ "replaces": null,
+ "objects": [
+  "Extra_BookA",
+  "Extra_BookB",
+  "Extra_Cup",
+  "Extra_TableLeg0",
+  "Extra_TableLeg1",
+  "Extra_TableLeg2",
+  "Extra_TableShelf",
+  "Extra_TableTop"
+ ],
+ "world_bbox_min": [
+  -0.47,
+  -0.75,
+  -0.003
+ ],
+ "world_bbox_max": [
+  0.03,
+  -0.25,
+  0.725
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.5,
+ "mask_seconds": 4.4,
+ "batch": 2,
+ "position_xy": [
+  -0.22,
+  -0.5
+ ],
+ "height_m": 0.725,
+ "footprint_m": [
+  0.5,
+  0.5
+ ],
+ "placement_note": "corner gap between the plant and the door frame, 0.5 m from the back wall",
+ "game": {
+  "obstacles": [
+   {
+    "id": "extra_side_table",
+    "centre": [
+     0.22,
+     0.5
+    ],
+    "radius": 0.25
+   }
+  ]
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "rug": {
+  "id": "rug_checker",
+  "shape": "rect",
+  "centre": [
+   2.9,
+   3.3
+  ],
+  "radii": [
+   2.0,
+   1.4
+  ]
+ },
+ "file": "room_rug.png",
+ "bbox": [
+  45,
+  1675,
+  1283,
+  2129
+ ]
+}

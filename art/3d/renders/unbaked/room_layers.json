@@ -1,0 +1,107 @@
+{
+ "width": 1284,
+ "height": 2778,
+ "order": [
+  "door",
+  "picR",
+  "picL",
+  "plant",
+  "couch"
+ ],
+ "layers": {
+  "door": {
+   "index": 0,
+   "bbox": [
+    1007,
+    1050,
+    1266,
+    1589
+   ],
+   "pivot": [
+    1136.5,
+    1589
+   ],
+   "height": 539,
+   "width": 259,
+   "bend": 0,
+   "pivot_at": "bottom"
+  },
+  "picR": {
+   "index": 1,
+   "bbox": [
+    407,
+    1174,
+    519,
+    1317
+   ],
+   "pivot": [
+    463.0,
+    1174
+   ],
+   "height": 143,
+   "width": 112,
+   "bend": 0,
+   "pivot_at": "top"
+  },
+  "picL": {
+   "index": 2,
+   "bbox": [
+    174,
+    1157,
+    313,
+    1321
+   ],
+   "pivot": [
+    243.5,
+    1157
+   ],
+   "height": 164,
+   "width": 139,
+   "bend": 0,
+   "pivot_at": "top"
+  },
+  "plant": {
+   "index": 3,
+   "bbox": [
+    670,
+    1196,
+    924,
+    1637
+   ],
+   "pivot": [
+    797.0,
+    1637
+   ],
+   "height": 441,
+   "width": 254,
+   "bend": 1.5,
+   "pivot_at": "bottom"
+  },
+  "couch": {
+   "index": 4,
+   "bbox": [
+    34,
+    1385,
+    717,
+    1722
+   ],
+   "pivot": [
+    375.5,
+    1722
+   ],
+   "height": 337,
+   "width": 683,
+   "bend": 0,
+   "pivot_at": "bottom"
+  }
+ },
+ "rug": {
+  "bbox": [
+   0,
+   1696,
+   1194,
+   2065
+  ],
+  "file": "room_rug.png"
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "id": "pic_fruit_bowl",
+ "category": "pictures",
+ "name": "Fruit Bowl",
+ "description": "Round frame: a blue bowl with an orange, an apple and a pear, blush frame.",
+ "replaces": "picL",
+ "objects": [
+  "PicL_Apple",
+  "PicL_Bowl",
+  "PicL_BowlFoot",
+  "PicL_Canvas",
+  "PicL_Frame",
+  "PicL_Leaf",
+  "PicL_Orange",
+  "PicL_Pear",
+  "PicL_Table"
+ ],
+ "world_bbox_min": [
+  -4.38,
+  -0.086,
+  1.67
+ ],
+ "world_bbox_max": [
+  -3.62,
+  0.0,
+  2.43
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.7,
+ "mask_seconds": 4.4,
+ "batch": 2,
+ "picR": {
+  "offset": [
+   1.15,
+   0.0,
+   -0.05
+  ],
+  "scale_xz": 0.9,
+  "about": [
+   -4.0,
+   -0.03,
+   2.05
+  ],
+  "render_seconds": 4.5,
+  "mask_seconds": 4.3
+ },
+ "game": {
+  "picL": {
+   "id": "pic_fruit_bowl"
+  },
+  "picR": {
+   "id": "pic_fruit_bowl"
+  }
+ }
+}

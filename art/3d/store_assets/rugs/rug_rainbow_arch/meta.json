@@ -1,0 +1,45 @@
+{
+ "id": "rug_rainbow_arch",
+ "category": "rugs",
+ "name": "Rainbow Arch Rug",
+ "description": "Half-round cream rug with four rainbow bands, flat edge toward the camera.",
+ "replaces": "rug",
+ "objects": [
+  "Rug",
+  "Rug_Band0",
+  "Rug_Band1",
+  "Rug_Band2",
+  "Rug_Band3"
+ ],
+ "world_bbox_min": [
+  -4.55,
+  -4.25,
+  0.0
+ ],
+ "world_bbox_max": [
+  -1.45,
+  -2.7,
+  0.011
+ ],
+ "plate_size": [
+  1284,
+  2778
+ ],
+ "render_seconds": 4.9,
+ "mask_seconds": 4.6,
+ "batch": 2,
+ "game": {
+  "rug": {
+   "id": "rug_rainbow_arch",
+   "shape": "ellipse",
+   "centre": [
+    3.0,
+    3.475
+   ],
+   "radii": [
+    1.55,
+    0.775
+   ]
+  }
+ }
+}
