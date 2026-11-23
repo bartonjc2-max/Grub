@@ -222,4 +222,11 @@ He is 1.85 m in world units (1.37 local, scale 1.35); `bodyHeight` is used for t
 - His OK on the notification copy.
 - His read of `beats_readability.png` and `need_asks.png`.
 - Frame rate: iOS runs at **30 fps** because `targetFrameRate` is unset. Going to 60 is smoother but uses more battery; this needs a decision.
+  - **Measured at 60 fps** on an iPhone 13 Pro Max (build 49, `GRUB_PERF=120 GRUB_FPS=60`, 2 min of normal arcs):
+    - 7200/7200 frames on time (interval p99 17.2 ms, max 18.2);
+    - CPU main thread p50 3.3 / p95 3.7 ms;
+    - GPU p50 6.6 / p95 11.4 / max 12.2 ms;
+    - the render-thread figure (13.7 ms) is vsync wait, the same at a 120 target.
+  - **Headroom at 60:** CPU about 13 ms (×4.5); GPU about 10 ms typical, about 5 ms on the worst 5% of frames.
+  - Above 60 needs `CADisableMinimumFrameDurationOnPhone` in Info.plist; the phone stayed at 60 with a 120 target.
 - Hand-feeding (deferred).
